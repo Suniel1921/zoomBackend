@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .status {
+      padding: 12px;
+      border-radius: 4px;
+      margin: 20px 0;
+      text-align: center;
+    }
+    .status-verified {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    .status-rejected {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+    .button {
+      display: inline-block;
+      padding: 12px 24px;
+      background-color: #FEDC00;
+      color: #010101;
+      text-decoration: none;
+      border-radius: 4px;
+      margin-top: 20px;
+    }
+    .footer {
+      margin-top: 40px;
+      text-align: center;
+      font-size: 12px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Document Verification Status</h1>
+    </div>
+
+    <p>Dear {{name}},</p>
+
+    <p>Your document "{{documentName}}" has been reviewed.</p>
+
+    <div class="status {{#if isVerified}}status-verified{{else}}status-rejected{{/if}}">
+      <h2>Status: {{status}}</h2>
+      {{#if message}}
+        <p>{{message}}</p>
+      {{/if}}
+    </div>
+
+    {{#unless isVerified}}
+      <div>
+        <h3>Next Steps:</h3>
+        <ol>
+          <li>Review the feedback provided</li>
+          <li>Make necessary corrections</li>
+          <li>Upload the updated document</li>
+        </ol>
+      </div>
+    {{/unless}}
+
+    <p style="text-align: center;">
+      <a href="{{portalUrl}}" class="button">View Details</a>
+    </p>
+
+    <p>If you have any questions, please contact us:</p>
+    <ul>
+      <li>Email: support@zoomcreatives.jp</li>
+      <li>Phone: 03-6764-5723</li>
+      <li>Mobile: 090-6494-5723</li>
+    </ul>
+
+    <div class="footer">
+      <p>© {{year}} Zoom Creatives. All rights reserved.</p>
+      <p>
+        〒130-0012 東京都墨田区太平1-11-7 グランドステータスKIYA2F<br>
+        Tokyo-To, Sumida-Ku, Taihei 1-11-7 Grand Status KIYA 2F, 130-0012
+      </p>
+    </div>
+  </div>
+</body>
+</html>

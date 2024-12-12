@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .logo {
+      max-width: 200px;
+      margin-bottom: 20px;
+    }
+    .button {
+      display: inline-block;
+      padding: 12px 24px;
+      background-color: #FEDC00;
+      color: #010101;
+      text-decoration: none;
+      border-radius: 4px;
+      margin-top: 20px;
+    }
+    .footer {
+      margin-top: 40px;
+      text-align: center;
+      font-size: 12px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <img src="{{logoUrl}}" alt="Zoom Creatives" class="logo">
+      <h1>Welcome to Zoom Creatives!</h1>
+    </div>
+
+    <p>Dear {{name}},</p>
+
+    <p>Thank you for joining Zoom Creatives! We're excited to have you as part of our community.</p>
+
+    <p>With your account, you can:</p>
+    <ul>
+      <li>Track your visa applications</li>
+      <li>Schedule appointments</li>
+      <li>Access important documents</li>
+      <li>Communicate with our team</li>
+    </ul>
+
+    <p style="text-align: center;">
+      <a href="{{loginUrl}}" class="button">Access Your Account</a>
+    </p>
+
+    <p>If you have any questions or need assistance, please don't hesitate to contact us:</p>
+    <ul>
+      <li>Email: support@zoomcreatives.jp</li>
+      <li>Phone: 03-6764-5723</li>
+      <li>Mobile: 090-6494-5723</li>
+    </ul>
+
+    <div class="footer">
+      <p>© {{year}} Zoom Creatives. All rights reserved.</p>
+      <p>
+        〒130-0012 東京都墨田区太平1-11-7 グランドステータスKIYA2F<br>
+        Tokyo-To, Sumida-Ku, Taihei 1-11-7 Grand Status KIYA 2F, 130-0012
+      </p>
+    </div>
+  </div>
+</body>
+</html>
