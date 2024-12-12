@@ -98,6 +98,12 @@ const PORT = process.env.PORT || 3000;
 // startServer();
 
 
+
+app.get('/', ()=>{
+  res.json({sucess: true, message: 'welcome to zoom backend'})
+})
+
+
 app.listen(PORT,()=> {
   console.log(`Server is running on no port no : ${PORT}`)
 })
