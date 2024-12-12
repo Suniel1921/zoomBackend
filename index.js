@@ -98,10 +98,9 @@ const PORT = process.env.PORT || 3000;
 // startServer();
 
 
-
-app.get('/', ()=>{
-  res.json({sucess: true, message: 'welcome to zoom backend'})
-})
+app.get('/', (req, res) => {
+  res.json({ success: true, message: 'Welcome to zoom backend' });
+});
 
 
 app.listen(PORT,()=> {
