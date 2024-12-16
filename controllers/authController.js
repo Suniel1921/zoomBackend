@@ -238,6 +238,68 @@ exports.register = async (req, res) => {
 //   }
 // };
 
+
+
+
+
+// exports.login = async (req, res) => {
+//   try {
+//     const { email, password } = req.body;
+
+//     if (!email || !password) {
+//       return res.status(400).json({ success: false, message: "Email and password are required" });
+//     }
+
+//     // Check if user exists in authModel or clientModel
+//     let user = await authModel.findOne({ email });
+//     let isClientModel = false;
+
+//     if (!user) {
+//       user = await ClientModel.findOne({ email });
+//       isClientModel = true;
+//     }
+
+//     if (!user) {
+//       return res.status(401).json({ success: false, message: "Invalid email or password" });
+//     }
+
+//     // Verify password
+//     const isPasswordValid = await bcrypt.compare(password, user.password);
+//     if (!isPasswordValid) {
+//       return res.status(401).json({ success: false, message: "Invalid email or password" });
+//     }
+
+//     // Generate JWT token
+//     const token = JWT.sign(
+//       { _id: user._id, email: user.email, role: user.role || 'client' },
+//       process.env.SECRET_KEY,
+//       { expiresIn: "7d" }
+//     );
+
+//     // Adjust fullName for ClientModel users
+//     const fullName = isClientModel ? user?.name : user?.fullName;
+
+//     // Return user details along with the token
+//     return res.status(200).json({
+//       success: true,
+//       message: "Login successful",
+//       user: {
+//         fullName: isClientModel ? user.name : user.fullName,
+//         email: user.email,
+//         role: user.role || 'client',
+//         id: user._id, // Include the ID here for frontend usage
+//       },
+//       token,
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({ success: false, message: "Server error" });
+//   }
+// };
+
+
+
+
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -266,42 +328,25 @@ exports.login = async (req, res) => {
     }
 
     // Generate JWT token
-    // const token = JWT.sign(
-    //   { _id: user._id, email: user.email, role: user.role || 'client' }, // Default role for ClientModel
-    //   process.env.SECRET_KEY,
-    //   { expiresIn: "7d" }
-    // );
     const token = JWT.sign(
-      { _id: user._id, email: user.email, role: user.role || 'client' }, 
+      { _id: user._id, email: user.email, role: user.role || 'client' }, // Default role for ClientModel
       process.env.SECRET_KEY,
       { expiresIn: "7d" }
-    )
+    );
 
     // Adjust fullName for ClientModel users
     const fullName = isClientModel ? user.name : user.fullName;
 
-    // return res.status(200).json({success: true, message: "Login successful", user: { fullName,email: user.email, role: user.role || 'client', // Default role for ClientModel
-    //   },
-    //   token,
-    // });
-
-
-    // Return user details along with the token
-return res.status(200).json({
-  success: true,
-  message: "Login successful",
-  user: {
-    fullName: isClientModel ? user.name : user.fullName,
-    email: user.email,
-    role: user.role || 'client',
-    id: user._id,  // Include the ID here for frontend usage
-  },
-  token,
-});
-
-
-
-
+    return res.status(200).json({
+      success: true,
+      message: "Login successful",
+      user: {
+        fullName, // Derived from `name` for ClientModel
+        email: user.email,
+        role: user.role || 'client', // Default role for ClientModel
+      },
+      token,
+    });
   } catch (error) {
     console.error('Login Error:', error.message);
     return res.status(500).json({
@@ -310,6 +355,7 @@ return res.status(200).json({
     });
   }
 };
+
 
 
 

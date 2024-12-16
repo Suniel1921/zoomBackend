@@ -1,5 +1,105 @@
 
+const upload = require('../config/multerConfig');
 const ClientModel = require('../models/newModel/clientModel');
+const bcrypt = require('bcryptjs'); 
+const cloudinary = require ('cloudinary').v2;
+
+
+
+
+
+// exports.addClient = async (req, res) => {
+//   const { name, category, status, email, password, phone, nationality, postalCode, prefecture,
+//     city, street, building, modeOfContact, socialMedia, timeline, dateJoined, profilePhoto } = req.body;
+
+//   try {
+//     const hashedPassword = await bcrypt.hash(password, 10);
+
+//     const newClient = new ClientModel({
+//       name, category, status, email, password: hashedPassword, phone, nationality, postalCode,
+//       prefecture, city, street, building, modeOfContact, socialMedia, timeline, dateJoined,
+//       profilePhoto,
+//     });
+
+//     const savedClient = await newClient.save();
+//     res.status(201).json(savedClient);
+
+//   } catch (err) {
+//     const errorMessage = err.code === 11000 ? 'Email already exists' : err.message;
+//     res.status(400).json({ message: errorMessage });
+//   }
+// };
+
+
+
+// Add Client Endpoint
+exports.addClient = [
+  upload.array('profilePhoto', 1),
+  async (req, res) => {
+    try {
+      const {
+        name,
+        category,
+        status,
+        email,
+        password,
+        phone,
+        nationality,
+        postalCode,
+        prefecture,
+        city,
+        street,
+        building,
+        modeOfContact,
+        socialMedia,
+        timeline,
+        dateJoined,
+      } = req.body;
+
+      // Hash the password before saving
+  const hashedPassword = await bcrypt.hash(password, 10); // 10 is the salt rounds for bcrypt
+
+      // console.log('req file is',req.files); 
+
+      if (!req.files || req.files.length === 0) {
+        return res.status(400).json({ success: false, message: 'No file uploaded' });
+      }
+
+      const profilePhotoUrls = [];
+      for (const file of req.files) {
+        const result = await cloudinary.uploader.upload(file.path);
+        profilePhotoUrls.push(result.secure_url);
+      }
+
+      const createClient = await ClientModel.create({
+        name,
+        category,
+        status,
+        email,
+        password:hashedPassword,
+        phone,
+        nationality,
+        postalCode,
+        prefecture,
+        city,
+        street,
+        building,
+        modeOfContact,
+        socialMedia,
+        timeline,
+        dateJoined,
+        profilePhoto: profilePhotoUrls[0],
+      });
+
+      return res.status(201).json({ success: true, message: 'Client Created Successfully', createClient });
+    } catch (error) {
+      return res.status(500).json({ success: false, message: 'Internal Server Error', error });
+    }
+  },
+];
+
+
+
 
 // Get all clients
 exports.getClients = async (req, res) => {
@@ -24,34 +124,8 @@ exports.getClientById = async (req, res) => {
   }
 };
 
-// Add a new client
-const bcrypt = require('bcryptjs'); // Import bcryptjs for password hashing
 
-exports.addClient = async (req, res) => {
-  const { name, email, password, phone, nationality, category, status } = req.body;
 
-  // Hash the password before saving
-  const hashedPassword = await bcrypt.hash(password, 10); // 10 is the salt rounds for bcrypt
-
-  const newClient = new ClientModel({
-    name,
-    email,
-    password: hashedPassword,  // Store the hashed password
-    phone,
-    nationality,
-    category,
-    status,
-    // profilePhoto,
-  });
-
-  try {
-    // Save the new client with hashed password
-    const savedClient = await newClient.save();
-    res.status(201).json(savedClient);
-  } catch (err) {
-    res.status(400).json({ message: err.message });
-  }
-};
 
   
 
@@ -102,32 +176,43 @@ exports.updateClient = async (req, res) => {
     // Destructure the request body
     const {
       name,
-      email,
-      phone,
-      nationality,
       category,
       status,
-      address,
-      // profilePhoto,
+      email,
+      password,
+      phone,
+      nationality,
+      postalCode,
+      prefecture,
+      city,
+      street,
+      building,
       modeOfContact,
-      password
+      socialMedia,
+      // profilePhoto,
     } = req.body;
 
     // Update client fields if provided, otherwise keep existing values
     client.name = name || client.name;
+    client.category = category || client.category;
+    client.status = status || client.status;
     client.email = email || client.email;
     client.phone = phone || client.phone;
     client.nationality = nationality || client.nationality;
-    client.category = category || client.category;
-    client.status = status || client.status;
-    client.address = address || client.address;
-    // client.profilePhoto = profilePhoto || client.profilePhoto;
+    client.postalCode = postalCode || client.postalCode;
+    client.prefecture = prefecture || client.prefecture;
+    client.city = city || client.city;
+    client.street = street || client.street;
+    client.building = building || client.building;
     client.modeOfContact = modeOfContact || client.modeOfContact;
+    client.socialMedia = socialMedia || client.socialMedia;
+    client.password = password || client.password;
+    // client.profilePhoto = profilePhoto || client.profilePhoto;
 
     // Optionally update password (ensure password is hashed before saving if needed)
-    if (password) {
-      client.credentials.password = password; // You can hash this if necessary before saving
-    }
+    // if (password) {
+    //   client.credentials.password = password; // You can hash this if necessary before saving
+    // }
 
     // Save the updated client data to the database
     const updatedClient = await client.save();

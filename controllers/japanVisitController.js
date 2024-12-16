@@ -6,7 +6,7 @@ const japanVisitModel = require('../models/newModel/japanVisitModel');
 exports.createJapanVisitApplication = async (req, res) => {
   try {
     const {
-      clientId, step, mobileNo, date, deadline, handledBy, package: packageType,
+      clientId, mobileNo, date, deadline, handledBy, package: packageType,
       noOfApplicants, reasonForVisit, otherReason, amount, paidAmount, 
       discount, deliveryCharge, dueAmount, paymentStatus, paymentMethod, 
       modeOfDelivery, notes
@@ -19,7 +19,7 @@ exports.createJapanVisitApplication = async (req, res) => {
 
     // Create application instance
     const application = new japanVisitAppplicaitonModel({
-      clientId, step, mobileNo, date, deadline, handledBy, package: packageType,
+      clientId, mobileNo, date, deadline, handledBy, package: packageType,
       noOfApplicants, reasonForVisit, otherReason, amount, paidAmount, 
       discount, deliveryCharge, dueAmount, paymentStatus, paymentMethod, 
       modeOfDelivery, notes
@@ -41,7 +41,7 @@ exports.createJapanVisitApplication = async (req, res) => {
 // Get all applications
 exports.getAllJapanVisitApplications = async (req, res) => {
   try {
-    const applications = await japanVisitAppplicaitonModel.find().populate('clientId').populate('step');
+    const applications = await japanVisitAppplicaitonModel.find().populate('clientId');
     res.status(200).json({success: true, message: 'data fected', data: applications });
   } catch (error) {
     console.error(error);

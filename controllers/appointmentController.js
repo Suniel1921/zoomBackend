@@ -54,21 +54,80 @@ exports.getAppointmentById = async (req, res) => {
   
 
   // Update an appointment by ID
+// exports.updateAppointment = async (req, res) => {
+//     try {
+//       const updatedAppointment = await AppointmentModel.findByIdAndUpdate(req.params.id, req.body, { new: true });
+//       if (!updatedAppointment) {
+//         return res.status(404).json({
+//           success: false,
+//           message: 'Appointment not found'
+//         });
+//       }
+//       res.status(200).json({success: true, message: 'Appointment updated successfully',updatedAppointment});
+//     } catch (error) {
+//       console.error(error);
+//       res.status(500).json({success: false, message: 'Failed to update appointment', error});
+//     }
+//   };
+
+
+
+
 exports.updateAppointment = async (req, res) => {
-    try {
-      const updatedAppointment = await AppointmentModel.findByIdAndUpdate(req.params.id, req.body, { new: true });
-      if (!updatedAppointment) {
-        return res.status(404).json({
+  try {
+    const { id } = req.params;
+    const { mode, ...updateData } = req.body;
+
+    // Ensure the mode is valid (edit or reschedule)
+    if (!['edit', 'reschedule'].includes(mode)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid mode. Mode must be either "edit" or "reschedule".',
+      });
+    }
+
+    // Restrict fields for "reschedule" mode
+    if (mode === 'reschedule') {
+      const { date, time, notes } = updateData;
+      if (!date || !time) {
+        return res.status(400).json({
           success: false,
-          message: 'Appointment not found'
+          message: 'Date and Time are required for rescheduling.',
         });
       }
-      res.status(200).json({success: true, message: 'Appointment updated successfully',updatedAppointment});
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({success: false, message: 'Failed to update appointment', error});
+      updateData.date = new Date(date); // Ensure proper date formatting
+      updateData.time = time;
+      if (notes) updateData.notes = notes; // Include notes if provided
     }
-  };
+
+    const updatedAppointment = await AppointmentModel.findByIdAndUpdate(
+      id,
+      updateData,
+      { new: true } // Return the updated document
+    );
+
+    if (!updatedAppointment) {
+      return res.status(404).json({
+        success: false,
+        message: 'Appointment not found',
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Appointment ${mode}d successfully`,
+      updatedAppointment,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update appointment',
+      error,
+    });
+  }
+};
+
 
 
 
@@ -147,12 +206,12 @@ exports.deleteAppointment = async (req, res) => {
       // Fetch data from all models in parallel
       const [application, japanVisit, documentTranslation, epassports, otherServices, graphicDesigns, appointment, ] = await Promise.all([
         applicationModel.find().populate('clientId').populate('step').lean(),
-        japanVisitAppplicaitonModel.find().populate('clientId').populate('step').lean(),
-        documentTranslationModel.find().populate('clientId').populate('step').lean(),
-        ePassportModel.find().populate('clientId').populate('step').lean(),
-        OtherServiceModel.find().populate('clientId').populate('step').lean(),
-        GraphicDesignModel.find().populate('clientId').populate('step').lean(),
-        AppointmentModel.find().populate('clientId').populate('step').lean(),
+        japanVisitAppplicaitonModel.find().populate('clientId').lean(),
+        documentTranslationModel.find().populate('clientId').lean(),
+        ePassportModel.find().populate('clientId').lean(),
+        OtherServiceModel.find().populate('clientId').lean(),
+        GraphicDesignModel.find().populate('clientId').lean(),
+        AppointmentModel.find().populate('clientId').lean(),
 
       ]);
   

@@ -1,5 +1,5 @@
 const ePassportModel = require("../models/newModel/ePassportModel");
-const EpassportStepModel = require("../models/newModel/steps/ePassportStepModel");
+// const EpassportStepModel = require("../models/newModel/steps/ePassportStepModel");
 
 
 // Create a new ePassport application
@@ -69,61 +69,61 @@ exports.deleteEpassport = async (req, res) => {
 
 
 
-// Controller to handle creating a new application step with an object structure for stepNames
-exports.createEPassportStep = async (req, res) => {
-  try {
-    const { clientId, stepNames } = req.body;
+// // Controller to handle creating a new application step with an object structure for stepNames
+// exports.createEPassportStep = async (req, res) => {
+//   try {
+//     const { clientId, stepNames } = req.body;
 
-    // Validate required fields
-    if (!clientId) {
-      return res.status(400).json({ success: false, message: 'clientId is required' });
-    }
+//     // Validate required fields
+//     if (!clientId) {
+//       return res.status(400).json({ success: false, message: 'clientId is required' });
+//     }
 
-    if (typeof stepNames !== 'object' || Object.keys(stepNames).length === 0) {
-      return res.status(400).json({ success: false, message: 'stepNames must be a non-empty object' });
-    }
+//     if (typeof stepNames !== 'object' || Object.keys(stepNames).length === 0) {
+//       return res.status(400).json({ success: false, message: 'stepNames must be a non-empty object' });
+//     }
 
-    // Create a new ApplicationStep document
-    const newStep = new EpassportStepModel({
-      clientId,  // Make sure clientId is saved at the top level
-      stepNames,
-    });
+//     // Create a new ApplicationStep document
+//     const newStep = new EpassportStepModel({
+//       clientId,  // Make sure clientId is saved at the top level
+//       stepNames,
+//     });
 
-    // Save the step to the database
-    const savedStep = await newStep.save();
+//     // Save the step to the database
+//     const savedStep = await newStep.save();
 
-    // Return the saved step as a response
-    res.status(201).json(savedStep);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: 'Internal Server Error', error });
-  }
-};
+//     // Return the saved step as a response
+//     res.status(201).json(savedStep);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ success: false, message: 'Internal Server Error', error });
+//   }
+// };
 
 
-// Controller to handle updating the status of a specific step
-exports.updateEpassportStepStatus = async (req, res) => {
-  try {
-    const { step, status } = req.body;
-    const clientId = req.params.id;
+// // Controller to handle updating the status of a specific step
+// exports.updateEpassportStepStatus = async (req, res) => {
+//   try {
+//     const { step, status } = req.body;
+//     const clientId = req.params.id;
 
-    if (!step || !status) {
-      return res.status(400).json({ success: false, message: 'Step or status missing.' });
-    }
+//     if (!step || !status) {
+//       return res.status(400).json({ success: false, message: 'Step or status missing.' });
+//     }
 
-    const updated = await EpassportStepModel.findOneAndUpdate(
-      { 'clientId': clientId },
-      { [`stepNames.${step}.status`]: status },
-      { new: true }
-    );
+//     const updated = await EpassportStepModel.findOneAndUpdate(
+//       { 'clientId': clientId },
+//       { [`stepNames.${step}.status`]: status },
+//       { new: true }
+//     );
 
-    if (!updated) {
-      return res.status(404).json({ success: false, message: 'Client or step not found.' });
-    }
+//     if (!updated) {
+//       return res.status(404).json({ success: false, message: 'Client or step not found.' });
+//     }
 
-    res.status(200).json({ success: true, data: updated });
-  } catch (error) {
-    console.error('Error updating status:', error);
-    res.status(500).json({ success: false, message: 'Server error.' });
-  }
-};
+//     res.status(200).json({ success: true, data: updated });
+//   } catch (error) {
+//     console.error('Error updating status:', error);
+//     res.status(500).json({ success: false, message: 'Server error.' });
+//   }
+// };
