@@ -1,10 +1,28 @@
 const mongoose = require('mongoose');
+const defaultSteps = require('./defaultSteps');
 
 const documentTranslationSchema = new mongoose.Schema({
+  superAdminId: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: 'SuperAdminModel',
+    },
   clientId: {
     type: mongoose.Schema.Types.ObjectId, ref: 'ClientModel',
     required: true
 },
+
+steps: [
+  {
+    name: { type: String, required: true },
+    status: {
+      type: String,
+      enum: ['pending', 'completed', 'in-progress', 'processing'],
+      default: 'complted',
+    },
+    updatedAt: { type: Date, default: Date.now },
+  },
+],
   sourceLanguage: {
     type: String,
     enum: ['English', 'Japanese', 'Nepali', 'Hindi'],
@@ -57,6 +75,14 @@ const documentTranslationSchema = new mongoose.Schema({
     required: true
 },
 },{timestamps: true});
+
+// Middleware to auto-populate steps if not provided
+documentTranslationSchema.pre('save', function (next) {
+  if (!this.steps || this.steps.length === 0) {
+    this.steps = defaultSteps.documentTranslationStep; // Populate default steps
+  }
+  next();
+});
 
 const documentTranslationModel = mongoose.model('documentTranslationModel', documentTranslationSchema);
 module.exports = documentTranslationModel;

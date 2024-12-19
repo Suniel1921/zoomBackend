@@ -1,15 +1,31 @@
 
 const mongoose = require('mongoose');
+const defaultSteps = require('./defaultSteps');
 
 
 // Define Mongoose schema and model for the application data
 const japanVistiApplicationSchema = new mongoose.Schema({
-  clientId: { type: mongoose.Schema.Types.ObjectId, required: true,  ref: 'ClientModel' },
-  // step:{
-  //   type: mongoose.Schema.Types.ObjectId,
-  //   ref: 'ApplicationStepModel',
-  //   // required: true,
-  // },
+   superAdminId: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: 'SuperAdminModel',
+    },
+  clientId: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: 'ClientModel'
+  },
+  steps: [
+    {
+      name: { type: String, required: true },
+      status: {
+        type: String,
+        enum: ['pending', 'completed', 'in-progress', 'processing'],
+        default: 'complted',
+      },
+      updatedAt: { type: Date, default: Date.now },
+    },
+  ],
 
   mobileNo: { type: String, required: true },
   date: { type: Date, required: true },
@@ -50,5 +66,17 @@ const japanVistiApplicationSchema = new mongoose.Schema({
 
 
 
-const japanVisitAppplicaitonModel = mongoose.model('japanVisitApplicationModel', japanVistiApplicationSchema);
-module.exports = japanVisitAppplicaitonModel;
+
+// Middleware to auto-populate steps if not provided
+japanVistiApplicationSchema.pre('save', function (next) {
+  if (!this.steps || this.steps.length === 0) {
+    this.steps = defaultSteps.japanVisitApplicationStep; // Populate default steps
+  }
+  next();
+});
+
+
+
+
+const japanVisitApplicationModel = mongoose.model('japanVisitApplicationModel', japanVistiApplicationSchema);
+module.exports = japanVisitApplicationModel;

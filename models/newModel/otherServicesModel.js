@@ -1,8 +1,36 @@
 const mongoose = require('mongoose');
+const defaultSteps = require('./defaultSteps');
 
 // Define the Service Schema
 const OtherServiceSchema = new mongoose.Schema({
-    clientId: { type: mongoose.Schema.Types.ObjectId, required: true,  ref: 'ClientModel' },
+  superAdminId: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: 'SuperAdminModel',
+  },
+  
+    clientId: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true, 
+      ref: 'ClientModel'
+    },
+
+
+    steps: [
+      {
+        name: { type: String, required: true },
+        status: {
+          type: String,
+          enum: ['pending', 'completed', 'in-progress', 'processing'],
+          default: 'complted',
+        },
+        updatedAt: { type: Date, default: Date.now },
+      },
+    ],
+
+
+
+
   serviceTypes: {
     type: [String],
     enum: [
@@ -63,6 +91,15 @@ const OtherServiceSchema = new mongoose.Schema({
     default: function() { return this.dueAmount > 0 ? 'Due' : 'Paid'; },
   },
 }, { timestamps: true });
+
+
+// Middleware to auto-populate steps if not provided
+OtherServiceSchema.pre('save', function (next) {
+  if (!this.steps || this.steps.length === 0) {
+    this.steps = defaultSteps.otherServiceStep; // Populate default steps
+  }
+  next();
+});
 
 // Create the Service model
 const OtherServiceModel = mongoose.model('OtherServiceModel', OtherServiceSchema);

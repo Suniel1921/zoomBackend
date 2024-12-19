@@ -28,15 +28,15 @@ dotenv.config();
 const app = express();
 
 // Middleware
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
-}));
+// app.use(cors({
+//   origin: process.env.CORS_ORIGIN || '*',
+//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+//   allowedHeaders: ['Content-Type', 'Authorization'],
+//   credentials: true
+// }));
 
 
-// app.use(cors());
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -68,39 +68,8 @@ app.use('/api/v1/serviceRequest', serviceRequestRoute);
 dbConnection();
 
 
-
-// Error handling middleware
-// app.use((err, req, res, next) => {
-//   console.error(err.stack);
-//   res.status(500).json({ 
-//     success: false, 
-//     message: 'Internal server error',
-//     error: process.env.NODE_ENV === 'development' ? err.message : undefined
-//   });
-// });
-
 const PORT = process.env.PORT || 3000;
 
-// Database connection and server start
-// async function startServer() {
-//   try {
-//     await sequelize.authenticate();
-//     console.log('Database connection established.');
-    
-//     // Sync database models
-//     await sequelize.sync();
-//     console.log('Database models synchronized.');
-
-//     app.listen(PORT, () => {
-//       console.log(`Server running on port ${PORT}`);
-//     });
-//   } catch (error) {
-//     console.error('Unable to start server:', error);
-//     process.exit(1);
-//   }
-// }
-
-// startServer();
 
 
 app.get('/', (req, res) => {
@@ -111,3 +80,8 @@ app.get('/', (req, res) => {
 app.listen(PORT,()=> {
   console.log(`Server is running on no port no : ${PORT}`)
 })
+
+
+
+// i have this model and i want to fectch data seperately like if this crm used 10000+ client let take a two client for now ram and shyam make sure when ram login then dont show the shyam data and shyam login then dont show the ram data on her dashbaord 
+

@@ -1,6 +1,12 @@
 const mongoose = require('mongoose');
 
 const appointmentSchema = new mongoose.Schema({
+  superAdminId: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: 'SuperAdminModel',
+  },
+  
     clientId: { type: mongoose.Schema.Types.ObjectId, required: true,  ref: 'ClientModel' },
   type: { type: String, required: true },
   date: { type: Date, required: true },

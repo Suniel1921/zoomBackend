@@ -26,6 +26,9 @@ const router = express.Router();
 const controller = require("../controllers/authController");
 const { requireLogin, isAdmin } = require("../middleware/newMiddleware/authMiddleware");
 
+//********************super admin route********************
+router.post('/createSuperAdmin', controller.CreateSuperAdmin);
+
 
 
 

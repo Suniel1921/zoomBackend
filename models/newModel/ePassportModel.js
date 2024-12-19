@@ -1,16 +1,28 @@
 const mongoose = require('mongoose');
+const defaultSteps = require('./defaultSteps');
 
 const epassportSchema = new mongoose.Schema({
+    superAdminId: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        ref: 'SuperAdminModel',
+      },
 
     clientId: { type: mongoose.Schema.Types.ObjectId,
         required: true,
         ref: 'ClientModel'
     },
-    // step:{
-    //   type: mongoose.Schema.Types.ObjectId,
-    //   ref: 'EpassportStepModel',
-    //   // required: true,
-    // },
+    steps: [
+      {
+        name: { type: String, required: true },
+        status: {
+          type: String,
+          enum: ['pending', 'completed', 'in-progress', 'processing'],
+          default: 'complted',
+        },
+        updatedAt: { type: Date, default: Date.now },
+      },
+    ],
 
   mobileNo: {
     type: String,
@@ -95,6 +107,16 @@ const epassportSchema = new mongoose.Schema({
     required: false
 },
 },{timestamps: true});
+
+
+
+// Middleware to auto-populate steps if not provided
+epassportSchema.pre('save', function (next) {
+  if (!this.steps || this.steps.length === 0) {
+    this.steps = defaultSteps.ePassportStep; // Populate default steps
+  }
+  next();
+});
 
 const ePassportModel = mongoose.model('ePassportModel', epassportSchema);
 

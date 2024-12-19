@@ -75,8 +75,12 @@ const mongoose = require('mongoose');
 
 
 
-
 const clientSchema = new mongoose.Schema({
+   superAdminId: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: 'SuperAdminModel',
+    },
     name: { type: String, required: true },
     category: { type: String, required: true },
     status: { type: String, enum: ['active', 'inactive'], default: 'active' },
@@ -106,3 +110,4 @@ const clientSchema = new mongoose.Schema({
 const ClientModel = mongoose.model('ClientModel', clientSchema);
 
 module.exports = ClientModel;
+

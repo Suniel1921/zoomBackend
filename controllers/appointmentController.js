@@ -5,71 +5,302 @@ const ClientModel = require("../models/newModel/clientModel");
 const documentTranslationModel = require("../models/newModel/documentTranslationModel");
 const ePassportModel = require("../models/newModel/ePassportModel");
 const GraphicDesignModel = require("../models/newModel/graphicDesingModel");
-const japanVisitAppplicaitonModel = require("../models/newModel/japanVisitModel");
 const OtherServiceModel = require("../models/newModel/otherServicesModel");
 const applicationStepModel = require("../models/newModel/steps/applicationStepModel");
-
-// Create an appointment
-exports.createAppointment = async (req, res) => {
-    try {
-      const appointment = new AppointmentModel(req.body);
-      await appointment.save();
-      res.status(201).json({success: true, message: 'Appointment created successfully',appointment});
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({success: false, message: 'Failed to create appointment',error});
-    }
-  };
-
-  
-
-  // Get all appointments
-exports.getAllAppointments = async (req, res) => {
-    try {
-      const appointments = await AppointmentModel.find().populate('clientId', 'name phone');
-      res.status(200).json({success: true, appointments});
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({success: false, message: 'Failed to retrieve appointments',error});
-    }
-  };
-
-  
+const japanVisitApplicationModel = require("../models/newModel/japanVisitModel");
 
 
-  // Get an appointment by ID
-exports.getAppointmentById = async (req, res) => {
-    try {
-      const appointment = await AppointmentModel.findById(req.params.id);
-      if (!appointment) {
-        return res.status(404).json({success: false, message: 'Appointment not found'});
-      }
-      res.status(200).json({success: true, message: 'appointment fetched succssfully', appointment});
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({success: false, message: 'Failed to retrieve appointment', error});
-    }
-  };
 
-  
 
-  // Update an appointment by ID
-// exports.updateAppointment = async (req, res) => {
+// // Create an appointment
+// exports.createAppointment = async (req, res) => {
 //     try {
-//       const updatedAppointment = await AppointmentModel.findByIdAndUpdate(req.params.id, req.body, { new: true });
-//       if (!updatedAppointment) {
-//         return res.status(404).json({
-//           success: false,
-//           message: 'Appointment not found'
-//         });
-//       }
-//       res.status(200).json({success: true, message: 'Appointment updated successfully',updatedAppointment});
+//       const appointment = new AppointmentModel(req.body);
+//       await appointment.save();
+//       res.status(201).json({success: true, message: 'Appointment created successfully',appointment});
 //     } catch (error) {
 //       console.error(error);
-//       res.status(500).json({success: false, message: 'Failed to update appointment', error});
+//       res.status(500).json({success: false, message: 'Failed to create appointment',error});
 //     }
 //   };
 
+  
+
+//   // Get all appointments
+// exports.getAllAppointments = async (req, res) => {
+//     try {
+//       const appointments = await AppointmentModel.find().populate('clientId', 'name phone');
+//       res.status(200).json({success: true, appointments});
+//     } catch (error) {
+//       console.error(error);
+//       res.status(500).json({success: false, message: 'Failed to retrieve appointments',error});
+//     }
+//   };
+
+  
+
+
+//   // Get an appointment by ID
+// exports.getAppointmentById = async (req, res) => {
+//     try {
+//       const appointment = await AppointmentModel.findById(req.params.id);
+//       if (!appointment) {
+//         return res.status(404).json({success: false, message: 'Appointment not found'});
+//       }
+//       res.status(200).json({success: true, message: 'appointment fetched succssfully', appointment});
+//     } catch (error) {
+//       console.error(error);
+//       res.status(500).json({success: false, message: 'Failed to retrieve appointment', error});
+//     }
+//   };
+
+
+
+
+
+// exports.updateAppointment = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const { mode, ...updateData } = req.body;
+
+//     // Ensure the mode is valid (edit or reschedule)
+//     if (!['edit', 'reschedule'].includes(mode)) {
+//       return res.status(400).json({
+//         success: false,
+//         message: 'Invalid mode. Mode must be either "edit" or "reschedule".',
+//       });
+//     }
+
+//     // Restrict fields for "reschedule" mode
+//     if (mode === 'reschedule') {
+//       const { date, time, notes } = updateData;
+//       if (!date || !time) {
+//         return res.status(400).json({
+//           success: false,
+//           message: 'Date and Time are required for rescheduling.',
+//         });
+//       }
+//       updateData.date = new Date(date); // Ensure proper date formatting
+//       updateData.time = time;
+//       if (notes) updateData.notes = notes; // Include notes if provided
+//     }
+
+//     const updatedAppointment = await AppointmentModel.findByIdAndUpdate(
+//       id,
+//       updateData,
+//       { new: true } // Return the updated document
+//     );
+
+//     if (!updatedAppointment) {
+//       return res.status(404).json({
+//         success: false,
+//         message: 'Appointment not found',
+//       });
+//     }
+
+//     res.status(200).json({
+//       success: true,
+//       message: `Appointment ${mode}d successfully`,
+//       updatedAppointment,
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Failed to update appointment',
+//       error,
+//     });
+//   }
+// };
+
+
+
+
+
+
+//   // Update appointment status (mark as completed or cancelled)
+// exports.updateAppointmentStatus = async (req, res) => {
+//     const { status } = req.body;  // Status can be "Completed" or "Cancelled"
+//     const { id } = req.params;
+  
+//     try {
+//       // Find the appointment by ID
+//       const appointment = await AppointmentModel.findById(id);
+      
+//       if (!appointment) {
+//         return res.status(404).json({ success: false, message: 'Appointment not found' });
+//       }
+  
+//       // Check if the status is valid (Completed or Cancelled)
+//       if (status !== 'Completed' && status !== 'Cancelled') {
+//         return res.status(400).json({ success: false, message: 'Invalid status' });
+//       }
+  
+//       // Update the appointment status
+//       appointment.status = status;
+  
+//       // Optionally, add timestamps for when the appointment is completed or cancelled
+//       if (status === 'Completed') {
+//         appointment.completedAt = new Date();
+//       } else if (status === 'Cancelled') {
+//         appointment.cancelledAt = new Date();
+//       }
+  
+//       // Save the updated appointment
+//       await appointment.save();
+  
+//       res.status(200).json({
+//         success: true,
+//         message: 'Appointment status updated successfully',
+//         appointment
+//       });
+//     } catch (error) {
+//       console.error(error);
+//       res.status(500).json({ success: false, message: 'Failed to update appointment status', error });
+//     }
+//   };
+  
+
+//   // Delete an appointment by ID
+// exports.deleteAppointment = async (req, res) => {
+//     try {
+//       const deletedAppointment = await AppointmentModel.findByIdAndDelete(req.params.id);
+//       if (!deletedAppointment) {
+//         return res.status(404).json({success: false, message: 'Appointment not found'});
+//       }
+//       res.status(200).json({success: true, message: 'Appointment deleted successfully'});
+//     } catch (error) {
+//       console.error(error);
+//       res.status(500).json({success: false, message: 'Failed to delete appointment', error});
+//     }
+//   };
+
+
+
+
+
+
+
+
+
+// Create an appointment
+exports.createAppointment = async (req, res) => {
+  try {
+    const { _id: superAdminId } = req.user;  // Extract superAdminId from the authenticated user
+    const { clientId, ...appointmentData } = req.body;
+
+    // Validate if the client exists and belongs to the superAdmin
+    // const client = await AppointmentModel.findOne({ _id: clientId, superAdminId });
+    // if (!client) {
+    //   return res.status(400).json({ success: false, message: 'Client not found or unauthorized' });
+    // }
+
+    const appointment = new AppointmentModel({
+      clientId,
+      ...appointmentData,
+      superAdminId, // Attach superAdminId
+    });
+    await appointment.save();
+
+    res.status(201).json({ success: true, message: 'Appointment created successfully', appointment });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Failed to create appointment', error });
+  }
+};
+
+// Get all appointments for the authenticated superAdmin
+exports.getAllAppointments = async (req, res) => {
+  try {
+    const { _id: superAdminId } = req.user;  // Extract superAdminId from the authenticated user
+    const appointments = await AppointmentModel.find({ superAdminId })
+      .populate('clientId', 'name phone')  // Populate client information
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({ success: true, appointments });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Failed to retrieve appointments', error });
+  }
+};
+
+// Get an appointment by ID for the authenticated superAdmin
+exports.getAppointmentById = async (req, res) => {
+  try {
+    const { _id: superAdminId } = req.user;  // Extract superAdminId from the authenticated user
+    const appointment = await AppointmentModel.findOne({ _id: req.params.id, superAdminId });
+
+    if (!appointment) {
+      return res.status(404).json({ success: false, message: 'Appointment not found or unauthorized' });
+    }
+
+    res.status(200).json({ success: true, message: 'Appointment fetched successfully', appointment });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Failed to retrieve appointment', error });
+  }
+};
+
+// Update an appointment by ID for the authenticated superAdmin
+// exports.updateAppointment = async (req, res) => {
+//   try {
+//     const { _id: superAdminId } = req.user;   // Extract superAdminId from the authenticated user
+//     const { id } = req.params;
+//     const { mode, ...updateData } = req.body;
+
+//     // Ensure the mode is valid (edit or reschedule)
+//     if (!['edit', 'reschedule'].includes(mode)) {
+//       return res.status(400).json({
+//         success: false,
+//         message: 'Invalid mode. Mode must be either "edit" or "reschedule".',
+//       });
+//     }
+
+//     // Restrict fields for "reschedule" mode
+//     if (mode === 'reschedule') {
+//       const { date, time, notes } = updateData;
+//       if (!date || !time) {
+//         return res.status(400).json({
+//           success: false,
+//           message: 'Date and Time are required for rescheduling.',
+//         });
+//       }
+//       updateData.date = new Date(date); // Ensure proper date formatting
+//       updateData.time = time;
+//       if (notes) updateData.notes = notes; // Include notes if provided
+//     }
+
+//     // Check if the appointment belongs to the authenticated superAdmin
+//     const updatedAppointment = await AppointmentModel.findOneAndUpdate(
+//       { _id: id, superAdminId },
+//       updateData,
+//       { new: true } // Return the updated document
+//     );
+
+//     if (!updatedAppointment) {
+//       return res.status(404).json({
+//         success: false,
+//         message: 'Appointment not found or unauthorized',
+//       });
+//     }
+
+//     res.status(200).json({
+//       success: true,
+//       message: `Appointment ${mode}d successfully`,
+//       updatedAppointment,
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Failed to update appointment',
+//       error,
+//     });
+//   }
+// };
+
+
+// **********when we use above code to update the data then got error unauthorized login first (check route also (::add requiredLogin middleware)) (::fixed later)***********
 
 
 
@@ -132,106 +363,174 @@ exports.updateAppointment = async (req, res) => {
 
 
 
-
-  // Update appointment status (mark as completed or cancelled)
+// Update appointment status (mark as completed or cancelled) for the authenticated superAdmin
 exports.updateAppointmentStatus = async (req, res) => {
-    const { status } = req.body;  // Status can be "Completed" or "Cancelled"
-    const { id } = req.params;
-  
-    try {
-      // Find the appointment by ID
-      const appointment = await AppointmentModel.findById(id);
-      
-      if (!appointment) {
-        return res.status(404).json({ success: false, message: 'Appointment not found' });
-      }
-  
-      // Check if the status is valid (Completed or Cancelled)
-      if (status !== 'Completed' && status !== 'Cancelled') {
-        return res.status(400).json({ success: false, message: 'Invalid status' });
-      }
-  
-      // Update the appointment status
-      appointment.status = status;
-  
-      // Optionally, add timestamps for when the appointment is completed or cancelled
-      if (status === 'Completed') {
-        appointment.completedAt = new Date();
-      } else if (status === 'Cancelled') {
-        appointment.cancelledAt = new Date();
-      }
-  
-      // Save the updated appointment
-      await appointment.save();
-  
-      res.status(200).json({
-        success: true,
-        message: 'Appointment status updated successfully',
-        appointment
-      });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ success: false, message: 'Failed to update appointment status', error });
+  const { status } = req.body;  // Status can be "Completed" or "Cancelled"
+  const { id } = req.params;
+
+
+  try {
+    const { _id: superAdminId } = req.user;  // Extract superAdminId from the authenticated user
+    const appointment = await AppointmentModel.findOne({ _id: id, superAdminId });
+
+    if (!appointment) {
+      return res.status(404).json({ success: false, message: 'Appointment not found or unauthorized' });
     }
-  };
-  
+
+    if (status !== 'Completed' && status !== 'Cancelled') {
+      return res.status(400).json({ success: false, message: 'Invalid status' });
+    }
+
+    appointment.status = status;
+
+    if (status === 'Completed') {
+      appointment.completedAt = new Date();
+    } else if (status === 'Cancelled') {
+      appointment.cancelledAt = new Date();
+    }
+
+    await appointment.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Appointment status updated successfully',
+      appointment,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Failed to update appointment status', error });
+  }
+};
 
 
 
-  
-
-
-
-  // Delete an appointment by ID
+// Delete an appointment by ID for the authenticated superAdmin
 exports.deleteAppointment = async (req, res) => {
-    try {
-      const deletedAppointment = await AppointmentModel.findByIdAndDelete(req.params.id);
-      if (!deletedAppointment) {
-        return res.status(404).json({success: false, message: 'Appointment not found'});
-      }
-      res.status(200).json({success: true, message: 'Appointment deleted successfully'});
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({success: false, message: 'Failed to delete appointment', error});
+  try {
+    const { _id: superAdminId } = req.user;  // Extract superAdminId from the authenticated user
+    const { id } = req.params;
+
+    const deletedAppointment = await AppointmentModel.findOneAndDelete({ _id: id, superAdminId });
+
+    if (!deletedAppointment) {
+      return res.status(404).json({ success: false, message: 'Appointment not found or unauthorized' });
     }
-  };
+
+    res.status(200).json({ success: true, message: 'Appointment deleted successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Failed to delete appointment', error });
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   
+
+
 
 
 
   // *****************************************************GET ALL MODEL DATA AT ONCE FOR ACCOUNT AND TASK (FRONTEND)**************************************************
 
+  // exports.fetchAllModelData = async (req, res) => {
+  //   try {
+  //     // Fetch data from all models in parallel
+  //     const [application, japanVisit, documentTranslation, epassports, otherServices, graphicDesigns, appointment, ] = await Promise.all([
+  //       applicationModel.find().populate('clientId').populate('step').lean(),
+  //       japanVisitAppplicaitonModel.find().populate('clientId').lean(),
+  //       documentTranslationModel.find().populate('clientId').lean(),
+  //       ePassportModel.find().populate('clientId').lean(),
+  //       OtherServiceModel.find().populate('clientId').lean(),
+  //       GraphicDesignModel.find().populate('clientId').lean(),
+  //       AppointmentModel.find().populate('clientId').lean(),
+
+  //     ]);
+  
+  //     // Combine the data into a single response object
+  //     const allData = {application, japanVisit, documentTranslation, epassports, otherServices, graphicDesigns, appointment,};
+
+  //     // Send the combined data as a JSON response
+  //     res.status(200).json({success: true, message: 'all model data fetched successfully', allData});
+  //   } catch (error) {
+  //     console.error('Error fetching all data:', error);
+  //     res.status(500).json({success: false, meessage: 'Failed to fetch data from models', error });
+  //   }
+  // };
+
+
   exports.fetchAllModelData = async (req, res) => {
     try {
-      // Fetch data from all models in parallel
-      const [application, japanVisit, documentTranslation, epassports, otherServices, graphicDesigns, appointment, ] = await Promise.all([
-        applicationModel.find().populate('clientId').populate('step').lean(),
-        japanVisitAppplicaitonModel.find().populate('clientId').lean(),
-        documentTranslationModel.find().populate('clientId').lean(),
-        ePassportModel.find().populate('clientId').lean(),
-        OtherServiceModel.find().populate('clientId').lean(),
-        GraphicDesignModel.find().populate('clientId').lean(),
-        AppointmentModel.find().populate('clientId').lean(),
-
+      const { _id: superAdminId } = req.user;  // Extract superAdminId from the authenticated user
+  
+      // Fetch data from all models in parallel, filtering by superAdminId
+      const [application, japanVisit, documentTranslation, epassports, otherServices, graphicDesigns, appointment] = await Promise.all([
+        applicationModel.find({ superAdminId }).populate('clientId').lean(),
+        japanVisitApplicationModel.find({ superAdminId }).populate('clientId').lean(),
+        documentTranslationModel.find({ superAdminId }).populate('clientId').lean(),
+        ePassportModel.find({ superAdminId }).populate('clientId').lean(),
+        OtherServiceModel.find({ superAdminId }).populate('clientId').lean(),
+        GraphicDesignModel.find({ superAdminId }).populate('clientId').lean(),
+        AppointmentModel.find({ superAdminId }).populate('clientId').lean(),
       ]);
   
       // Combine the data into a single response object
-      const allData = {application, japanVisit, documentTranslation, epassports, otherServices, graphicDesigns, appointment,};
-
+      const allData = {
+        application,
+        japanVisit,
+        documentTranslation,
+        epassports,
+        otherServices,
+        graphicDesigns,
+        appointment,
+      };
+  
       // Send the combined data as a JSON response
-      res.status(200).json({success: true, message: 'all model data fetched successfully', allData});
+      res.status(200).json({
+        success: true,
+        message: 'All model data fetched successfully',
+        allData,
+      });
     } catch (error) {
       console.error('Error fetching all data:', error);
-      res.status(500).json({success: false, meessage: 'Failed to fetch data from models', error });
+      res.status(500).json({
+        success: false,
+        message: 'Failed to fetch data from models',
+        error,
+      });
     }
   };
+  
+
+
+
+
+
+
 
 
   //get all model data by id
   // Define the models array
   const models = [
     applicationModel,
-    japanVisitAppplicaitonModel,
+    japanVisitApplicationModel,
     documentTranslationModel,
     ePassportModel,
     OtherServiceModel,
@@ -256,7 +555,7 @@ exports.deleteAppointment = async (req, res) => {
       const promises = models.map(model =>
         model.find({ clientId: id }) // Querying based on clientId instead of id
           .populate('clientId')        // Populate clientId field
-          .populate('step')            // Populate step field
+          // .populate('step')            // Populate step field
           .lean()
           .catch(err => {
             return { success: false, message: `Failed to fetch data for model ${model.modelName}`, error: err.message };
@@ -267,7 +566,7 @@ exports.deleteAppointment = async (req, res) => {
   
       // Store results by model name
       results.forEach((data, idx) => {
-        allData[models[idx].modelName] = data;
+        allData[models[idx].modelName] = data; 
       });
   
       // console.log('Fetched Data:', allData); // Log the fetched data for debugging
@@ -423,57 +722,55 @@ exports.getApplicationSteps = async (req, res) => {
 
 
 
-// here upadating the status based on applicationstepmodel and above code based on stepmodel (just for testing purpose (both code work ))
+// ******************************here upadating the status based on model (using single api route)******************************
 
+
+// Model Mapping (make sure this is aligned with your frontend)
+const modelMapping = {
+  application: applicationModel,
+  appointment: AppointmentModel,
+  documenttranslation: documentTranslationModel,
+  epassports: ePassportModel,
+  graphicDesign: GraphicDesignModel,
+  japanvisit: japanVisitApplicationModel, 
+  otherservices: OtherServiceModel,
+};
+
+// Route to update step status
 exports.updateStepStatus = async (req, res) => {
+  const { clientId, steps } = req.body;
+
   try {
-    const { clientId, stepId, status } = req.body;  // Expecting clientId, stepId, and status
+    // Loop through each step and update it
+    for (let step of steps) {
+      const { stepId, status, modelName } = step;
 
-    if (!clientId || !stepId || !status) {
-      return res.status(400).json({
-        success: false,
-        message: "Client ID, Step ID, and Status are required"
-      });
+      // Log the incoming modelName to ensure correct casing
+      console.log('Incoming Model Name:', modelName); // Log incoming model name
+
+      // Map modelName to lowercase and check
+      const Model = modelMapping[modelName.toLowerCase()];
+      if (!Model) {
+        return res.status(400).json({ success: false, message: `Invalid model name: ${modelName}` });
+      }
+
+      console.log('Model:', Model); // Log selected model from mapping
+      console.log('Step ID:', stepId);
+      console.log('Status:', status);
+
+      const result = await Model.updateOne(
+        { "steps._id": stepId },
+        { $set: { "steps.$.status": status } }
+      );
+
+      if (result.nModified === 0) {
+        console.log(`No document updated for stepId ${stepId}`);
+      }
     }
 
-    // Find the step using the clientId and stepId
-    const applicationStep = await applicationStepModel.findOne({ clientId });
-
-    if (!applicationStep) {
-      return res.status(404).json({
-        success: false,
-        message: "Application step not found"
-      });
-    }
-
-    // Update the step's status by finding the correct step
-    const stepToUpdate = applicationStep.stepNames.get(stepId);
-
-    if (!stepToUpdate) {
-      return res.status(404).json({
-        success: false,
-        message: "Step not found"
-      });
-    }
-
-    // Update the step status
-    stepToUpdate.status = status;
-
-    // Save the updated document
-    await applicationStep.save();
-
-    res.status(200).json({
-      success: true,
-      message: "Step status updated successfully",
-      data: applicationStep
-    });
-
+    return res.status(200).json({ success: true, message: "Statuses updated successfully!" });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      success: false,
-      message: "Internal server error",
-      error: error.message,
-    });
+    console.error('Error updating status:', error);
+    return res.status(500).json({ success: false, message: "Failed to update statuses", error: error.message });
   }
 };
