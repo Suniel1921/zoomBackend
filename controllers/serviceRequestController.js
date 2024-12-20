@@ -27,16 +27,16 @@
 //   }
 // };
 
-// // Get all service requests
-// // exports.getAllServiceRequests = async (req, res) => {
-// //   try {
-// //     const requests = await ServiceRequestModel.find().sort({ createdAt: -1 });
-// //     res.status(200).json({ data: requests });
-// //   } catch (error) {
-// //     console.error('Error fetching service requests:', error);
-// //     res.status(500).json({ error: 'Failed to fetch service requests.' });
-// //   }
-// // };
+// Get all service requests
+// exports.getAllServiceRequests = async (req, res) => {
+//   try {
+//     const requests = await ServiceRequestModel.find().sort({ createdAt: -1 });
+//     res.status(200).json({ data: requests });
+//   } catch (error) {
+//     console.error('Error fetching service requests:', error);
+//     res.status(500).json({ error: 'Failed to fetch service requests.' });
+//   }
+// };
 
 
 // exports.getAllServiceRequests = async (req, res) => {
@@ -182,23 +182,38 @@ exports.createServiceRequest = async (req, res) => {
 //   }
 // };
 
-// Get all service requests
+
+
+
+
+//Get all service requests
 exports.getAllServiceRequests = async (req, res) => {
   try {
-    const { _id: superAdminId } = req.user; // Ensure authenticated superAdminId is used
-
-    if (!superAdminId) {
-      return res.status(400).json({ error: 'User is not authenticated.' });
-    }
-
-    const requests = await ServiceRequestModel.find({ superAdminId }).sort({ createdAt: -1 });
-
+    const requests = await ServiceRequestModel.find().sort({ createdAt: -1 });
     res.status(200).json({ data: requests });
   } catch (error) {
     console.error('Error fetching service requests:', error);
     res.status(500).json({ error: 'Failed to fetch service requests.' });
   }
 };
+
+// Get all service requests
+// exports.getAllServiceRequests = async (req, res) => {
+//   try {
+//     const { _id: superAdminId } = req.user; // Ensure authenticated superAdminId is used
+
+//     if (!superAdminId) {
+//       return res.status(400).json({ error: 'User is not authenticated.' });
+//     }
+
+//     const requests = await ServiceRequestModel.find({ superAdminId }).sort({ createdAt: -1 });
+
+//     res.status(200).json({ data: requests });
+//   } catch (error) {
+//     console.error('Error fetching service requests:', error);
+//     res.status(500).json({ error: 'Failed to fetch service requests.' });
+//   }
+// };
 
 // Get a single service request by ID
 exports.getServiceRequestById = async (req, res) => {
