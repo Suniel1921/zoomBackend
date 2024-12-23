@@ -14,6 +14,11 @@ const graphicDesignSchema = new mongoose.Schema({
         ref: 'ClientModel'
     },
 
+    handledBy: {
+      type: String,
+       required: true
+       },
+
     steps: [
       {
         name: { type: String, required: true },

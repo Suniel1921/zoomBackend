@@ -8,7 +8,7 @@ exports.createGraphicDesign = async (req, res) => {
   try {
     const { _id: superAdminId } = req.user; 
     const {
-      clientId, businessName, mobileNo, landlineNo, address, designType,
+      clientId, handledBy, businessName, mobileNo, landlineNo, address, designType,
       amount, advancePaid, remarks, status, deadline
     } = req.body;
 
@@ -23,6 +23,7 @@ exports.createGraphicDesign = async (req, res) => {
 
     const designJob = new GraphicDesignModel({
       clientId,
+      handledBy,
       businessName,
       mobileNo,
       landlineNo,

@@ -6,7 +6,7 @@ exports.createJapanVisitApplication = async (req, res) => {
     const { _id: superAdminId } = req.user; 
     
     const {
-      clientId, steps, mobileNo, date, deadline, handledBy, package: packageType,
+      clientId, steps, mobileNo, date, deadline, handledBy, status, package: packageType,
       noOfApplicants, reasonForVisit, otherReason, amount, paidAmount, 
       discount, deliveryCharge, dueAmount, paymentStatus, paymentMethod, 
       modeOfDelivery, notes
@@ -23,7 +23,7 @@ exports.createJapanVisitApplication = async (req, res) => {
     // Create application instance
     const application = new japanVisitApplicationModel({
       superAdminId,  
-      clientId, mobileNo, date, deadline, handledBy, package: packageType,
+      clientId, mobileNo, date, deadline, handledBy, status, package: packageType,
       noOfApplicants, reasonForVisit, otherReason, amount, paidAmount, 
       discount, deliveryCharge, dueAmount, paymentStatus, paymentMethod, 
       modeOfDelivery, notes, steps: applicationSteps,
