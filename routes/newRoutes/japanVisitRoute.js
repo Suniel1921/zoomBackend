@@ -6,14 +6,12 @@ const { requireLogin } = require('../../middleware/newMiddleware/authMiddleware'
 
 router.post('/createJapanVisitApplication', requireLogin, controller.createJapanVisitApplication);
 router.get('/getAllJapanVisitApplication', requireLogin, controller.getAllJapanVisitApplications);
-// router.get('/getJapanVisitApplicationById/:id', controller.getJapanVisitApplicationById);
-// router.put('/updateJapanVisitApplication/:id', controller.updateJapanVisitApplication);
+router.get('/getJapanVisitApplicationById/:id', requireLogin, controller.getJapanVisitApplicationById);
+router.put('/updateJapanVisitApplication/:id', requireLogin, controller.updateJapanVisitApplication);
 router.delete('/deleteJapanVisitApplication/:id', requireLogin, controller.deleteJapanVisitApplication);
 
 
 
-router.get('/getJapanVisitApplicationById/:id', requireLogin, controller.getJapanVisitApplicationById);
-router.put('/updateJapanVisitApplication/:id', requireLogin, controller.updateJapanVisitApplication);
 
 
 

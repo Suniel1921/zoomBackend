@@ -12,10 +12,4 @@ router.delete('/deleteEpassport/:id',  requireLogin, controller.deleteEpassport)
 
 
 
-// **********epassport step update and create route********
-
-// router.post('/createEpassportStep', controller.createEPassportStep);
-// router.put('/updateEpassportStepStatus/:id', controller.updateEpassportStepStatus);
-
-
 module.exports = router;

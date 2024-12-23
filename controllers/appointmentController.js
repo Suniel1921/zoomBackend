@@ -746,7 +746,7 @@ exports.updateStepStatus = async (req, res) => {
       const { stepId, status, modelName } = step;
 
       // Log the incoming modelName to ensure correct casing
-      console.log('Incoming Model Name:', modelName); // Log incoming model name
+      // console.log('Incoming Model Name:', modelName); // Log incoming model name
 
       // Map modelName to lowercase and check
       const Model = modelMapping[modelName.toLowerCase()];
@@ -754,9 +754,9 @@ exports.updateStepStatus = async (req, res) => {
         return res.status(400).json({ success: false, message: `Invalid model name: ${modelName}` });
       }
 
-      console.log('Model:', Model); // Log selected model from mapping
-      console.log('Step ID:', stepId);
-      console.log('Status:', status);
+      // console.log('Model:', Model); // Log selected model from mapping
+      // console.log('Step ID:', stepId);
+      // console.log('Status:', status);
 
       const result = await Model.updateOne(
         { "steps._id": stepId },
