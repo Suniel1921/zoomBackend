@@ -10,6 +10,18 @@ router.post('/createEpassport', requireLogin, controller.createEpassport);
 router.put('/updateEpassport/:id',  requireLogin, controller.updateEpassport);
 router.delete('/deleteEpassport/:id',  requireLogin, controller.deleteEpassport);
 
+// **file uplaod route**
+router.post('/uploadMultipleFiles/:clientId', controller.uploadFileForApplication);
+
+
+router.post('/uploadModelFile/:clientId/:modelName', controller.uploadFileForSpecificModel);
+
+
+
+
+
+
+
 
 
 module.exports = router;

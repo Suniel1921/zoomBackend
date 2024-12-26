@@ -77,6 +77,52 @@ exports.getJapanVisitApplicationById = async (req, res) => {
 };
 
 //update Japan Visit Application Controller
+// exports.updateJapanVisitApplication = async (req, res) => {
+//   try {
+//     const { _id: superAdminId } = req.user;
+//     const { id } = req.params;
+//     const updateData = req.body;
+
+//     // Ensure the payment object exists in updateData
+//     if (!updateData.payment) {
+//       updateData.payment = {}; // Create an empty payment object if it's missing
+//     }
+
+//     // Calculate total payment
+//     const {
+//       visaApplicationFee = 0,
+//       translationFee = 0,
+//       paidAmount = 0,
+//       discount = 0,
+//     } = updateData.payment;
+
+//     const total = (visaApplicationFee + translationFee) - (paidAmount + discount);
+
+//     // Set total and payment status
+//     updateData.payment.total = total;
+//     updateData.paymentStatus = total <= 0 ? 'Paid' : 'Due';
+
+//     // Find and update the application
+//     const application = await japanVisitApplicationModel.findOneAndUpdate(
+//       { _id: id, superAdminId },
+//       updateData,
+//       { new: true }
+//     );
+
+//     if (!application) {
+//       return res.status(404).json({ message: 'Application not found or you are not authorized to update it' });
+//     }
+
+//     res.status(200).json({ success: true, message: 'Application updated successfully', data: application });
+//   } catch (error) {
+//     console.error('Error updating application:', error);
+//     res.status(500).json({ message: 'Something went wrong', error: error.message });
+//   }
+// };
+
+
+
+
 exports.updateJapanVisitApplication = async (req, res) => {
   try {
     const { _id: superAdminId } = req.user;
@@ -119,6 +165,7 @@ exports.updateJapanVisitApplication = async (req, res) => {
     res.status(500).json({ message: 'Something went wrong', error: error.message });
   }
 };
+
 
 
 

@@ -138,6 +138,13 @@ const applicationSchema = new mongoose.Schema({
         },
       },
     ],
+
+    clientFiles: {
+      type: [String], // Array of URLs
+      default: [], // Default to empty array
+    },
+
+
     familyMembers: [familyMemberSchema],
     submissionDate: {
       type: Date,

@@ -29,10 +29,10 @@ const app = express();
 
 // Middleware
 // app.use(cors({
-//   origin: process.env.CORS_ORIGIN || '*',
+//   origin: 'http://localhost:5173', // Allow the frontend URL
 //   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
 //   allowedHeaders: ['Content-Type', 'Authorization'],
-//   credentials: true
+//   credentials: true, // Allow credentials like cookies or authorization headers
 // }));
 
 

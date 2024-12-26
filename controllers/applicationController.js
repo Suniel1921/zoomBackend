@@ -99,12 +99,64 @@ exports.getApplicationById = async (req, res) => {
 
 
 
-// Update an application by ID controller
+// // Update an application by ID controller
+// exports.updateApplication = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const updateData = req.body;
+//     const { _id: superAdminId } = req.user; 
+
+//     // Find the application to ensure it belongs to the authenticated user
+//     const application = await applicationModel.findById(id);
+//     if (!application) {
+//       return res.status(404).json({ success: false, message: 'Application not found' });
+//     }
+
+//     // Check if the application belongs to the authenticated superAdminId
+//     if (application.superAdminId.toString() !== superAdminId.toString()) {
+//       return res.status(403).json({ success: false, message: 'Access denied: You are not authorized to update this application' });
+//     }
+
+//     // Log request body for debugging
+//     // console.log('Request body:', updateData);
+
+//     // Validate payment data
+//     if (!updateData.payment) {
+//       return res.status(400).json({ success: false, message: 'Payment data is required' });
+//     }
+
+//     // Set default values for missing payment fields
+//     const visaApplicationFee = updateData.payment.visaApplicationFee || 0;
+//     const translationFee = updateData.payment.translationFee || 0;
+//     const paidAmount = updateData.payment.paidAmount || 0;
+//     const discount = updateData.payment.discount || 0;
+
+//     // Calculate total payment
+//     const total = (visaApplicationFee + translationFee) - (paidAmount + discount);
+
+//     // Set total and payment status
+//     updateData.payment.total = total;
+//     updateData.paymentStatus = total <= 0 ? 'Paid' : 'Due';
+
+//     // Update the application
+//     const updatedApplication = await applicationModel.findByIdAndUpdate(id, updateData, { new: true });
+
+//     res.status(200).json({ success: true, message: 'Application updated successfully', data: updatedApplication });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ success: false, message: 'Something went wrong', error: error.message });
+//   }
+// };
+
+
+
+
+
 exports.updateApplication = async (req, res) => {
   try {
     const { id } = req.params;
     const updateData = req.body;
-    const { _id: superAdminId } = req.user; 
+    const { _id: superAdminId } = req.user;
 
     // Find the application to ensure it belongs to the authenticated user
     const application = await applicationModel.findById(id);
@@ -116,9 +168,6 @@ exports.updateApplication = async (req, res) => {
     if (application.superAdminId.toString() !== superAdminId.toString()) {
       return res.status(403).json({ success: false, message: 'Access denied: You are not authorized to update this application' });
     }
-
-    // Log request body for debugging
-    // console.log('Request body:', updateData);
 
     // Validate payment data
     if (!updateData.payment) {
@@ -133,12 +182,14 @@ exports.updateApplication = async (req, res) => {
 
     // Calculate total payment
     const total = (visaApplicationFee + translationFee) - (paidAmount + discount);
-
-    // Set total and payment status
     updateData.payment.total = total;
     updateData.paymentStatus = total <= 0 ? 'Paid' : 'Due';
 
-    // Update the application
+    // Update the application, including family members if provided
+    if (updateData.familyMembers) {
+      application.familyMembers = updateData.familyMembers; // Update family members
+    }
+
     const updatedApplication = await applicationModel.findByIdAndUpdate(id, updateData, { new: true });
 
     res.status(200).json({ success: true, message: 'Application updated successfully', data: updatedApplication });
@@ -147,6 +198,7 @@ exports.updateApplication = async (req, res) => {
     res.status(500).json({ success: false, message: 'Something went wrong', error: error.message });
   }
 };
+
 
 
 

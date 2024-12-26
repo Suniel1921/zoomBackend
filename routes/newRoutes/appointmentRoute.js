@@ -7,7 +7,7 @@ const { requireLogin } = require('../../middleware/newMiddleware/authMiddleware'
 
 router.post('/createAppointment', requireLogin, controller.createAppointment);
 router.get('/getAllAppointment', requireLogin, controller.getAllAppointments);
-router.get('/getAllAppointmentByID/:id', requireLogin, controller.getAppointmentById);
+router.get('/getAllAppointmentByID/:clientId', requireLogin, controller.getAppointmentsByClientId);
 router.put('/updateAppointment/:id', controller.updateAppointment);
 router.put('/updateappointmentStatus/:id/status', requireLogin, controller.updateAppointmentStatus);
 router.delete('/deleteAppointment/:id', requireLogin, controller.deleteAppointment);
