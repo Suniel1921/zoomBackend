@@ -200,6 +200,11 @@ const epassportSchema = new mongoose.Schema(
       type: Number,
       min: 0,
       required: true,
+    }, 
+    dueAmount: {
+      type: Number,
+      min: 0,
+      required: true,
     },
 
     discount: {
