@@ -239,5 +239,73 @@ exports.deleteApplication = async (req, res) => {
 
 
 
+// ************upload multiple file***********
+
+// const upload = require('../config/multerConfig');
+// const cloudinary = require('cloudinary').v2;
+
+// exports.allApplicationFileUpload = [
+//   upload.array('clientFiles', 5), // Handling multiple file uploads (max 5 files)
+//   async (req, res) => {
+//     try {
+//       const { clientId } = req.params; 
+//       // console.log(clientId)
+//       console.log('Params:', req.params);
+
+
+//       if(!clientId){
+//         return res.status(404).json({success : false, message: 'client id not found'})
+//       }
+
+//       // Check if files were uploaded
+//       if (!req.files || req.files.length === 0) {
+//         return res.status(400).json({ success: false, message: 'No files uploaded' });
+//       }
+
+//       // Find the application (ePassport) for the specific clientId
+//       const application = await applicationModel.findOne({ clientId });
+
+
+//       if (!application) {
+//         return res.status(404).json({ success: false, message: 'Application not found for this user' });
+//       }
+
+//       // Process each file and upload to Cloudinary
+//       const clientFilesUrls = [];
+//       for (const file of req.files) {
+//         const result = await cloudinary.uploader.upload(file.path);
+//         clientFilesUrls.push(result.secure_url); // Collect all the uploaded file URLs
+//       }
+
+//       // Save the uploaded file URLs in the application model
+//       application.clientFiles = application.clientFiles || []; // Initialize the files array if not already
+//       application.clientFiles.push(...clientFilesUrls); // Add the new file URLs
+
+//       // Save the updated application data
+//       await application.save();
+
+//       return res.status(200).json({
+//         success: true,
+//         message: 'Files uploaded successfully',
+//         fileUrls: clientFilesUrls, // Return the list of URLs to the client
+//       });
+//     } catch (error) {
+//       console.error('Error uploading files:', error);
+//       return res.status(500).json({ success: false, message: 'Server error while uploading files' });
+//     }
+//   }
+// ];
+
+
+
+
+
+
+
+
+
+
+
+
 
 

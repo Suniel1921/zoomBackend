@@ -14,6 +14,12 @@ const graphicDesignSchema = new mongoose.Schema({
         ref: 'ClientModel'
     },
 
+    clientFiles: {
+      type: [String], // Array of URLs
+      default: [], // Default to empty array
+    },
+    
+
     handledBy: {
       type: String,
        required: true

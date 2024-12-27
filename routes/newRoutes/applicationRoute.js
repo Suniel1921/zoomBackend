@@ -10,6 +10,12 @@ router.put('/updateVisaApplication/:id', requireLogin, controller.updateApplicat
 router.delete('/deleteVisaApplication/:id', requireLogin, controller.deleteApplication);
 
 
+// **file uplaod route**
+// router.post('/visa-application-file-Upload/:clientId', controller.allApplicationFileUpload);
+
+  
+
+
 
 
 

@@ -508,18 +508,10 @@ exports.deleteAppointment = async (req, res) => {
       };
   
       // Send the combined data as a JSON response
-      res.status(200).json({
-        success: true,
-        message: 'All model data fetched successfully',
-        allData,
-      });
+      res.status(200).json({success: true, message: 'All model data fetched successfully',allData,});
     } catch (error) {
       console.error('Error fetching all data:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Failed to fetch data from models',
-        error,
-      });
+      res.status(500).json({success: false, message: 'Failed to fetch data from models',error,});
     }
   };
   

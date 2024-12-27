@@ -206,11 +206,6 @@ exports.uploadFileForApplication = [
 
 
 // ********************file uploading based on model and client id****************************
-
-
-// const upload = require('../config/multerConfig');
-// const cloudinary = require('cloudinary').v2;
-
 const applicationModel = require("../models/newModel/applicationModel");
 const documentTranslationModel = require("../models/newModel/documentTranslationModel");
 // const ePassportModel = require("../models/newModel/ePassportModel");
@@ -218,7 +213,11 @@ const GraphicDesignModel = require("../models/newModel/graphicDesingModel");
 const OtherServiceModel = require("../models/newModel/otherServicesModel");
 const japanVisitApplicationModel = require("../models/newModel/japanVisitModel");
 
-// Map model names to actual model objects
+
+
+// *****************file upload testring**************
+
+
 const models = {
   applicationModel,
   japanVisitApplicationModel,
@@ -228,63 +227,63 @@ const models = {
   GraphicDesignModel,
 };
 
-exports.uploadFileForSpecificModel = [
-  upload.array('clientFiles', 5), // Upload up to 5 files
+exports.allApplicationFileUpload = [
+  upload.array('clientFiles', 5), // Handling multiple file uploads (max 5 files)
   async (req, res) => {
     try {
-      const { clientId, modelName } = req.params; // Capture modelName and clientId from the URL
-      console.log('Model Name:', modelName);
-      console.log('Client ID:', clientId);
+      const { clientId, modelName } = req.params; // Get clientId and modelName from params
 
       if (!clientId || !modelName) {
-        return res.status(404).json({ success: false, message: 'Client ID or model name not found' });
+        return res.status(400).json({ success: false, message: 'clientId and modelName are required' });
       }
 
-      // Dynamically select the correct model based on modelName
-      const Model = models[modelName]; // Using dynamic model loading
-
+      const Model = models[modelName]; // Dynamically select the model
       if (!Model) {
-        return res.status(404).json({ success: false, message: 'Model not found' });
+        return res.status(404).json({ success: false, message: 'Invalid model name' });
       }
-
-      // Find the application (or other model data) for the specific clientId
-      const application = await Model.findOne({ clientId });
-
-      if (!application) {
-        return res.status(404).json({ success: false, message: 'Application not found for this user' });
-      }
-
-      // Log the model-specific id and clientId
-      console.log(`${modelName} ID:`, application._id); // Log the model's document ID
-      console.log(`Client ID:`, clientId); // Log the clientId
 
       // Check if files were uploaded
       if (!req.files || req.files.length === 0) {
         return res.status(400).json({ success: false, message: 'No files uploaded' });
       }
 
-      // Process each file and upload to Cloudinary
+      // Find the specific application/model data for the client
+      const application = await Model.findOne({ clientId });
+
+      if (!application) {
+        return res.status(404).json({ success: false, message: `No ${modelName} found for this client` });
+      }
+
+      // Upload files to Cloudinary and collect URLs
       const clientFilesUrls = [];
       for (const file of req.files) {
         const result = await cloudinary.uploader.upload(file.path);
-        clientFilesUrls.push(result.secure_url); // Collect all the uploaded file URLs
+        clientFilesUrls.push(result.secure_url);
       }
 
-      // Save the uploaded file URLs in the specific model
-      application.clientFiles = application.clientFiles || []; // Initialize the files array if not already
-      application.clientFiles.push(...clientFilesUrls); // Add the new file URLs
+      // Update the `clientFiles` array for the application
+      application.clientFiles = application.clientFiles || [];
+      application.clientFiles.push(...clientFilesUrls);
 
-      // Save the updated application data
+      // Save the updated data
       await application.save();
 
       return res.status(200).json({
         success: true,
         message: 'Files uploaded successfully',
-        fileUrls: clientFilesUrls, // Return the list of URLs to the client
+        fileUrls: clientFilesUrls,
       });
     } catch (error) {
       console.error('Error uploading files:', error);
       return res.status(500).json({ success: false, message: 'Server error while uploading files' });
     }
-  }
+  },
 ];
+
+
+
+
+
+
+
+

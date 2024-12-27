@@ -12,6 +12,11 @@ const documentTranslationSchema = new mongoose.Schema({
     required: true
 },
 
+clientFiles: {
+  type: [String], // Array of URLs
+  default: [], // Default to empty array
+},
+
 steps: [
   {
     name: { type: String, required: true },

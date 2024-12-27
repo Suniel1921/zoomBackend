@@ -15,6 +15,10 @@ const japanVistiApplicationSchema = new mongoose.Schema({
     required: true,
     ref: 'ClientModel'
   },
+   clientFiles: {
+      type: [String], // Array of URLs
+      default: [], // Default to empty array
+    },
   steps: [
     {
       name: { type: String, required: true },
