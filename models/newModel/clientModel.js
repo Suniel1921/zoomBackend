@@ -22,7 +22,7 @@ const clientSchema = new mongoose.Schema({
     socialMedia: { type: Object },
     timeline: { type: Array },
     dateJoined: { type: Date },
-    profilePhoto: { type: String, required: true },
+    profilePhoto: { type: String, required: false },
     role: { 
       type: String, 
       enum: ['user', 'admin'], 
