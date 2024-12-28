@@ -15,6 +15,8 @@ router.post('/uploadMultipleFiles/:clientId', controller.uploadFileForApplicatio
 
 // *****file upload route for all mode based on model name (this api route called in FileTab component)****
 router.post('/fileUpload/:clientId/:modelName', controller.allApplicationFileUpload);
+// router.delete('/deleteClientFile/:clientId/:modelName/:fileUrl', controller.deleteClientFile);
+router.delete('/deleteFile', controller.deleteFile);
 
 
 

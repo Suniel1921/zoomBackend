@@ -287,3 +287,35 @@ exports.allApplicationFileUpload = [
 
 
 
+exports.deleteFile = async (req, res) => {
+  try {
+    const { clientId, modelName, fileUrl } = req.body;
+
+    if (!clientId || !modelName || !fileUrl) {
+      return res.status(400).json({ success: false, message: 'Missing required parameters.' });
+    }
+
+    const Model = models[modelName];
+    if (!Model) {
+      return res.status(404).json({ success: false, message: 'Invalid model name.' });
+    }
+
+    const application = await Model.findOne({ clientId });
+    if (!application) {
+      return res.status(404).json({ success: false, message: 'Application not found.' });
+    }
+
+    // Extract public ID from Cloudinary URL
+    const publicId = fileUrl.split('/').pop().split('.')[0];
+    await cloudinary.uploader.destroy(publicId);
+
+    // Remove URL from database
+    application.clientFiles = application.clientFiles.filter((url) => url !== fileUrl);
+    await application.save();
+
+    res.status(200).json({ success: true, message: 'File deleted successfully.' });
+  } catch (error) {
+    console.error('Error deleting file:', error);
+    res.status(500).json({ success: false, message: 'Server error.' });
+  }
+};
