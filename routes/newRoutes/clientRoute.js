@@ -12,8 +12,14 @@ router.get('/getClient/:id', requireLogin, controller.getClientById);
 router.post('/createClient', requireLogin, controller.addClient);
 //udpate client
 router.put('/updateClient/:id', requireLogin, controller.updateClient);
+//update client profile
+router.put('/updateClientProfile/:id', requireLogin, controller.updateClientProfile);
 //delete client
 router.delete('/deleteClient/:id', requireLogin, controller.deleteClient);
+
+
+router.post('/uploadCsvFile', requireLogin, controller.UploadCSVFile);
+// router.post('/uploadCsvFile', upload.single('csvFile'), clientController.UploadCSVFile);
 
 
 module.exports = router;

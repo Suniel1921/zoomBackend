@@ -97,7 +97,6 @@ exports.login = async (req, res) => {
       { expiresIn: "7d" }
     );
 
-    // Adjust fullName based on model type
     const fullName = isClientModel ? user.name : (isSuperAdminModel ? user.email : user.fullName);
 
     return res.status(200).json({
@@ -109,7 +108,8 @@ exports.login = async (req, res) => {
               fullName, 
               email: user.email,
               role: user.role || 'client', 
-              phone: user.phone
+              phone: user.phone,
+              profilePhoto: user.profilePhoto
               },
       token,
     });
@@ -168,28 +168,100 @@ exports.CreateSuperAdmin = async (req, res) => {
 
 
 
+// Get Super Admin by ID
+exports.GetSuperAdminById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Fetch super admin from database by ID
+    const superAdmin = await SuperAdminModel.findById(id);
+
+    if (!superAdmin) {
+      return res.status(404).json({ success: false, message: 'Super Admin not found' });
+    }
+
+    // Respond with the super admin data
+    return res.status(200).json({
+      success: true,
+      message: 'Super Admin fetched successfully',
+      superAdmin,
+    });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
+
+
+// Update Super Admin
+exports.UpdateSuperAdmin = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, email } = req.body;
+
+    // Fetch super admin from the database
+    const superAdmin = await SuperAdminModel.findById(id);
+
+    if (!superAdmin) {
+      return res.status(404).json({ success: false, message: 'Super Admin not found' });
+    }
+
+    // Update fields
+    if (name) superAdmin.name = name;
+    if (email) superAdmin.email = email;
+
+    // Save the updated super admin
+    const updatedSuperAdmin = await superAdmin.save();
+
+    // Respond with updated super admin data
+    return res.status(200).json({
+      success: true,
+      message: 'Super Admin updated successfully',
+      superAdmin: updatedSuperAdmin,
+    });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
 
 
 
 
 
 
+//udpate super admin password
 
+exports.UpdateSuperAdminPassword = async (req, res) => {
+  const { id } = req.params;
+  const { currentPassword, newPassword } = req.body;
 
+  try {
+    const user = await SuperAdminModel.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
 
+    // Validate current password
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Current password is incorrect' });
+    }
 
+    // Hash and update new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    await user.save();
 
-
-
-
-
-
-
-
-
-
-
-
+    res.json({ success: true, message: 'Password updated successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
 
 
 
@@ -207,3 +279,7 @@ exports.protectedRoute = async (req, res) => {
 exports.admin = (req, res) => {
   res.status(200).json({ ok: true });
 }
+
+
+
+

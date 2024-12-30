@@ -89,7 +89,11 @@ const OtherServiceSchema = new mongoose.Schema({
     required: true,
   },
   remarks: { type: String },
-  dueAmount: { type: Number, min: 0, default: function() { return this.amount - (this.paidAmount + this.discount); } },
+
+  dueAmount: {
+    type: Number,
+    //  min: 0,
+     default: function() { return this.amount - (this.paidAmount + this.discount); } },
   paymentStatus: {
     type: String,
     enum: ['Due', 'Paid'],

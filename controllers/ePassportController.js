@@ -214,10 +214,6 @@ const OtherServiceModel = require("../models/newModel/otherServicesModel");
 const japanVisitApplicationModel = require("../models/newModel/japanVisitModel");
 
 
-
-// *****************file upload testring**************
-
-
 const models = {
   applicationModel,
   japanVisitApplicationModel,
@@ -228,10 +224,10 @@ const models = {
 };
 
 exports.allApplicationFileUpload = [
-  upload.array('clientFiles', 5), // Handling multiple file uploads (max 5 files)
+  upload.array('clientFiles', 5), 
   async (req, res) => {
     try {
-      const { clientId, modelName } = req.params; // Get clientId and modelName from params
+      const { clientId, modelName } = req.params; 
 
       if (!clientId || !modelName) {
         return res.status(400).json({ success: false, message: 'clientId and modelName are required' });

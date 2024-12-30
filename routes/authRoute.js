@@ -26,16 +26,24 @@ const router = express.Router();
 const controller = require("../controllers/authController");
 const { requireLogin, isAdmin } = require("../middleware/newMiddleware/authMiddleware");
 
-//********************super admin route********************
-router.post('/createSuperAdmin', controller.CreateSuperAdmin);
-
-
-
 
 router.post('/register', controller.register);
 router.post('/login', controller.login);
 router.get('/protectedRoute', requireLogin, controller.protectedRoute);
 router.get('/admin', requireLogin, isAdmin, controller.admin);
+
+
+
+
+//********************super admin route********************
+router.post('/createSuperAdmin', controller.CreateSuperAdmin);
+router.get('/getSuperAdmin/:id', controller.GetSuperAdminById);
+router.put('/updateSuperAdmin/:id',controller.UpdateSuperAdmin);
+router.put('/updateSuperAdminPassword/:id', controller.UpdateSuperAdminPassword);
+
+
+
+
 
 
 
