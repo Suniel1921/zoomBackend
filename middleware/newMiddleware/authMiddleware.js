@@ -54,13 +54,13 @@ exports.requireLogin = async (req, res, next) => {
     req.user = decoded;
 
     // Optionally log the decoded token for debugging
-    console.log('Decoded Token:', decoded);
+    // console.log('Decoded Token:', decoded);
 
     // Proceed to the next middleware or route handler
     next();
   } catch (error) {
     // Log the error to help debugging
-    console.error('Token Verification Error:', error.message);
+    // console.error('Token Verification Error:', error.message);
     return res.status(401).json({ success: false, message: 'Unauthorized: Invalid Token' });
   }
 };
@@ -78,7 +78,6 @@ exports.isAdmin = async (req, res, next) => {
     }
 
     const userId = req.user._id;
-
     // Check user role in both models
     const authUser = await authModel.findById(userId).select('role');
     const superAdminUser = !authUser ? await SuperAdminModel.findById(userId).select('role') : null;
@@ -93,7 +92,7 @@ exports.isAdmin = async (req, res, next) => {
 
     next(); // User is either `admin` or `superadmin`, proceed to the next step
   } catch (error) {
-    console.error('Error in isAdmin middleware:', error.message);
+    // console.error('Error in isAdmin middleware:', error.message);
     res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 };

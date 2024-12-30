@@ -21,6 +21,7 @@ const graphicDesignRoute = require ('./routes/newRoutes/graphicDesingRoute');
 const appointmentRoute = require ('./routes/newRoutes/appointmentRoute');
 const adminRoute = require ('./routes/newRoutes/adminRoute');
 const serviceRequestRoute = require ('./routes/newRoutes/serviceRequestRoute');
+const noteRoute = require ('./routes/newRoutes/noteRoute');
 
 
 dotenv.config();
@@ -60,6 +61,7 @@ app.use('/api/v1/graphicDesign', graphicDesignRoute);
 app.use('/api/v1/appointment', appointmentRoute);
 app.use('/api/v1/admin', adminRoute);
 app.use('/api/v1/serviceRequest', serviceRequestRoute);
+app.use('/api/v1/note', noteRoute);
 
 
 
