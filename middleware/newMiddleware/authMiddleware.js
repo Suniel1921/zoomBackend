@@ -2,6 +2,7 @@
 const JWT = require('jsonwebtoken');
 const authModel = require('../../models/newModel/authModel');
 const SuperAdminModel = require('../../models/newModel/superAdminModel');
+const AdminModel = require ('../../models/newModel/adminModel');
 
 
 
@@ -68,7 +69,9 @@ exports.requireLogin = async (req, res, next) => {
 
 
 
-//isAdmin check middleware
+//isAdmin and super admin check middleware
+
+
 
 exports.isAdmin = async (req, res, next) => {
   try {
@@ -78,12 +81,31 @@ exports.isAdmin = async (req, res, next) => {
     }
 
     const userId = req.user._id;
-    // Check user role in both models
-    const authUser = await authModel.findById(userId).select('role');
-    const superAdminUser = !authUser ? await SuperAdminModel.findById(userId).select('role') : null;
 
-    // Determine role from whichever model returned a user
-    const role = authUser?.role || superAdminUser?.role;
+    // Check role in each model sequentially
+    let role = null;
+
+    // Check Auth Model
+    const authUser = await authModel.findById(userId).select('role');
+    if (authUser) {
+      role = authUser.role;
+    }
+
+    // Check Admin Model if not found in Auth Model
+    if (!role) {
+      const adminUser = await AdminModel.findById(userId).select('role');
+      if (adminUser) {
+        role = adminUser.role;
+      }
+    }
+
+    // Check SuperAdmin Model if not found in Admin Model
+    if (!role) {
+      const superAdminUser = await SuperAdminModel.findById(userId).select('role');
+      if (superAdminUser) {
+        role = superAdminUser.role;
+      }
+    }
 
     // Check if the role is `admin` or `superadmin`
     if (!role || !['admin', 'superadmin'].includes(role)) {
@@ -92,11 +114,7 @@ exports.isAdmin = async (req, res, next) => {
 
     next(); // User is either `admin` or `superadmin`, proceed to the next step
   } catch (error) {
-    // console.error('Error in isAdmin middleware:', error.message);
+    console.error('Error in isAdmin middleware:', error.message);
     res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 };
-
-
-
-

@@ -14,9 +14,15 @@ const superAdminSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ['admin', 'superAdmin'],
-        default: 'admin', //admin role just for testing purpose when set superadmin defualt value then not able to access /dashboard page redirect to client login page
-      },
+        default: 'superadmin', 
+    },
+
+    superAdminPhoto: {
+        type: String, 
+        default: '', 
+    },
+
+
 },{timestamps: true})
 
 const SuperAdminModel = mongoose.model('SuperAdminModel', superAdminSchema);

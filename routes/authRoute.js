@@ -25,6 +25,7 @@ const express = require ("express");
 const router = express.Router();
 const controller = require("../controllers/authController");
 const { requireLogin, isAdmin } = require("../middleware/newMiddleware/authMiddleware");
+const upload = require('../config/multerConfig');
 
 
 router.post('/register', controller.register);
@@ -33,14 +34,19 @@ router.get('/protectedRoute', requireLogin, controller.protectedRoute);
 router.get('/admin', requireLogin, isAdmin, controller.admin);
 
 
+// *************************forgot password and reset link*************************
+router.post('/forgotPassword', controller.forgotPassword);
+router.post('/resetPassword', controller.resetPassword);
+
+
 
 
 //********************super admin route********************
 router.post('/createSuperAdmin', controller.CreateSuperAdmin);
+// router.post('/uploadSuperAdminPhoto/:id', requireLogin, controller.uploadSuperAdminPhoto);
 router.get('/getSuperAdmin/:id', controller.GetSuperAdminById);
-router.put('/updateSuperAdmin/:id',controller.UpdateSuperAdmin);
+router.put('/updateSuperAdmin/:id', upload.single('superAdminPhoto'), controller.updateSuperAdmin);
 router.put('/updateSuperAdminPassword/:id', controller.UpdateSuperAdminPassword);
-
 
 
 

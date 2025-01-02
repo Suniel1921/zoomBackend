@@ -1,3 +1,6 @@
+// Increase the default max listeners
+require('events').EventEmitter.defaultMaxListeners = 15;
+
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
@@ -21,7 +24,9 @@ const graphicDesignRoute = require ('./routes/newRoutes/graphicDesingRoute');
 const appointmentRoute = require ('./routes/newRoutes/appointmentRoute');
 const adminRoute = require ('./routes/newRoutes/adminRoute');
 const serviceRequestRoute = require ('./routes/newRoutes/serviceRequestRoute');
+const globalSearchRoute = require ('./routes/newRoutes/globalSearchRoute');
 const noteRoute = require ('./routes/newRoutes/noteRoute');
+const backupDataRoute = require ('./routes/newRoutes/backupDataRoute');
 
 
 dotenv.config();
@@ -61,7 +66,9 @@ app.use('/api/v1/graphicDesign', graphicDesignRoute);
 app.use('/api/v1/appointment', appointmentRoute);
 app.use('/api/v1/admin', adminRoute);
 app.use('/api/v1/serviceRequest', serviceRequestRoute);
+app.use('/api/v1/globalSearch', globalSearchRoute);
 app.use('/api/v1/note', noteRoute);
+app.use('/api/v1/backup', backupDataRoute);
 
 
 
@@ -85,5 +92,5 @@ app.listen(PORT,()=> {
 
 
 
-// i have this model and i want to fectch data seperately like if this crm used 10000+ client let take a two client for now ram and shyam make sure when ram login then dont show the shyam data and shyam login then dont show the ram data on her dashbaord 
+
 

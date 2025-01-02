@@ -25,9 +25,6 @@ router.put('/updateStatus', controller.updateStepStatus);
 
 
 
-// ********global search*******
-
-router.get('/globalSearch', requireLogin, controller.globalSearch);
 
 
 

@@ -10,11 +10,13 @@ const cloudinary = require ('cloudinary').v2;
 
 //create client controller
 
+// const MAX_SIZE = 2 * 1024 * 1024; // 2MB
+
 // exports.addClient = [
 //   upload.array('profilePhoto', 1),
 //   async (req, res) => {
-//     // const { superAdminId } = req.user; // Extract superAdminId from authenticated user
-//     const { _id: superAdminId } = req.user; // Getting user ID from the authenticated user
+//     const { _id: superAdminId } = req.user;
+
 //     if (!superAdminId) {
 //       return res.status(403).json({ success: false, message: 'Unauthorized: SuperAdmin access required.' });
 //     }
@@ -46,7 +48,13 @@ const cloudinary = require ('cloudinary').v2;
 //       }
 
 //       const profilePhotoUrls = [];
+
+//       // Check file size for profile photo
 //       for (const file of req.files) {
+//         if (file.size > MAX_SIZE) {
+//           return res.status(400).json({ success: false, message: 'Profile photo must be less than 2MB.' });
+//         }
+        
 //         const result = await cloudinary.uploader.upload(file.path);
 //         profilePhotoUrls.push(result.secure_url);
 //       }
@@ -76,12 +84,24 @@ const cloudinary = require ('cloudinary').v2;
 //     } catch (error) {
 //       return res.status(500).json({ success: false, message: 'Internal Server Error', error });
 //     }
-//   },
+//   }
 // ];
 
 
 
+
+
+const nodemailer = require('nodemailer');
 const MAX_SIZE = 2 * 1024 * 1024; // 2MB
+
+// Email configuration
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.MYEMAIL,
+    pass: process.env.PASSWORD, // App password
+  },
+});
 
 exports.addClient = [
   upload.array('profilePhoto', 1),
@@ -125,7 +145,7 @@ exports.addClient = [
         if (file.size > MAX_SIZE) {
           return res.status(400).json({ success: false, message: 'Profile photo must be less than 2MB.' });
         }
-        
+
         const result = await cloudinary.uploader.upload(file.path);
         profilePhotoUrls.push(result.secure_url);
       }
@@ -151,12 +171,35 @@ exports.addClient = [
         profilePhoto: profilePhotoUrls[0],
       });
 
-      return res.status(201).json({ success: true, message: 'Client created successfully', createClient });
+      // Send email with client's details
+      const mailOptions = {
+        from: process.env.MYEMAIL,
+        to: email,
+        subject: 'Welcome to Zoom Creatives!',
+        html: `
+          <h2>Welcome, ${name}!</h2>
+          <p>Your account has been successfully created.</p>
+          <p><strong>Email:</strong> ${email}</p>
+          <p><strong>Password:</strong> ${password}</p>
+          <p>Please keep your login credentials secure.</p>
+        `,
+      };
+
+      await transporter.sendMail(mailOptions);
+
+      return res.status(201).json({
+        success: true,
+        message: 'Client created successfully and email sent',
+        createClient,
+      });
     } catch (error) {
       return res.status(500).json({ success: false, message: 'Internal Server Error', error });
     }
-  }
+  },
 ];
+
+
+
 
 
 
