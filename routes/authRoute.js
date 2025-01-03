@@ -43,6 +43,7 @@ router.post('/resetPassword', controller.resetPassword);
 
 //********************super admin route********************
 router.post('/createSuperAdmin', controller.CreateSuperAdmin);
+router.get('/getAllSuperAdmins', controller.getAllSuperAdmins);
 // router.post('/uploadSuperAdminPhoto/:id', requireLogin, controller.uploadSuperAdminPhoto);
 router.get('/getSuperAdmin/:id', controller.GetSuperAdminById);
 router.put('/updateSuperAdmin/:id', upload.single('superAdminPhoto'), controller.updateSuperAdmin);

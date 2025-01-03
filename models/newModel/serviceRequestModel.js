@@ -6,6 +6,10 @@ const serviceRequestSchema = new mongoose.Schema({
     ref: 'SuperAdminModel',
     required: false,
   },
+  clientId: {
+    type: String,
+    required: true,
+  },
   clientName: {
     type: String,
     required: true,
@@ -22,11 +26,14 @@ const serviceRequestSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+ 
+
   status: {
     type: String,
-    enum: ['pending', 'approved', 'rejected'],
+    enum: ['pending', 'in_progress', 'completed', 'cancelled'], 
     default: 'pending',
   },
+
 }, { timestamps: true });
 
 const ServiceRequestModel = mongoose.model('ServiceRequestModel', serviceRequestSchema);

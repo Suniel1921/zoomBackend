@@ -307,54 +307,74 @@ exports.CreateSuperAdmin = async (req, res) => {
 
 
 
+exports.getAllSuperAdmins = async (req, res) => {
+  try {
+    // Fetch all super admins from the database
+    const superAdmins = await SuperAdminModel.find({}, 'name email createdAt superAdminPhoto');
+
+    // Respond with the list of super admins
+    return res.status(200).json({
+      success: true,
+      message: 'Super admins fetched successfully!',
+      superAdmins,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
+
+
+
 // ************upload multiple file***********
 
-const upload = require('../config/multerConfig');
-const cloudinary = require('cloudinary').v2;
+// const upload = require('../config/multerConfig');
+// const cloudinary = require('cloudinary').v2;
 
-exports.uploadSuperAdminPhoto = [
-  upload.array('clientFiles', 1), // Handling multiple file uploads (max 5 files)
-  async (req, res) => {
-    try {
-      const { id } = req.params; // Use 'id' as parameter for the super admin
+// exports.uploadSuperAdminPhoto = [
+//   upload.array('clientFiles', 1), // Handling multiple file uploads (max 5 files)
+//   async (req, res) => {
+//     try {
+//       const { id } = req.params; // Use 'id' as parameter for the super admin
 
-      if (!id) {
-        return res.status(404).json({ success: false, message: 'Super Admin ID not found' });
-      }
+//       if (!id) {
+//         return res.status(404).json({ success: false, message: 'Super Admin ID not found' });
+//       }
 
-      // Check if files were uploaded
-      if (!req.files || req.files.length === 0) {
-        return res.status(400).json({ success: false, message: 'No files uploaded' });
-      }
+//       // Check if files were uploaded
+//       if (!req.files || req.files.length === 0) {
+//         return res.status(400).json({ success: false, message: 'No files uploaded' });
+//       }
 
-      // Find the super admin by ID
-      const superAdmin = await SuperAdminModel.findById(id);
-      if (!superAdmin) {
-        return res.status(404).json({ success: false, message: 'Super Admin not found' });
-      }
+//       // Find the super admin by ID
+//       const superAdmin = await SuperAdminModel.findById(id);
+//       if (!superAdmin) {
+//         return res.status(404).json({ success: false, message: 'Super Admin not found' });
+//       }
 
-      // Process each file and upload to Cloudinary
-      const fileUrls = [];
-      for (const file of req.files) {
-        const result = await cloudinary.uploader.upload(file.path);
-        fileUrls.push(result.secure_url); // Collect all the uploaded file URLs
-      }
+//       // Process each file and upload to Cloudinary
+//       const fileUrls = [];
+//       for (const file of req.files) {
+//         const result = await cloudinary.uploader.upload(file.path);
+//         fileUrls.push(result.secure_url); // Collect all the uploaded file URLs
+//       }
 
-      // Save the uploaded file URLs to the super admin model
-      superAdmin.superAdminPhoto = superAdmin.superAdminPhoto || []; // Initialize the array if not already
-      superAdmin.superAdminPhoto.push(...fileUrls); // Add the new file URLs
+//       // Save the uploaded file URLs to the super admin model
+//       superAdmin.superAdminPhoto = superAdmin.superAdminPhoto || []; // Initialize the array if not already
+//       superAdmin.superAdminPhoto.push(...fileUrls); // Add the new file URLs
 
-      // Save the updated super admin data
-      await superAdmin.save();
+//       // Save the updated super admin data
+//       await superAdmin.save();
 
-      return res.status(200).json({success: true, message: 'Files uploaded successfully', fileUrls, 
-      });
-    } catch (error) {
-      console.error('Error uploading files:', error);
-      return res.status(500).json({ success: false, message: 'Server error while uploading files' });
-    }
-  }
-];
+//       return res.status(200).json({success: true, message: 'Files uploaded successfully', fileUrls, 
+//       });
+//     } catch (error) {
+//       console.error('Error uploading files:', error);
+//       return res.status(500).json({ success: false, message: 'Server error while uploading files' });
+//     }
+//   }
+// ];
 
 
 
@@ -649,6 +669,15 @@ exports.protectedRoute = async (req, res) => {
 exports.admin = (req, res) => {
   res.status(200).json({ ok: true });
 }
+
+
+
+
+
+
+
+
+
 
 
 

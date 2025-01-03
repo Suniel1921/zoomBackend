@@ -6,16 +6,17 @@ exports.createServiceRequest = async (req, res) => {
   try {
     const { clientId, clientName, phoneNumber, serviceId, serviceName, message } = req.body;
 
-    // Include superAdminId only if available (e.g., for authenticated admin users)
+    // Include superAdminId if available
     const superAdminId = req.user ? req.user._id : null;
 
     if (!clientName || !phoneNumber || !serviceName || !message) {
       return res.status(400).json({ error: 'All fields are required.' });
     }
 
+    // Create a new service request and include clientId
     const newRequest = new ServiceRequestModel({
-      superAdminId, // Optional field
-      clientId,
+      superAdminId,
+      clientId,  // clientId is included here
       clientName,
       phoneNumber,
       serviceId,
@@ -70,32 +71,42 @@ exports.getServiceRequestById = async (req, res) => {
 
 
 // Update a service request status Controller
+const mongoose = require('mongoose');
+
+
 exports.updateServiceRequestStatus = async (req, res) => {
   try {
-    const { _id: superAdminId } = req.user; 
-    const { id } = req.params;
+    const { id } = req.params; // Expecting the `id` from the route parameter
     const { status } = req.body;
 
-    if (!['pending', 'approved', 'rejected'].includes(status)) {
+    // Validate if the id is a valid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: 'Invalid service request ID.' });
+    }
+
+    // Validate status value
+    if (!['pending', 'in_progress', 'completed', 'cancelled'].includes(status)) {
       return res.status(400).json({ error: 'Invalid status value.' });
     }
 
+    // Update the service request status
     const updatedRequest = await ServiceRequestModel.findOneAndUpdate(
-      { _id: id, superAdminId }, // Verify superAdminId ownership
+      { _id: id }, // MongoDB will use the provided id for matching the document
       { status },
       { new: true }
     );
 
     if (!updatedRequest) {
-      return res.status(404).json({ error: 'Service request not found or you do not have access to it.' });
+      return res.status(404).json({ success: false, message: 'Service request not found.' });
     }
 
-    res.status(200).json({ message: 'Service request updated successfully.', data: updatedRequest });
+    res.status(200).json({ success: true, message: 'Service request updated successfully.', data: updatedRequest });
   } catch (error) {
     console.error('Error updating service request:', error);
-    res.status(500).json({ error: 'Failed to update service request.' });
+    res.status(500).json({ success: false, message: 'Internal server error', error });
   }
 };
+
 
 // Delete a service request
 exports.deleteServiceRequest = async (req, res) => {
