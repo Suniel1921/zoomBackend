@@ -57,8 +57,10 @@ const clientSchema = new mongoose.Schema({
       type: [String]
     },
     socialMedia: {
-      type: Object
+      type: []
     },
+
+
     timeline: {
       type: Array
     },

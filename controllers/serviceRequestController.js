@@ -52,13 +52,13 @@ exports.getAllServiceRequests = async (req, res) => {
 // Get a single service request by ID
 exports.getServiceRequestById = async (req, res) => {
   try {
-    const { _id: superAdminId } = req.user; 
     const { id } = req.params;
 
-    const request = await ServiceRequestModel.findOne({ _id: id, superAdminId }); // Verify superAdminId ownership
+    const request = await ServiceRequestModel.find({ id, }); 
+    console.log(request)
 
     if (!request) {
-      return res.status(404).json({ error: 'Service request not found or you do not have access to it.' });
+      return res.status(404).json({ error: 'Service request not found .' });
     }
 
     res.status(200).json({ data: request });
