@@ -52,10 +52,12 @@ exports.addClient = [
       } = req.body;
 
       const hashedPassword = await bcrypt.hash(password, 10);
+ 
 
-      if (!req.files || req.files.length === 0) {
-        return res.status(400).json({ success: false, message: 'No file uploaded' });
-      }
+      //client photo is optinal
+      // if (!req.files || req.files.length === 0) {
+      //   return res.status(400).json({ success: false, message: 'No file uploaded' });
+      // }
 
       const profilePhotoUrls = [];
 
