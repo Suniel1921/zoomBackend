@@ -27,6 +27,8 @@ const serviceRequestRoute = require ('./routes/newRoutes/serviceRequestRoute');
 const globalSearchRoute = require ('./routes/newRoutes/globalSearchRoute');
 const noteRoute = require ('./routes/newRoutes/noteRoute');
 const backupDataRoute = require ('./routes/newRoutes/backupDataRoute');
+const auditLogRoute = require ('./routes/newRoutes/auditLogRoute');
+const logMiddleware = require('./middleware/newMiddleware/auditLogMiddleware');
 
 
 dotenv.config();
@@ -45,6 +47,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(logMiddleware);
 
 // Routes
 // app.use('/api/auth', authRoutes);
@@ -69,6 +72,7 @@ app.use('/api/v1/serviceRequest', serviceRequestRoute);
 app.use('/api/v1/globalSearch', globalSearchRoute);
 app.use('/api/v1/note', noteRoute);
 app.use('/api/v1/backup', backupDataRoute);
+app.use('/api/v1/logs', auditLogRoute);
 
 
 
