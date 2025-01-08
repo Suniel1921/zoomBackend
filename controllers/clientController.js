@@ -102,6 +102,8 @@ exports.addClient = [
           <p>Your account has been successfully created.</p>
           <p><strong>Email:</strong> ${email}</p>
           <p><strong>Password:</strong> ${password}</p>
+          <p>You can track you application status using the below link </p>
+          <p><a href="https://crm.zoomcreatives.jp/client-login" target="_blank">Click here to login</a></p>
           <p>Please keep your login credentials secure.</p>
         `,
       };
