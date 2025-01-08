@@ -176,7 +176,6 @@ exports.forgotPassword = async (req, res) => {
       html: `
         <div style="font-family: Arial, sans-serif; color: #333;">
           <div style="text-align: center; margin-bottom: 20px;">
-            <img src="https://zoomcreatives.jp/wp-content/uploads/2024/03/Asset-1@300x-2048x664.png" alt="ZoomCreatives Logo" style="max-width: 150px;">
           </div>
           <p>Hello User,</p>
           <p>We received a request to reset the password for your ZoomCreatives account. If you did not request a password reset, please ignore this email.</p>
