@@ -1,6 +1,5 @@
-const mongoose = require('mongoose');
-const defaultSteps = require('./defaultSteps');
-
+const mongoose = require("mongoose");
+const defaultSteps = require("./defaultSteps");
 
 // Define Family Member Schema
 const familyMemberSchema = new mongoose.Schema({
@@ -9,17 +8,23 @@ const familyMemberSchema = new mongoose.Schema({
 });
 
 // Define Application Schema
-const applicationSchema = new mongoose.Schema({
-
+const applicationSchema = new mongoose.Schema(
+  {
     superAdminId: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
-      ref: 'SuperAdminModel',
+      ref: "SuperAdminModel",
     },
-    
+
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "AdminModel", // Can be a super admin or admin
+      required: true,
+    },
+
     clientId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'ClientModel',
+      ref: "ClientModel",
       required: true,
     },
     steps: [
@@ -27,8 +32,8 @@ const applicationSchema = new mongoose.Schema({
         name: { type: String, required: true },
         status: {
           type: String,
-          enum: ['pending', 'completed', 'in-progress', 'processing'],
-          default: 'pending',
+          enum: ["pending", "completed", "in-progress", "processing"],
+          default: "pending",
         },
         updatedAt: { type: Date, default: Date.now },
       },
@@ -39,7 +44,7 @@ const applicationSchema = new mongoose.Schema({
     },
     type: {
       type: String,
-      enum: ['Visitor Visa', 'Student Visa', 'Tourist Visa'],
+      enum: ["Visitor Visa", "Student Visa", "Tourist Visa"],
       required: true,
     },
     country: {
@@ -48,7 +53,7 @@ const applicationSchema = new mongoose.Schema({
     },
     documentStatus: {
       type: String,
-      enum: ['Not Yet', 'Few Received', 'Fully Received'],
+      enum: ["Not Yet", "Few Received", "Fully Received"],
       required: true,
     },
     documentsToTranslate: {
@@ -57,18 +62,18 @@ const applicationSchema = new mongoose.Schema({
     },
     translationStatus: {
       type: String,
-      enum: ['Under Process', 'Completed'],
+      enum: ["Under Process", "Completed"],
       required: true,
     },
     visaStatus: {
       type: String,
       enum: [
-        'Under Review',
-        'Under Process',
-        'Waiting for Payment',
-        'Completed',
-        'Approved',
-        'Rejected',
+        "Under Review",
+        "Under Process",
+        "Waiting for Payment",
+        "Completed",
+        "Approved",
+        "Rejected",
       ],
       required: true,
     },
@@ -108,8 +113,8 @@ const applicationSchema = new mongoose.Schema({
     },
     paymentStatus: {
       type: String,
-      enum: ['Due', 'Paid'],
-      default: 'Due',
+      enum: ["Due", "Paid"],
+      default: "Due",
     },
     notes: {
       type: String,
@@ -130,8 +135,8 @@ const applicationSchema = new mongoose.Schema({
         },
         priority: {
           type: String,
-          enum: ['Low', 'Medium', 'High'],
-          default: 'Medium',
+          enum: ["Low", "Medium", "High"],
+          default: "Medium",
         },
         dueDate: {
           type: Date,
@@ -144,7 +149,6 @@ const applicationSchema = new mongoose.Schema({
       default: [], // Default to empty array
     },
 
-
     familyMembers: [familyMemberSchema],
     submissionDate: {
       type: Date,
@@ -155,7 +159,7 @@ const applicationSchema = new mongoose.Schema({
 );
 
 // Middleware to auto-populate steps if not provided
-applicationSchema.pre('save', function (next) {
+applicationSchema.pre("save", function (next) {
   if (!this.steps || this.steps.length === 0) {
     this.steps = defaultSteps.applicationStep; // Populate default steps
   }
@@ -163,6 +167,6 @@ applicationSchema.pre('save', function (next) {
 });
 
 // Create Application Model
-const applicationModel = mongoose.model('ApplicationModel', applicationSchema);
+const applicationModel = mongoose.model("ApplicationModel", applicationSchema);
 
 module.exports = applicationModel;

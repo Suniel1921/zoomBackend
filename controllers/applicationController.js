@@ -5,42 +5,53 @@ const applicationModel = require('../models/newModel/applicationModel');
 // Create a new application
 exports.createApplication = async (req, res) => {
   try {
-    const { _id: superAdminId } = req.user; // Getting user ID from the authenticated user
+    const { superAdminId, _id: createdBy, role } = req.user; // Extract user ID and role from authenticated user
+    const {clientId, clientName, familyMembers, payment, steps, ...rest } = req.body;
 
-    const { clientId, clientName, familyMembers, payment, steps, ...rest } = req.body;
+    // Role-based check: Only 'superadmin' or 'admin' are allowed
+    if (role !== 'superadmin' && (!superAdminId || role !== 'admin')) {
+      console.log('Unauthorized access attempt:', req.user);  // Log for debugging
+      return res.status(403).json({ success: false, message: 'Unauthorized: Access denied.' });
+    }
 
-    if (!superAdminId) {
-      return res.status(400).json({ success: false, message: 'User is not authenticated' });
+
+    // If the user is a superadmin, use their userId as superAdminId
+    const clientSuperAdminId = role === 'superadmin' ? createdBy : superAdminId;
+
+    if (!clientSuperAdminId) {
+      return res.status(400).json({ success: false, message: 'SuperAdminId is required' });
     }
 
     // Calculate total payment
     const total = (payment.visaApplicationFee + payment.translationFee) - (payment.paidAmount + payment.discount);
 
-    // Use custom steps if provided, otherwise leave it undefined
-    const applicationSteps = steps && Array.isArray(steps) ? steps : [];
-
     // Prepare application data
     const applicationData = {
-      ...rest,
-      superAdminId, 
+      superAdminId: clientSuperAdminId,  // Use the determined superAdminId
+      createdBy,  // The user creating the application
       clientName,
       clientId,
-      steps: applicationSteps, 
       familyMembers,
       payment: {
         ...payment,
         total,
       },
       paymentStatus: total <= 0 ? 'Paid' : 'Due',
+      steps: Array.isArray(steps) ? steps : [],  // Ensure steps are provided if necessary
+      ...rest,
     };
 
-    // Save the new application
+    // Save the new application to the database
     const newApplication = new applicationModel(applicationData);
     await newApplication.save();
 
-    res.status(201).json({ success: true, message: 'Application created successfully', data: newApplication });
+    res.status(201).json({
+      success: true,
+      message: 'Application created successfully',
+      data: newApplication,
+    });
   } catch (error) {
-    console.error(error);
+    console.error('Error creating application:', error);
     res.status(500).json({ success: false, message: 'Something went wrong', error: error.message });
   }
 };
@@ -48,29 +59,47 @@ exports.createApplication = async (req, res) => {
 
 
 
-// Get all applications for the authenticated super admin
+
+// Get all applications for the authenticated user (superadmin or admin)
 exports.getApplications = async (req, res) => {
+  const { _id, role, superAdminId } = req.user; // Extract user ID and role from authenticated user
+
+  // Role-based check: Only 'superadmin' or 'admin' are allowed
+  if (!role || (role !== 'superadmin' && role !== 'admin')) {
+    return res.status(403).json({ success: false, message: 'Unauthorized: Access denied.' });
+  }
+
   try {
-    const { _id: superAdminId } = req.user; 
+    let query = {};
 
-    // console.log('Authenticated superAdminId:', superAdminId); 
-
-    // Query to find applications where superAdminId matches
-    const applications = await applicationModel
-      .find({ superAdminId }) 
-      .populate('clientId') 
-      // .populate('step');
-
-    // Check if any applications are found
-    if (!applications || applications.length === 0) {
-      return res.status(404).json({ success: false, message: 'No applications found for this super admin' });
+  
+    if (role === 'superadmin') {
+      // SuperAdmin: Fetch all clients under their `superAdminId`
+      query = { superAdminId: _id };
+    } else if (role === 'admin') {
+      // Admin: Fetch clients created by the admin or under their `superAdminId`
+      query = { $or: [{ createdBy: _id }, { superAdminId }] };
     }
 
-    // Respond with the applications
-    res.status(200).json({ success: true, data: applications });
+    // Query to get applications based on role and superAdminId
+    const applications = await applicationModel
+      .find(query)  // Apply the query to find applications
+      .populate('createdBy', 'name email')  // Populate client details associated with the application
+      .exec();
+
+    // If no applications are found, return a 404 error
+    if (applications.length === 0) {
+      return res.status(404).json({ success: false, message: 'No applications found' });
+    }
+
+    // Return the list of applications found
+    return res.status(200).json({
+      success: true,
+      data: applications,
+    });
   } catch (error) {
     console.error('Error fetching applications:', error.message);
-    res.status(500).json({ success: false, message: 'Something went wrong', error: error.message });
+    return res.status(500).json({ success: false, message: 'Internal Server Error', error });
   }
 };
 
@@ -99,12 +128,13 @@ exports.getApplicationById = async (req, res) => {
 
 
 
-// // Update an application by ID controller
+
+
 // exports.updateApplication = async (req, res) => {
 //   try {
 //     const { id } = req.params;
 //     const updateData = req.body;
-//     const { _id: superAdminId } = req.user; 
+//     const { _id: superAdminId } = req.user;
 
 //     // Find the application to ensure it belongs to the authenticated user
 //     const application = await applicationModel.findById(id);
@@ -116,9 +146,6 @@ exports.getApplicationById = async (req, res) => {
 //     if (application.superAdminId.toString() !== superAdminId.toString()) {
 //       return res.status(403).json({ success: false, message: 'Access denied: You are not authorized to update this application' });
 //     }
-
-//     // Log request body for debugging
-//     // console.log('Request body:', updateData);
 
 //     // Validate payment data
 //     if (!updateData.payment) {
@@ -133,12 +160,14 @@ exports.getApplicationById = async (req, res) => {
 
 //     // Calculate total payment
 //     const total = (visaApplicationFee + translationFee) - (paidAmount + discount);
-
-//     // Set total and payment status
 //     updateData.payment.total = total;
 //     updateData.paymentStatus = total <= 0 ? 'Paid' : 'Due';
 
-//     // Update the application
+//     // Update the application, including family members if provided
+//     if (updateData.familyMembers) {
+//       application.familyMembers = updateData.familyMembers; // Update family members
+//     }
+
 //     const updatedApplication = await applicationModel.findByIdAndUpdate(id, updateData, { new: true });
 
 //     res.status(200).json({ success: true, message: 'Application updated successfully', data: updatedApplication });
@@ -152,59 +181,96 @@ exports.getApplicationById = async (req, res) => {
 
 
 
+
+// Delete an application by ID
+
+
 exports.updateApplication = async (req, res) => {
   try {
     const { id } = req.params;
     const updateData = req.body;
-    const { _id: superAdminId } = req.user;
+    const { _id: adminId, role, superAdminId } = req.user;
 
-    // Find the application to ensure it belongs to the authenticated user
+    console.log("User Info:", { adminId, role, superAdminId });
+
+    // Find the application to ensure it exists
     const application = await applicationModel.findById(id);
+
+    // Verify if application exists
     if (!application) {
-      return res.status(404).json({ success: false, message: 'Application not found' });
+      return res.status(404).json({ success: false, message: "Application not found" });
     }
 
-    // Check if the application belongs to the authenticated superAdminId
-    if (application.superAdminId.toString() !== superAdminId.toString()) {
-      return res.status(403).json({ success: false, message: 'Access denied: You are not authorized to update this application' });
+    console.log("Application Found:", application);
+
+    // Role-based access control
+    if (role === "superadmin") {
+      if (!application.superAdminId || application.superAdminId.toString() !== adminId.toString()) {
+        console.log("SuperAdmin ID mismatch:", {
+          applicationSuperAdminId: application.superAdminId,
+          requestSuperAdminId: adminId, // Use adminId as the superadmin ID
+        });
+        return res.status(403).json({
+          success: false,
+          message: "Access denied: You are not authorized to update this application",
+        });
+      }
+    } else if (role === "admin") {
+      // Check if admin has access
+      const belongsToSuperAdmin = application.superAdminId.toString() === superAdminId?.toString();
+      const createdByAdmin = application.createdBy ? application.createdBy.toString() === adminId.toString() : false;
+
+      if (!belongsToSuperAdmin && !createdByAdmin) {
+        console.log("Admin access denied:", {
+          applicationSuperAdminId: application.superAdminId,
+          applicationCreatedBy: application.createdBy,
+          requestSuperAdminId: superAdminId,
+        });
+        return res.status(403).json({
+          success: false,
+          message: "Access denied: You are not authorized to update this application",
+        });
+      }
     }
 
-    // Validate payment data
-    if (!updateData.payment) {
-      return res.status(400).json({ success: false, message: 'Payment data is required' });
+    // Validate payment data if provided
+    if (updateData.payment) {
+      const { visaApplicationFee, translationFee, paidAmount, discount } = updateData.payment;
+
+      // Set default values for missing payment fields
+      const visaAppFee = visaApplicationFee || 0;
+      const translation = translationFee || 0;
+      const paid = paidAmount || 0;
+      const disc = discount || 0;
+
+      // Calculate total payment
+      const total = visaAppFee + translation - (paid + disc);
+      updateData.payment.total = total;
+      updateData.paymentStatus = total <= 0 ? "Paid" : "Due";
     }
 
-    // Set default values for missing payment fields
-    const visaApplicationFee = updateData.payment.visaApplicationFee || 0;
-    const translationFee = updateData.payment.translationFee || 0;
-    const paidAmount = updateData.payment.paidAmount || 0;
-    const discount = updateData.payment.discount || 0;
-
-    // Calculate total payment
-    const total = (visaApplicationFee + translationFee) - (paidAmount + discount);
-    updateData.payment.total = total;
-    updateData.paymentStatus = total <= 0 ? 'Paid' : 'Due';
-
-    // Update the application, including family members if provided
+    // Update family members if provided
     if (updateData.familyMembers) {
-      application.familyMembers = updateData.familyMembers; // Update family members
+      application.familyMembers = updateData.familyMembers;
     }
 
+    // Update the application
     const updatedApplication = await applicationModel.findByIdAndUpdate(id, updateData, { new: true });
 
-    res.status(200).json({ success: true, message: 'Application updated successfully', data: updatedApplication });
+    res.status(200).json({
+      success: true,
+      message: "Application updated successfully",
+      data: updatedApplication,
+    });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: 'Something went wrong', error: error.message });
+    console.error("Error:", error.message); // Log the actual error message
+    res.status(500).json({ success: false, message: "Something went wrong", error: error.message });
   }
 };
 
 
 
 
-
-
-// Delete an application by ID
 exports.deleteApplication = async (req, res) => {
   try {
     const { id } = req.params;

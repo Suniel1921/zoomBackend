@@ -133,8 +133,6 @@ exports.register = async (req, res) => {
 
 
 
-
-
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -143,27 +141,26 @@ exports.login = async (req, res) => {
       return res.status(400).json({ success: false, message: "Email and password are required" });
     }
 
-    let user = await authModel.findOne({ email });
-    let isClientModel = false;
-    let isSuperAdminModel = false;
-    let isAdminModel = false;
+    // List of models to check, in order of precedence
+    const models = [
+      { model: SuperAdminModel, role: "superadmin", include: {} },
+      { model: AdminModel, role: "admin", include: { superAdminId: 1 } },
+      { model: ClientModel, role: "client", include: { superAdminId: 1 } },
+      { model: authModel, role: "user", include: {} }, // Add authModel last for fallback
+    ];
 
-    // Check if the user exists in ClientModel
-    if (!user) {
-      user = await ClientModel.findOne({ email });
-      isClientModel = true;
-    }
+    let user = null;
+    let role = null;
+    let additionalData = {};
 
-    // Check if the user exists in SuperAdminModel
-    if (!user) {
-      user = await SuperAdminModel.findOne({ email });
-      isSuperAdminModel = true;
-    }
-
-    // Check if the user exists in AdminModel
-    if (!user) {
-      user = await AdminModel.findOne({ email });
-      isAdminModel = true;
+    // Check each model for the user
+    for (const { model, role: modelRole, include } of models) {
+      user = await model.findOne({ email }).select({ ...include, password: 1, name: 1, email: 1, phone: 1, profilePhoto: 1 });
+      if (user) {
+        role = modelRole;
+        additionalData = include;
+        break;
+      }
     }
 
     if (!user) {
@@ -176,42 +173,48 @@ exports.login = async (req, res) => {
       return res.status(401).json({ success: false, message: "Invalid email or password" });
     }
 
-    // Determine the role
-    let role = 'client'; // Default role
-    if (isSuperAdminModel) role = 'superadmin';
-    else if (user.role) role = user.role;
-    else if (isAdminModel) role = 'admin'; // Assuming admin has a default role of 'admin'
+    // Prepare JWT payload
+    const payload = {
+      _id: user._id,
+      email: user.email,
+      role,
+      ...(user.superAdminId && { superAdminId: user.superAdminId }), // Include superAdminId if available
+    };
+
+    // Log the payload for debugging
+    console.log('JWT Payload:', payload);
 
     // Generate JWT token
-    const token = JWT.sign(
-      { _id: user._id, email: user.email, role },
-      process.env.SECRET_KEY,
-      { expiresIn: "7d" }
-    );
+    const token = JWT.sign(payload, process.env.SECRET_KEY, { expiresIn: "7d" });
 
-    const fullName = isClientModel ? user.name : (isSuperAdminModel ? user.email : user.fullName);
-
+    // Return user data with the token
     return res.status(200).json({
       success: true,
       message: "Login successful",
       user: {
         id: user._id,
-        fullName,
+        fullName: user.name || user.email, // Use name if available, otherwise email
         email: user.email,
         role,
-        phone: user.phone,
-        profilePhoto: user.profilePhoto,
+        phone: user.phone || null,
+        profilePhoto: user.profilePhoto || null,
+        ...additionalData, // Include additional fields like `superAdminId`
       },
       token,
     });
   } catch (error) {
-    console.error('Login Error:', error.message);
+    console.error("Login Error:", error);
     return res.status(500).json({
       success: false,
       message: "An error occurred during login. Please try again later.",
     });
   }
 };
+
+
+
+
+
 
 
 

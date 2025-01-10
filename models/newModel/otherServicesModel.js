@@ -8,6 +8,11 @@ const OtherServiceSchema = new mongoose.Schema({
     required: true,
     ref: 'SuperAdminModel',
   },
+  createdBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "AdminModel", // Can be a super admin or admin
+        required: true,
+      },
   
     clientId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -19,7 +24,6 @@ const OtherServiceSchema = new mongoose.Schema({
       default: [], // Default to empty array
     },
     
-
 
     steps: [
       {

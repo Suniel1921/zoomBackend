@@ -6,26 +6,50 @@ const AdminModel = require ('../../models/newModel/adminModel');
 
 
 
+
+
+
 // exports.requireLogin = async (req, res, next) => {
 //   const token = req.header('Authorization');
 
-//   // console.log('Authorization Header:', token);  // Log the token here
-
+//   // Check if token is provided
 //   if (!token) {
 //     return res.status(401).json({ success: false, message: 'Unauthorized: Login First' });
 //   }
 
 //   try {
-//     // Remove "Bearer " and trim whitespace
-//     const decoded = JWT.verify(token.replace("Bearer ", "").trim(), process.env.SECRET_KEY);
-//     req.user = decoded; 
-//     // console.log('Decoded Token:', decoded);  // Log the decoded token
-//     next();  
+//     // Remove "Bearer " prefix and trim any extra spaces from the token
+//     const tokenWithoutBearer = token.replace("Bearer ", "").trim();
+
+//     // Check if the token is valid
+//     if (!tokenWithoutBearer) {
+//       return res.status(401).json({ success: false, message: 'Unauthorized: Invalid Token' });
+//     }
+
+//     // Verify the token using the secret key
+//     const decoded = JWT.verify(tokenWithoutBearer, process.env.SECRET_KEY);
+
+//     // Attach the decoded token's user data to the request object
+//     req.user = decoded;
+//     console.log('Decoded Token:', decoded); 
+
+//     // Optionally log the decoded token for debugging
+//     // console.log('Decoded Token:', decoded);
+
+//     // Proceed to the next middleware or route handler
+//     next();
 //   } catch (error) {
-//     console.error('Token Verification Error:', error.message);
+//     // Log the error to help debugging
+//     // console.error('Token Verification Error:', error.message);
 //     return res.status(401).json({ success: false, message: 'Unauthorized: Invalid Token' });
 //   }
 // };
+
+
+
+
+// Add some logging to confirm that `req.user` is populated correctly
+
 
 
 
@@ -34,37 +58,29 @@ const AdminModel = require ('../../models/newModel/adminModel');
 exports.requireLogin = async (req, res, next) => {
   const token = req.header('Authorization');
 
-  // Check if token is provided
   if (!token) {
     return res.status(401).json({ success: false, message: 'Unauthorized: Login First' });
   }
 
   try {
-    // Remove "Bearer " prefix and trim any extra spaces from the token
     const tokenWithoutBearer = token.replace("Bearer ", "").trim();
 
-    // Check if the token is valid
     if (!tokenWithoutBearer) {
       return res.status(401).json({ success: false, message: 'Unauthorized: Invalid Token' });
     }
 
-    // Verify the token using the secret key
     const decoded = JWT.verify(tokenWithoutBearer, process.env.SECRET_KEY);
+    req.user = decoded; // Attach the decoded user info to the request object
+    
+    // Log the decoded token
+    console.log('Decoded Token:', decoded);
 
-    // Attach the decoded token's user data to the request object
-    req.user = decoded;
-
-    // Optionally log the decoded token for debugging
-    // console.log('Decoded Token:', decoded);
-
-    // Proceed to the next middleware or route handler
     next();
   } catch (error) {
-    // Log the error to help debugging
-    // console.error('Token Verification Error:', error.message);
     return res.status(401).json({ success: false, message: 'Unauthorized: Invalid Token' });
   }
 };
+
 
 
 

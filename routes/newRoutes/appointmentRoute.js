@@ -18,8 +18,8 @@ router.delete('/deleteAppointment/:id', requireLogin, controller.deleteAppointme
 router.get('/fetchAllModelData', requireLogin, controller.fetchAllModelData);
 router.get('/getAllModelDataByID/:id', controller.getAllModelDataById);
 
-router.post('/createSteps', controller.createApplicationStep);
-router.get('/getApplicationStep', controller.getApplicationSteps);
+// router.post('/createSteps', controller.createApplicationStep);
+// router.get('/getApplicationStep', controller.getApplicationSteps);
 // router.put('/updateStatus/:id', controller.updateStepStatus);
 router.put('/updateStatus', controller.updateStepStatus);
 

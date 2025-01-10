@@ -455,46 +455,93 @@ exports.deleteAppointment = async (req, res) => {
 
   // *****************************************************GET ALL MODEL DATA AT ONCE FOR ACCOUNT AND TASK (FRONTEND)**************************************************
 
+ 
   // exports.fetchAllModelData = async (req, res) => {
   //   try {
-  //     // Fetch data from all models in parallel
-  //     const [application, japanVisit, documentTranslation, epassports, otherServices, graphicDesigns, appointment, ] = await Promise.all([
-  //       applicationModel.find().populate('clientId').populate('step').lean(),
-  //       japanVisitAppplicaitonModel.find().populate('clientId').lean(),
-  //       documentTranslationModel.find().populate('clientId').lean(),
-  //       ePassportModel.find().populate('clientId').lean(),
-  //       OtherServiceModel.find().populate('clientId').lean(),
-  //       GraphicDesignModel.find().populate('clientId').lean(),
-  //       AppointmentModel.find().populate('clientId').lean(),
-
+  //     const { _id: superAdminId } = req.user;  // Extract superAdminId from the authenticated user
+  
+  //     // Fetch data from all models in parallel, filtering by superAdminId
+  //     const [application, japanVisit, documentTranslation, epassports, otherServices, graphicDesigns, appointment] = await Promise.all([
+  //       applicationModel.find({ superAdminId }).populate('clientId').lean(),
+  //       japanVisitApplicationModel.find({ superAdminId }).populate('clientId').lean(),
+  //       documentTranslationModel.find({ superAdminId }).populate('clientId').lean(),
+  //       ePassportModel.find({ superAdminId }).populate('clientId').lean(),
+  //       OtherServiceModel.find({ superAdminId }).populate('clientId').lean(),
+  //       GraphicDesignModel.find({ superAdminId }).populate('clientId').lean(),
+  //       AppointmentModel.find({ superAdminId }).populate('clientId').lean(),
   //     ]);
   
   //     // Combine the data into a single response object
-  //     const allData = {application, japanVisit, documentTranslation, epassports, otherServices, graphicDesigns, appointment,};
-
+  //     const allData = {
+  //       application,
+  //       japanVisit,
+  //       documentTranslation,
+  //       epassports,
+  //       otherServices,
+  //       graphicDesigns,
+  //       appointment,
+  //     };
+  
   //     // Send the combined data as a JSON response
-  //     res.status(200).json({success: true, message: 'all model data fetched successfully', allData});
+  //     res.status(200).json({success: true, message: 'All model data fetched successfully',allData,});
   //   } catch (error) {
   //     console.error('Error fetching all data:', error);
-  //     res.status(500).json({success: false, meessage: 'Failed to fetch data from models', error });
+  //     res.status(500).json({success: false, message: 'Failed to fetch data from models',error,});
   //   }
   // };
 
 
+
+
   exports.fetchAllModelData = async (req, res) => {
-    try {
-      const { _id: superAdminId } = req.user;  // Extract superAdminId from the authenticated user
+    const { _id, role, superAdminId } = req.user; // Extract user ID, role, and superAdminId from the authenticated user
   
-      // Fetch data from all models in parallel, filtering by superAdminId
+    // Role-based check: Only 'superadmin' or 'admin' are allowed
+    if (!role || (role !== "superadmin" && role !== "admin")) {
+      return res.status(403).json({ success: false, message: "Unauthorized: Access denied." });
+    }
+  
+    try {
+      let query = {};
+  
+      if (role === "superadmin") {
+        // SuperAdmin: Fetch all clients under their `superAdminId`
+        query = { superAdminId: _id };
+      } else if (role === "admin") {
+        // Admin: Fetch clients created by the admin or under their `superAdminId`
+        query = { $or: [{ createdBy: _id }, { superAdminId: _id }] };
+      }
+  
+      // Fetch data from all models in parallel, with 'createdBy' populated in each model
       const [application, japanVisit, documentTranslation, epassports, otherServices, graphicDesigns, appointment] = await Promise.all([
-        applicationModel.find({ superAdminId }).populate('clientId').lean(),
-        japanVisitApplicationModel.find({ superAdminId }).populate('clientId').lean(),
-        documentTranslationModel.find({ superAdminId }).populate('clientId').lean(),
-        ePassportModel.find({ superAdminId }).populate('clientId').lean(),
-        OtherServiceModel.find({ superAdminId }).populate('clientId').lean(),
-        GraphicDesignModel.find({ superAdminId }).populate('clientId').lean(),
-        AppointmentModel.find({ superAdminId }).populate('clientId').lean(),
+        applicationModel.find(query).populate('clientId').populate({
+          path: "createdBy", 
+          select: "name email", 
+        }).lean(),
+        japanVisitApplicationModel.find(query).populate('clientId').populate({
+          path: "createdBy", 
+          select: "name email", 
+        }).lean(),
+        documentTranslationModel.find(query).populate('clientId').populate({
+          path: "createdBy", 
+          select: "name email", 
+        }).lean(),
+        ePassportModel.find(query).populate('clientId').populate({
+          path: "createdBy", 
+          select: "name email", 
+        }).lean(),
+        OtherServiceModel.find(query).populate('clientId').populate({
+          path: "createdBy", 
+          select: "name email", 
+        }).lean(),
+        GraphicDesignModel.find(query).populate('clientId').populate({
+          path: "createdBy", 
+          select: "name email", 
+        }).lean(),
+        AppointmentModel.find(query).populate('clientId').lean(),
       ]);
+
+      //ALERT ⚠️: in  AppointmentModel not populating createdBy becoz there is not creadtedBy in AppointmentModel model
   
       // Combine the data into a single response object
       const allData = {
@@ -508,10 +555,19 @@ exports.deleteAppointment = async (req, res) => {
       };
   
       // Send the combined data as a JSON response
-      res.status(200).json({success: true, message: 'All model data fetched successfully',allData,});
+      res.status(200).json({
+        success: true,
+        message: 'All model data fetched successfully',
+        allData,
+      });
+  
     } catch (error) {
       console.error('Error fetching all data:', error);
-      res.status(500).json({success: false, message: 'Failed to fetch data from models',error,});
+      res.status(500).json({
+        success: false,
+        message: 'Failed to fetch data from models',
+        error,
+      });
     }
   };
   
@@ -519,9 +575,19 @@ exports.deleteAppointment = async (req, res) => {
 
 
 
+  
+  
 
-  //get all model data by id
+
+  
+
+
+
+  // get all model data by id
   // Define the models array
+  
+  
+  
   const models = [
     applicationModel,
     japanVisitApplicationModel,
@@ -584,97 +650,66 @@ exports.deleteAppointment = async (req, res) => {
 
 
 // Controller to handle creating a new application step with an object structure for stepNames
-exports.createApplicationStep = async (req, res) => {
-  try {
-    const { clientId, stepNames } = req.body;
+// exports.createApplicationStep = async (req, res) => {
+//   try {
+//     const { clientId, stepNames } = req.body;
 
-    // Validate required fields
-    if (!clientId) {
-      return res.status(400).json({ success: false, message: 'clientId is required' });
-    }
+//     // Validate required fields
+//     if (!clientId) {
+//       return res.status(400).json({ success: false, message: 'clientId is required' });
+//     }
 
-    if (typeof stepNames !== 'object' || Object.keys(stepNames).length === 0) {
-      return res.status(400).json({ success: false, message: 'stepNames must be a non-empty object' });
-    }
+//     if (typeof stepNames !== 'object' || Object.keys(stepNames).length === 0) {
+//       return res.status(400).json({ success: false, message: 'stepNames must be a non-empty object' });
+//     }
 
-    // Create a new ApplicationStep document
-    const newStep = new applicationStepModel({
-      clientId,  // Make sure clientId is saved at the top level
-      stepNames,
-    });
+//     // Create a new ApplicationStep document
+//     const newStep = new applicationStepModel({
+//       clientId,  // Make sure clientId is saved at the top level
+//       stepNames,
+//     });
 
-    // Save the step to the database
-    const savedStep = await newStep.save();
+//     // Save the step to the database
+//     const savedStep = await newStep.save();
 
-    // Return the saved step as a response
-    res.status(201).json(savedStep);
-  } catch (error) {
-    console.error('Error while creating application step:', error.message); // Log error message
-    console.error('Full error:', error); // Log full error stack
-    res.status(500).json({
-      success: false,
-      message: 'Internal Server Error',
-      error: error.message || error, // Send specific error message
-    });
-  }
-};
+//     // Return the saved step as a response
+//     res.status(201).json(savedStep);
+//   } catch (error) {
+//     console.error('Error while creating application step:', error.message); // Log error message
+//     console.error('Full error:', error); // Log full error stack
+//     res.status(500).json({
+//       success: false,
+//       message: 'Internal Server Error',
+//       error: error.message || error, // Send specific error message
+//     });
+//   }
+// };
 
 
 
 // Controller to handle fetching the application steps based on clientId
-exports.getApplicationSteps = async (req, res) => {
-  try {
-    // const { clientId } = req.params;  // Get clientId from the request parameters
-
-    // // Validate clientId
-    // if (!clientId) {
-    //   return res.status(400).json({ success: false, message: 'clientId is required' });
-    // }
-
-    // Fetch the ApplicationStep document based on the clientId
-    const applicationStep = await applicationStepModel.findOne();
-
-    // Check if the application step exists
-    if (!applicationStep) {
-      return res.status(404).json({ success: false, message: 'Application steps not found for this client' });
-    }
-
-    // Return the fetched application step
-    res.status(200).json({ success: true, message: 'appliction step retrived success', applicationStep });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: 'Internal Server Error', error });
-  }
-};
-
-
-
-
-
-// Controller to handle updating the status of a specific step
-// exports.updateStepStatus = async (req, res) => {
+// exports.getApplicationSteps = async (req, res) => {
 //   try {
-//     const { step, status } = req.body;
-//     const clientId = req.params.id;
+//     // const { clientId } = req.params;  // Get clientId from the request parameters
 
-//     if (!step || !status) {
-//       return res.status(400).json({ success: false, message: 'Step or status missing.' });
+//     // // Validate clientId
+//     // if (!clientId) {
+//     //   return res.status(400).json({ success: false, message: 'clientId is required' });
+//     // }
+
+//     // Fetch the ApplicationStep document based on the clientId
+//     const applicationStep = await applicationStepModel.findOne();
+
+//     // Check if the application step exists
+//     if (!applicationStep) {
+//       return res.status(404).json({ success: false, message: 'Application steps not found for this client' });
 //     }
 
-//     const updated = await applicationStepModel.findOneAndUpdate(
-//       { 'clientId': clientId },
-//       { [`stepNames.${step}.status`]: status },
-//       { new: true }
-//     );
-
-//     if (!updated) {
-//       return res.status(404).json({ success: false, message: 'Client or step not found.' });
-//     }
-
-//     res.status(200).json({ success: true, data: updated });
+//     // Return the fetched application step
+//     res.status(200).json({ success: true, message: 'appliction step retrived success', applicationStep });
 //   } catch (error) {
-//     console.error('Error updating status:', error);
-//     res.status(500).json({ success: false, message: 'Server error.' });
+//     console.error(error);
+//     res.status(500).json({ success: false, message: 'Internal Server Error', error });
 //   }
 // };
 
@@ -683,34 +718,10 @@ exports.getApplicationSteps = async (req, res) => {
 
 
 
-// Controller to handle updating the status of a specific step
 
-// exports.updateStepStatus = async (req, res) => {
-//   try {
-//     const { step, status } = req.body;
-//     const clientId = req.params.id;
 
-//     if (!step || !status) {
-//       return res.status(400).json({ success: false, message: 'Step or status missing.' });
-//     }
 
-//     // Ensure the correct clientId is passed when updating the step status
-//     const updated = await ClientModel.findOneAndUpdate(
-//       { clientId: clientId },  // Make sure you're matching the clientId
-//       { [`stepNames.${step}.status`]: status }, // Update status of the specified step
-//       { new: true }
-//     );
 
-//     if (!updated) {
-//       return res.status(404).json({ success: false, message: 'Client or step not found.' });
-//     }
-
-//     res.status(200).json({ success: true, data: updated });
-//   } catch (error) {
-//     console.error('Error updating status:', error);
-//     res.status(500).json({ success: false, message: 'Server error.' });
-//   }
-// };
 
 
 
@@ -725,9 +736,10 @@ const modelMapping = {
   appointment: AppointmentModel,
   documenttranslation: documentTranslationModel,
   epassports: ePassportModel,
-  graphicDesign: GraphicDesignModel,
+  // graphicDesign: GraphicDesignModel,
+  graphicdesigns: GraphicDesignModel,
   japanvisit: japanVisitApplicationModel, 
-  otherservices: OtherServiceModel,
+  otherservice: OtherServiceModel,
 };
 
 // Route to update step status
@@ -740,12 +752,12 @@ exports.updateStepStatus = async (req, res) => {
       const { stepId, status, modelName } = step;
 
       // Log the incoming modelName to ensure correct casing
-      // console.log('Incoming Model Name:', modelName); // Log incoming model name
+      console.log('Incoming Model Name:', modelName); // Log incoming model name
 
       // Map modelName to lowercase and check
       const Model = modelMapping[modelName.toLowerCase()];
       if (!Model) {
-        return res.status(400).json({ success: false, message: `Invalid model name: ${modelName}` });
+        return res.status(400).json({ success: false, message: `Invalid model names: ${modelName}` });
       }
 
       // console.log('Model:', Model); // Log selected model from mapping

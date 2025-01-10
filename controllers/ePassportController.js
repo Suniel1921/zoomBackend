@@ -3,17 +3,29 @@ const ePassportModel = require("../models/newModel/ePassportModel");
 
 exports.createEpassport = async (req, res) => {
   try {
-    const { _id: superAdminId } = req.user; 
+    const { superAdminId, _id: createdBy, role } = req.user; 
     const { steps, ...otherData } = req.body; 
 
     // Validate steps: Ensure it's an array or default to an empty array
     const applicationSteps = Array.isArray(steps) ? steps : [];
 
+    // Role-based check: Only 'superadmin' or 'admin' are allowed
+  if (role !== "superadmin" && (!superAdminId || role !== "admin")) {
+    console.log("Unauthorized access attempt:", req.user); // Log for debugging
+    return res
+      .status(403)
+      .json({ success: false, message: "Unauthorized: Access denied." });
+  }
+
+  // If the user is a superadmin, use their userId as superAdminId
+  const clientSuperAdminId = role === "superadmin" ? createdBy : superAdminId;
+
     // Create ePassport instance with validated steps and other data
     const epassport = new ePassportModel({
       ...otherData,
       steps: applicationSteps,
-      superAdminId,
+      superAdminId: clientSuperAdminId,
+      createdBy,
     });
 
     // Save to the database
@@ -37,27 +49,74 @@ exports.createEpassport = async (req, res) => {
 
 
 // Get all ePassport applications for authenticated superAdmin
-exports.getAllEpassports = async (req, res) => {
-  try {
-    const { _id: superAdminId } = req.user;
-    const epassports = await ePassportModel
-      .find({ superAdminId }) 
-      .populate("clientId");
 
+exports.getAllEpassports = async (req, res) => {
+  const { _id, role, superAdminId } = req.user; // Extract user ID and role from authenticated user
+
+  // Role-based check: Only 'superadmin' or 'admin' are allowed
+  if (!role || (role !== "superadmin" && role !== "admin")) {
+    return res
+      .status(403)
+      .json({ success: false, message: "Unauthorized: Access denied." });
+  }
+
+  try {
+    let query = {};
+
+    if (role === "superadmin") {
+      // SuperAdmin: Fetch all clients under their `superAdminId`
+      query = { superAdminId: _id };
+    } else if (role === "admin") {
+      // Admin: Fetch clients created by the admin or under their `superAdminId`
+      query = { $or: [{ createdBy: _id }, { superAdminId }] };
+    }
+
+    // Query to get applications based on role and superAdminId
+    const epassports = await ePassportModel
+      .find(query) // Apply the query to find applications
+      .populate({
+        path: "createdBy", // Populate createdBy field with user info (admin or super admin)
+        select: "name email", // Fields to include from the user model
+      })
+      .populate({
+        path: "clientId", // Populate the clientId field (client model)
+        select: "name email phone", // Fields to include from the client model
+      })
+      .exec();
+
+    // If no applications are found, return a 404 error
     if (epassports.length === 0) {
       return res
         .status(404)
-        .json({ success: false, message: "No ePassport applications found" });
+        .json({
+          success: false,
+          message: "No ePassport application found",
+        });
     }
-    res.status(200).json({
+
+    // Return the list of applications found
+    return res.status(200).json({
       success: true,
-      message: "ePassport application data fetched",
       data: epassports,
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error(
+      "Error fetching epassport applications:",
+      error.message
+    );
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal Server Error", error });
   }
 };
+
+
+
+
+
+
+
+
 
 // Get a single ePassport application by ID for authenticated superAdmin
 exports.getEpassportById = async (req, res) => {
@@ -79,33 +138,111 @@ exports.getEpassportById = async (req, res) => {
   }
 };
 
-// Update an ePassport application for authenticated superAdmin
+// Update an ePassport application for authenticated superAdmin 
+
+
+// exports.updateEpassport = async (req, res) => {
+//   try {
+//     const { _id: createdBy, role } = req.user; // Get the user info
+//     const epassportId = req.params.id; // Get the ePassport ID from the request parameters
+
+//     console.log("User Info:", { createdBy, role });
+//     console.log("Updating ePassport with ID:", epassportId);
+
+//     let query = {};
+
+//     // If superadmin, allow them to update any ePassport
+//     if (role === "superadmin") {
+//       query = { _id: epassportId };
+//     } else if (role === "admin") {
+//       // Admin can update any ePassport they created or under their superAdminId
+//       query = {
+//         _id: epassportId,
+//         $or: [
+//           { createdBy: createdBy }, // Admin can update their own ePassport
+//           { superAdminId: createdBy }, // Admin can update ePassports under their superAdminId
+//         ],
+//       };
+//     }
+
+//     console.log("Query being used:", query); // Log the query to verify it's correct
+
+//     // Find the ePassport by the query
+//     const epassport = await ePassportModel.findOne(query);
+
+//     // Check if the document was found
+//     if (!epassport) {
+//       console.log("No ePassport found with the query:", query); // Log why the document is not found
+//       return res.status(404).json({ success: false, message: "ePassport not found" });
+//     }
+
+//     // If found, update the ePassport with the request body
+//     const updatedEpassport = await ePassportModel.findOneAndUpdate(query, req.body, { new: true });
+
+//     // Return the updated ePassport
+//     res.status(200).json({
+//       success: true,
+//       message: "ePassport data updated successfully",
+//       data: updatedEpassport,
+//     });
+//   } catch (error) {
+//     console.error("Error updating ePassport:", error);
+//     res.status(400).json({ success: false, message: error.message });
+//   }
+// };
+
+
+
+
 exports.updateEpassport = async (req, res) => {
   try {
-    const { _id: superAdminId } = req.user;
+    const { _id: createdBy, role } = req.user; // Get user info
+    const epassportId = req.params.id; // Get ePassport ID from the request parameters
 
-    const epassport = await ePassportModel.findOneAndUpdate(
-      { _id: req.params.id, superAdminId },
-      req.body,
-      { new: true }
-    );
+    console.log("User Info:", { createdBy, role });
+    console.log("Updating ePassport with ID:", epassportId);
 
+    // Determine query based on role
+    const query =
+      role === "superadmin"
+        ? { _id: epassportId } // Superadmin can update any ePassport
+        : { _id: epassportId }; // Admin can update any ePassport (no restrictions)
+
+    console.log("Query being used:", query); // Log the query for debugging
+
+    // Find the ePassport
+    const epassport = await ePassportModel.findOne(query);
+
+    // Check if the document exists
     if (!epassport) {
-      return res
-        .status(404)
-        .json({ success: false, message: "ePassport not found" });
+      console.log("No ePassport found with the query:", query); // Log for debugging
+      return res.status(404).json({ success: false, message: "ePassport not found" });
     }
+
+    // Perform the update
+    const updatedEpassport = await ePassportModel.findOneAndUpdate(query, req.body, { new: true });
+
+    // Return the updated data
     res.status(200).json({
       success: true,
       message: "ePassport data updated successfully",
-      data: epassport,
+      data: updatedEpassport,
     });
   } catch (error) {
+    console.error("Error updating ePassport:", error);
     res.status(400).json({ success: false, message: error.message });
   }
 };
 
+
+
+
+
+
+
+
 // Delete an ePassport application for authenticated superAdmin
+
 exports.deleteEpassport = async (req, res) => {
   try {
     const { _id: superAdminId } = req.user;
@@ -133,6 +270,84 @@ exports.deleteEpassport = async (req, res) => {
 
 // ************upload multiple file***********
 
+
+//ALERT ⚠️ : - WHILE UPLOADING THE THE FILE FOR SAME CLIENT THEN ITS NOT WOKRING 
+// const upload = require('../config/multerConfig');
+// const cloudinary = require('cloudinary').v2;
+
+// exports.uploadFileForApplication = [
+//   upload.array('clientFiles', 5), // Handling multiple file uploads (max 5 files)
+//   async (req, res) => {
+//     try {
+//       const { clientId } = req.params; 
+//       // console.log(clientId)
+//       console.log('Params:', req.params);
+
+
+//       if(!clientId){
+//         return res.status(404).json({success : false, message: 'client id not found'})
+//       }
+
+//       // Check if files were uploaded
+//       if (!req.files || req.files.length === 0) {
+//         return res.status(400).json({ success: false, message: 'No files uploaded' });
+//       }
+
+//       // Find the application (ePassport) for the specific clientId
+//       // const application = await ePassportModel.find(clientId );
+//       const application = await ePassportModel.findOne({ clientId });
+
+
+//       if (!application) {
+//         return res.status(404).json({ success: false, message: 'Application not found for this user' });
+//       }
+
+//       // Process each file and upload to Cloudinary
+//       const clientFilesUrls = [];
+//       for (const file of req.files) {
+//         const result = await cloudinary.uploader.upload(file.path);
+//         clientFilesUrls.push(result.secure_url); // Collect all the uploaded file URLs
+//       }
+
+//       // Save the uploaded file URLs in the application model
+//       application.clientFiles = application.clientFiles || []; // Initialize the files array if not already
+//       application.clientFiles.push(...clientFilesUrls); // Add the new file URLs
+
+//       // Save the updated application data
+//       await application.save();
+
+//       return res.status(200).json({
+//         success: true,
+//         message: 'Files uploaded successfully',
+//         fileUrls: clientFilesUrls, // Return the list of URLs to the client
+//       });
+//     } catch (error) {
+//       console.error('Error uploading files:', error);
+//       return res.status(500).json({ success: false, message: 'Server error while uploading files' });
+//     }
+//   }
+// ];
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ********************file uploading based on model and client id****************************
+
+
+
 const upload = require('../config/multerConfig');
 const cloudinary = require('cloudinary').v2;
 
@@ -140,13 +355,12 @@ exports.uploadFileForApplication = [
   upload.array('clientFiles', 5), // Handling multiple file uploads (max 5 files)
   async (req, res) => {
     try {
-      const { clientId } = req.params; 
-      // console.log(clientId)
+      const { clientId } = req.params;
+      const { _id: createdBy } = req.user; // Get the admin's ID from the authenticated user
       console.log('Params:', req.params);
-
-
-      if(!clientId){
-        return res.status(404).json({success : false, message: 'client id not found'})
+      
+      if (!clientId) {
+        return res.status(404).json({ success: false, message: 'Client ID not found' });
       }
 
       // Check if files were uploaded
@@ -155,12 +369,15 @@ exports.uploadFileForApplication = [
       }
 
       // Find the application (ePassport) for the specific clientId
-      // const application = await ePassportModel.find(clientId );
       const application = await ePassportModel.findOne({ clientId });
-
 
       if (!application) {
         return res.status(404).json({ success: false, message: 'Application not found for this user' });
+      }
+
+      // Set the createdBy field (if it's not already set)
+      if (!application.createdBy) {
+        application.createdBy = createdBy;
       }
 
       // Process each file and upload to Cloudinary
@@ -194,18 +411,6 @@ exports.uploadFileForApplication = [
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-// ********************file uploading based on model and client id****************************
 const applicationModel = require("../models/newModel/applicationModel");
 const documentTranslationModel = require("../models/newModel/documentTranslationModel");
 // const ePassportModel = require("../models/newModel/ePassportModel");
@@ -226,6 +431,8 @@ const models = {
 exports.allApplicationFileUpload = [
   upload.array('clientFiles', 5), 
   async (req, res) => {
+
+
     try {
       const { clientId, modelName } = req.params; 
 

@@ -22,13 +22,127 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+// exports.addClient = [
+//   upload.array('profilePhoto', 1),
+//   async (req, res) => {
+//     const { _id: superAdminId } = req.user;
+
+//     if (!superAdminId) {
+//       return res.status(403).json({ success: false, message: 'Unauthorized: SuperAdmin access required.' });
+//     }
+
+//     try {
+//       const {
+//         name,
+//         category,
+//         status,
+//         email,
+//         password,
+//         phone,
+//         nationality,
+//         postalCode,
+//         prefecture,
+//         city,
+//         street,
+//         building,
+//         modeOfContact,
+//         socialMedia,
+//         timeline,
+//         dateJoined,
+//       } = req.body;
+
+//       const hashedPassword = await bcrypt.hash(password, 10);
+ 
+
+//       //client photo is optinal
+//       // if (!req.files || req.files.length === 0) {
+//       //   return res.status(400).json({ success: false, message: 'No file uploaded' });
+//       // }
+
+//       const profilePhotoUrls = [];
+
+//       // Check file size for profile photo
+//       for (const file of req.files) {
+//         if (file.size > MAX_SIZE) {
+//           return res.status(400).json({ success: false, message: 'Profile photo must be less than 2MB.' });
+//         }
+
+//         const result = await cloudinary.uploader.upload(file.path);
+//         profilePhotoUrls.push(result.secure_url);
+//       }
+
+//       const createClient = await ClientModel.create({
+//         superAdminId,
+//         name,
+//         category,
+//         status,
+//         email,
+//         password: hashedPassword,
+//         phone,
+//         nationality,
+//         postalCode,
+//         prefecture,
+//         city,
+//         street,
+//         building,
+//         modeOfContact,
+//         socialMedia,
+//         timeline,
+//         dateJoined,
+//         profilePhoto: profilePhotoUrls[0],
+//       });
+
+//       // Send email with client's details
+//       const mailOptions = {
+//         from: process.env.MYEMAIL,
+//         to: email,
+//         subject: 'Welcome to Zoom Creatives!',
+//         html: `
+//           <h2>Welcome, ${name}!</h2>
+//           <p>Your account has been successfully created.</p>
+//           <p><strong>Email:</strong> ${email}</p>
+//           <p><strong>Password:</strong> ${password}</p>
+//           <p>You can track you application status using the below link </p>
+//           <p><a href="https://crm.zoomcreatives.jp/client-login" target="_blank">Click here to login</a></p>
+//           <p>Please keep your login credentials secure.</p>
+//         `,
+//       };
+
+//       await transporter.sendMail(mailOptions);
+
+//       return res.status(201).json({
+//         success: true,
+//         message: 'Client created successfully and email sent',
+//         createClient,
+//       });
+//     } catch (error) {
+//       return res.status(500).json({ success: false, message: 'Internal Server Error', error });
+//     }
+//   },
+// ];
+
+
+
+
+
+
+//get all clients controller
+
+
+
+
+
+
 exports.addClient = [
   upload.array('profilePhoto', 1),
   async (req, res) => {
-    const { _id: superAdminId } = req.user;
+    const { superAdminId, _id: createdBy, role } = req.user;
 
-    if (!superAdminId) {
-      return res.status(403).json({ success: false, message: 'Unauthorized: SuperAdmin access required.' });
+    // If the user is a superadmin, they don't need superAdminId for client creation
+    // If the user is an admin, ensure superAdminId is provided
+    if (role !== 'superadmin' && (!superAdminId || role !== 'admin')) {
+      console.log('Unauthorized access attempt:', req.user);  // Log for debugging
+      return res.status(403).json({ success: false, message: 'Unauthorized: Access denied.' });
     }
 
     try {
@@ -52,16 +166,8 @@ exports.addClient = [
       } = req.body;
 
       const hashedPassword = await bcrypt.hash(password, 10);
- 
-
-      //client photo is optinal
-      // if (!req.files || req.files.length === 0) {
-      //   return res.status(400).json({ success: false, message: 'No file uploaded' });
-      // }
 
       const profilePhotoUrls = [];
-
-      // Check file size for profile photo
       for (const file of req.files) {
         if (file.size > MAX_SIZE) {
           return res.status(400).json({ success: false, message: 'Profile photo must be less than 2MB.' });
@@ -71,8 +177,14 @@ exports.addClient = [
         profilePhotoUrls.push(result.secure_url);
       }
 
+      // If the user is a superadmin, set superAdminId directly to the superadmin's ID
+      // If the user is an admin, superAdminId will come from the req.user (the current logged-in superadmin)
+      const clientSuperAdminId = role === 'superadmin' ? createdBy : superAdminId;
+
+      // Create the client with the correct superAdminId
       const createClient = await ClientModel.create({
-        superAdminId,
+        superAdminId: clientSuperAdminId,  // Correctly set superAdminId
+        createdBy,     // Track the admin who created this client
         name,
         category,
         status,
@@ -92,30 +204,13 @@ exports.addClient = [
         profilePhoto: profilePhotoUrls[0],
       });
 
-      // Send email with client's details
-      const mailOptions = {
-        from: process.env.MYEMAIL,
-        to: email,
-        subject: 'Welcome to Zoom Creatives!',
-        html: `
-          <h2>Welcome, ${name}!</h2>
-          <p>Your account has been successfully created.</p>
-          <p><strong>Email:</strong> ${email}</p>
-          <p><strong>Password:</strong> ${password}</p>
-          <p>You can track you application status using the below link </p>
-          <p><a href="https://crm.zoomcreatives.jp/client-login" target="_blank">Click here to login</a></p>
-          <p>Please keep your login credentials secure.</p>
-        `,
-      };
-
-      await transporter.sendMail(mailOptions);
-
       return res.status(201).json({
         success: true,
-        message: 'Client created successfully and email sent',
+        message: 'Client created successfully',
         createClient,
       });
     } catch (error) {
+      console.error('Error creating client:', error.message);
       return res.status(500).json({ success: false, message: 'Internal Server Error', error });
     }
   },
@@ -126,25 +221,63 @@ exports.addClient = [
 
 
 
-//get all clients controller
 exports.getClients = async (req, res) => {
-  const { _id: superAdminId } = req.user;  
-  
-  if (!superAdminId) {
-    return res.status(403).json({ success: false, message: 'Unauthorized: SuperAdmin access required.' });
+  const { _id, role, superAdminId } = req.user;
+
+  if (!role || (role !== 'superadmin' && role !== 'admin')) {
+    return res.status(403).json({ success: false, message: 'Unauthorized: Access denied.' });
   }
 
   try {
-    // Fetch clients where the superAdminId matches the logged-in user's superAdminId
-    const clients = await ClientModel.find({ superAdminId }); 
-    res.json({ success: true, clients });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    let query = {};
+
+    if (role === 'superadmin') {
+      // SuperAdmin: Fetch all clients under their `superAdminId`
+      query = { superAdminId: _id };
+    } else if (role === 'admin') {
+      // Admin: Fetch clients created by the admin or under their `superAdminId`
+      query = { $or: [{ createdBy: _id }, { superAdminId }] };
+    }
+
+    const clients = await ClientModel.find(query)
+      .populate('createdBy', 'name email') // Populate who created the client
+      .exec();
+
+    return res.status(200).json({
+      success: true,
+      clients,
+    });
+  } catch (error) {
+    console.error('Error fetching clients:', error.message);
+    return res.status(500).json({ success: false, message: 'Internal Server Error', error });
   }
 };
 
 
+// exports.getClients = async (req, res) => {
+//   const { _id: superAdminId } = req.user;  
+  
+//   if (!superAdminId) {
+//     return res.status(403).json({ success: false, message: 'Unauthorized: SuperAdmin access required.' });
+//   }
+
+//   try {
+//     // Fetch clients where the superAdminId matches the logged-in user's superAdminId
+//     const clients = await ClientModel.find({ superAdminId }); 
+//     res.json({ success: true, clients });
+//   } catch (err) {
+//     res.status(500).json({ success: false, message: err.message });
+//   }
+// };
+
+
 //get client by id controller
+
+
+
+
+
+
 exports.getClientById = async (req, res) => {
   const { _id: superAdminId } = req.user;
   if (!superAdminId) {
