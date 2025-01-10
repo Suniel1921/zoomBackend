@@ -73,7 +73,7 @@ exports.requireLogin = async (req, res, next) => {
     req.user = decoded; // Attach the decoded user info to the request object
     
     // Log the decoded token
-    console.log('Decoded Token:', decoded);
+    // console.log('Decoded Token:', decoded);
 
     next();
   } catch (error) {

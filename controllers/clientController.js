@@ -475,7 +475,7 @@ exports.deleteClient = async (req, res) => {
 
 
 
-// *******************cslient fv********************
+// *******************clients import(csv file)  ********************
 
 
 
@@ -517,10 +517,18 @@ const uploadCSV = multer({
 // Route for uploading CSV file
 exports.UploadCSVFile = [uploadCSV.single('csvFile'), async (req, res) => {
   // const { superAdminId } = req.user; // Ensure user is authenticated and has super admin role
-  const { _id: superAdminId } = req.user;
-  if (!superAdminId) {
-    return res.status(403).json({ success: false, message: 'Unauthorized: SuperAdmin access required.' });
+  const { superAdminId, _id: createdBy, role } = req.user;
+
+  // Role-based check: Only 'superadmin' or 'admin' are allowed
+  if (role !== "superadmin" && (!superAdminId || role !== "admin")) {
+    console.log("Unauthorized access attempt:", req.user); // Log for debugging
+    return res
+      .status(403)
+      .json({ success: false, message: "Unauthorized: Access denied." });
   }
+
+  // If the user is a superadmin, use their userId as superAdminId
+  const clientSuperAdminId = role === "superadmin" ? createdBy : superAdminId;
 
   if (!req.file) {
     return res.status(400).send('No file uploaded');
@@ -541,11 +549,13 @@ exports.UploadCSVFile = [uploadCSV.single('csvFile'), async (req, res) => {
         // Map and save data to the database
         const clients = results.map((row) => {
           return {
-            superAdminId, // Attach the superAdminId for each client
-            name: row.name || 'Default Name',   // Ensure name is set, otherwise default
+            superAdminId: clientSuperAdminId,
+            createdBy, 
+            name: row.name || 'Default Name',   
             email: row.email || 'default@example.com',  // Default email if not provided
             city: row.city || 'City not provided',  // Default city if not provided
             status: 'active', // You can adjust this as needed
+            phone : row.phone,
           };
         });
 

@@ -18,29 +18,39 @@ exports.getLogs = async (req, res) => {
 // Export logs to CSV or PDF (for simplicity, CSV only here)
 exports.exportLogs = async (req, res) => {
   const { format } = req.query;
-  const logs = await AuditLog.find();
 
-  if (format === 'csv') {
-    let csvContent = [
-      ['Timestamp', 'User', 'Type', 'Action', 'Resource', 'Details', 'IP Address'].join(','),
-      ...logs.map(log => [
-        log.timestamp,
-        log.userName,
-        log.userType,
-        log.action,
-        log.resource,
-        (log.details),
-        log.ipAddress
-      ].join(','))
-    ].join('\n');
+  try {
+    const logs = await AuditLog.find();
 
-    res.header('Content-Type', 'text/csv');
-    res.attachment(`audit-logs-${new Date().toISOString().split('T')[0]}.csv`);
-    res.send(csvContent);
-  } else {
-    res.status(400).json({ message: 'Invalid format' });
+    if (format === 'csv') {
+      // Prepare CSV content
+      const csvContent = [
+        ['Timestamp', 'User', 'Action', 'Details', 'IP Address'].join(','), // Header row
+        ...logs.map(log =>
+          [
+            log.timestamp,
+            log.userName,
+            log.action,
+            JSON.stringify(log.details).replace(/"/g, '""'), // Escape double quotes for CSV
+            log.ipAddress,
+          ]
+          .map(value => `"${value}"`) // Wrap each field in quotes
+          .join(',')
+        ),
+      ].join('\n');
+
+      // Send the CSV response
+      res.header('Content-Type', 'text/csv');
+      res.attachment(`audit-logs-${new Date().toISOString().split('T')[0]}.csv`);
+      res.send(csvContent);
+    } else {
+      res.status(400).json({ message: 'Invalid format' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: 'Error exporting logs', error });
   }
 };
+
 
 // Clear all logs
 exports.clearAllLogs = async (req, res) => {

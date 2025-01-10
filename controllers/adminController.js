@@ -74,9 +74,9 @@ exports.getAdmins = async (req, res) => {
     const admins = await AdminModel.find(query)
       .exec(); // Execute the query to find admins
 
-    if (admins.length === 0) {
-      return res.status(404).json({ success: false, message: 'No admins found' });
-    }
+    // if (admins.length === 0) {
+    //   return res.status(404).json({ success: false, message: 'No admins found' });
+    // }
 
     return res.status(200).json({
       success: true,
