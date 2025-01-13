@@ -103,16 +103,13 @@
 
 
 
-'use strict';
 
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const helmet = require('helmet');
-const compression = require('compression');
+const helmet = require('helmet');  // Import Helmet
 const { createServer } = require('http');
 const { Server } = require('socket.io');
-const winston = require('winston');
 const dbConnection = require('./config/dbConn');
 const logMiddleware = require('./middleware/newMiddleware/auditLogMiddleware');
 
@@ -138,29 +135,34 @@ dotenv.config();
 
 const app = express();
 const server = createServer(app);
-
-// Allowed Origins for CORS
-const allowedOrigins = [
-  'http://localhost:5173', // Development URL
-  'https://crm.zoomcreatives.jp', // Production URL
-];
-
-// Middleware
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
+const io = new Server(server, {
+  cors: {
+    origin: 'https://crm.zoomcreatives.jp',  // Set production frontend URL
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     credentials: true,
-  })
-);
-app.use(helmet()); // Secure HTTP headers
-app.use(compression()); // Compress response bodies
+  },
+});
+
+// Use Helmet for added security headers
+app.use(helmet());
+
+// CORS Configuration for Production
+app.use(cors({
+  origin: (origin, callback) => {
+    const allowedOrigins = [
+      'https://crm.zoomcreatives.jp',  // Production frontend URL
+    ];
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  credentials: true,
+}));
+
+// Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(logMiddleware);
@@ -168,41 +170,18 @@ app.use(logMiddleware);
 // Database Connection
 dbConnection();
 
-// Logging
-const logger = winston.createLogger({
-  level: 'info',
-  format: winston.format.json(),
-  transports: [
-    new winston.transports.Console(),
-    new winston.transports.File({ filename: 'server.log' }),
-  ],
-});
-
-// Socket.IO Configuration
-const io = new Server(server, {
-  cors: {
-    origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    credentials: true,
-  },
-});
-
-// Real-Time Notification Handling
+// Socket.IO - Real-Time Notification Handling
 io.on('connection', (socket) => {
-  logger.info(`User connected: ${socket.id}`);
+  console.log('A user connected: ', socket.id);
+
   socket.on('disconnect', () => {
-    logger.info(`User disconnected: ${socket.id}`);
+    console.log('A user disconnected: ', socket.id);
   });
 });
 
+// Broadcast new service request notifications
 app.use((req, res, next) => {
-  req.io = io; // Attach Socket.IO to the request
+  req.io = io;  // Attach `io` to `req` so it can be used in controllers
   next();
 });
 
@@ -229,31 +208,8 @@ app.get('/', (req, res) => {
   res.json({ success: true, message: 'Welcome to the backend server!' });
 });
 
-// Error Handling Middleware
-app.use((err, req, res, next) => {
-  logger.error(err.message);
-  res.status(err.status || 500).json({
-    success: false,
-    message: err.message || 'Internal Server Error',
-  });
-});
-
-// Graceful Shutdown
-const shutdown = () => {
-  logger.info('Shutting down gracefully...');
-  server.close(() => {
-    logger.info('HTTP server closed.');
-    process.exit(0);
-  });
-
-  // Close database connection if necessary
-  // Example: mongoose.connection.close()
-};
-process.on('SIGTERM', shutdown);
-process.on('SIGINT', shutdown);
-
-// Start the Server
+// Start the server
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  logger.info(`Server running on port ${PORT}`);
+  console.log(`Server is running on port: ${PORT}`);
 });
