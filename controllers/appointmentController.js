@@ -184,16 +184,57 @@ const japanVisitApplicationModel = require("../models/newModel/japanVisitModel")
 
 
 // Create an appointment
+// exports.createAppointment = async (req, res) => {
+//   try {
+//     const { _id: superAdminId } = req.user;  // Extract superAdminId from the authenticated user
+//     const { clientId, ...appointmentData } = req.body;
+
+//     // Validate if the client exists and belongs to the superAdmin
+//     // const client = await AppointmentModel.findOne({ _id: clientId, superAdminId });
+//     // if (!client) {
+//     //   return res.status(400).json({ success: false, message: 'Client not found or unauthorized' });
+//     // }
+
+//     const appointment = new AppointmentModel({
+//       clientId,
+//       ...appointmentData,
+//       superAdminId, // Attach superAdminId
+//     });
+//     await appointment.save();
+
+//     res.status(201).json({ success: true, message: 'Appointment created successfully', appointment });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ success: false, message: 'Failed to create appointment', error });
+//   }
+// };
+
+
+
+
+
+//****************sending email while appointment create ****************
+const nodemailer = require('nodemailer');
+const moment = require('moment');  // For date formatting
+// Nodemailer configuration
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.MYEMAIL,  // Ensure you use environment variable
+    pass: process.env.PASSWORD  // Ensure you use environment variable
+  }
+});
+
 exports.createAppointment = async (req, res) => {
   try {
     const { _id: superAdminId } = req.user;  // Extract superAdminId from the authenticated user
     const { clientId, ...appointmentData } = req.body;
 
     // Validate if the client exists and belongs to the superAdmin
-    // const client = await AppointmentModel.findOne({ _id: clientId, superAdminId });
-    // if (!client) {
-    //   return res.status(400).json({ success: false, message: 'Client not found or unauthorized' });
-    // }
+    const client = await ClientModel.findOne({ _id: clientId, superAdminId });
+    if (!client) {
+      return res.status(400).json({ success: false, message: 'Client not found or unauthorized' });
+    }
 
     const appointment = new AppointmentModel({
       clientId,
@@ -202,12 +243,57 @@ exports.createAppointment = async (req, res) => {
     });
     await appointment.save();
 
+    // Get the client's email address
+    const clientEmail = client.email;
+
+    // Format the appointment date and time
+    const formattedDate = moment(appointmentData.date).format('MMMM Do YYYY, h:mm A');
+    const formattedTime = appointmentData.time ? moment(appointmentData.time, 'HH:mm').format('h:mm A') : 'Not specified';
+    const meetingType = appointmentData.meetingType.charAt(0).toUpperCase() + appointmentData.meetingType.slice(1); // Capitalize meeting type
+
+    // Prepare email content
+    const emailContent = `
+      Hello ${client.name},
+
+      Your appointment has been successfully created with the following details:
+
+      - Date & Time: ${formattedDate} at ${formattedTime}
+      - Meeting Type: ${meetingType}
+      - Duration: ${appointmentData.duration} minutes
+      - Location: ${appointmentData.location || 'Not provided'}
+      
+      Thank you for using our service!
+
+      Best regards,
+      Zoom Cretives Team
+    `;
+
+    // Send an email notification to the client
+    const mailOptions = {
+      from: process.env.MYEMAIL,
+      to: clientEmail,  // Use the client's email
+      subject: 'Appointment Created Successfully',
+      text: emailContent
+    };
+
+    // Send email
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.error('Error sending email:', error);
+      } else {
+        console.log('Email sent:', info.response);
+      }
+    });
+
     res.status(201).json({ success: true, message: 'Appointment created successfully', appointment });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: 'Failed to create appointment', error });
   }
 };
+
+
+
 
 // Get all appointments for the authenticated superAdmin
 exports.getAllAppointments = async (req, res) => {
