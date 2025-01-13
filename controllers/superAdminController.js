@@ -143,28 +143,67 @@ exports.deleteSuperAdmin = async (req, res) => {
   
   
   
+  //update admin and super admin profile photo
+  // exports.updateSuperAdmin = async (req, res) => {
+  //   const { name, email } = req.body;
+  //   const superAdminId = req.params.id;
+  //   const superAdminPhoto = req.file ? req.file.path : null;  // Check if a new file is uploaded
+  
+  //   try {
+  //     // Find the super admin by ID first
+  //     const existingAdmin = await SuperAdminModel.findById(superAdminId);
+  
+  //     if (!existingAdmin) {
+  //       return res.status(404).json({ message: 'Super Admin not found' });
+  //     }
+  
+  //     // If no new photo is uploaded, keep the existing superAdminPhoto
+  //     const updatedAdminData = {
+  //       name,
+  //       email,
+  //       superAdminPhoto: superAdminPhoto || existingAdmin.superAdminPhoto, // Preserve old photo if no new one
+  //     };
+  
+  //     // Update the super admin document
+  //     const updatedAdmin = await SuperAdminModel.findByIdAndUpdate(superAdminId, updatedAdminData, { new: true });
+  
+  //     res.json({ message: 'Profile updated successfully', data: updatedAdmin });
+  //   } catch (error) {
+  //     console.error(error);
+  //     res.status(500).json({ message: 'Internal server error' });
+  //   }
+  // };
+
+
+
+
+
   exports.updateSuperAdmin = async (req, res) => {
     const { name, email } = req.body;
     const superAdminId = req.params.id;
-    const superAdminPhoto = req.file ? req.file.path : null;  // Check if a new file is uploaded
+    const superAdminPhoto = req.file ? req.file.path : null; // Check if a new file is uploaded
   
     try {
-      // Find the super admin by ID first
-      const existingAdmin = await SuperAdminModel.findById(superAdminId);
+      // Find the super admin in both models
+      const existingSuperAdmin = await SuperAdminModel.findById(superAdminId);
+      const existingAdmin = await AdminModel.findById(superAdminId);
   
-      if (!existingAdmin) {
-        return res.status(404).json({ message: 'Super Admin not found' });
+      if (!existingSuperAdmin && !existingAdmin) {
+        return res.status(404).json({ message: 'Super Admin not found in both models' });
       }
   
-      // If no new photo is uploaded, keep the existing superAdminPhoto
+      // Determine the model to update and retain the existing photo if no new one is uploaded
+      const targetModel = existingSuperAdmin ? SuperAdminModel : AdminModel;
+      const currentData = existingSuperAdmin || existingAdmin;
+  
       const updatedAdminData = {
         name,
         email,
-        superAdminPhoto: superAdminPhoto || existingAdmin.superAdminPhoto, // Preserve old photo if no new one
+        superAdminPhoto: superAdminPhoto || currentData.superAdminPhoto, // Preserve old photo if no new one
       };
   
       // Update the super admin document
-      const updatedAdmin = await SuperAdminModel.findByIdAndUpdate(superAdminId, updatedAdminData, { new: true });
+      const updatedAdmin = await targetModel.findByIdAndUpdate(superAdminId, updatedAdminData, { new: true });
   
       res.json({ message: 'Profile updated successfully', data: updatedAdmin });
     } catch (error) {
@@ -172,6 +211,7 @@ exports.deleteSuperAdmin = async (req, res) => {
       res.status(500).json({ message: 'Internal server error' });
     }
   };
+  
   
   
   
@@ -230,7 +270,6 @@ exports.deleteSuperAdmin = async (req, res) => {
 
 
 
-  
   
   
   
