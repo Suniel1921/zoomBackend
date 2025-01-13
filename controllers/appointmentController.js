@@ -12,177 +12,6 @@ const japanVisitApplicationModel = require("../models/newModel/japanVisitModel")
 
 
 
-// // Create an appointment
-// exports.createAppointment = async (req, res) => {
-//     try {
-//       const appointment = new AppointmentModel(req.body);
-//       await appointment.save();
-//       res.status(201).json({success: true, message: 'Appointment created successfully',appointment});
-//     } catch (error) {
-//       console.error(error);
-//       res.status(500).json({success: false, message: 'Failed to create appointment',error});
-//     }
-//   };
-
-  
-
-//   // Get all appointments
-// exports.getAllAppointments = async (req, res) => {
-//     try {
-//       const appointments = await AppointmentModel.find().populate('clientId', 'name phone');
-//       res.status(200).json({success: true, appointments});
-//     } catch (error) {
-//       console.error(error);
-//       res.status(500).json({success: false, message: 'Failed to retrieve appointments',error});
-//     }
-//   };
-
-  
-
-
-//   // Get an appointment by ID
-// exports.getAppointmentById = async (req, res) => {
-//     try {
-//       const appointment = await AppointmentModel.findById(req.params.id);
-//       if (!appointment) {
-//         return res.status(404).json({success: false, message: 'Appointment not found'});
-//       }
-//       res.status(200).json({success: true, message: 'appointment fetched succssfully', appointment});
-//     } catch (error) {
-//       console.error(error);
-//       res.status(500).json({success: false, message: 'Failed to retrieve appointment', error});
-//     }
-//   };
-
-
-
-
-
-// exports.updateAppointment = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const { mode, ...updateData } = req.body;
-
-//     // Ensure the mode is valid (edit or reschedule)
-//     if (!['edit', 'reschedule'].includes(mode)) {
-//       return res.status(400).json({
-//         success: false,
-//         message: 'Invalid mode. Mode must be either "edit" or "reschedule".',
-//       });
-//     }
-
-//     // Restrict fields for "reschedule" mode
-//     if (mode === 'reschedule') {
-//       const { date, time, notes } = updateData;
-//       if (!date || !time) {
-//         return res.status(400).json({
-//           success: false,
-//           message: 'Date and Time are required for rescheduling.',
-//         });
-//       }
-//       updateData.date = new Date(date); // Ensure proper date formatting
-//       updateData.time = time;
-//       if (notes) updateData.notes = notes; // Include notes if provided
-//     }
-
-//     const updatedAppointment = await AppointmentModel.findByIdAndUpdate(
-//       id,
-//       updateData,
-//       { new: true } // Return the updated document
-//     );
-
-//     if (!updatedAppointment) {
-//       return res.status(404).json({
-//         success: false,
-//         message: 'Appointment not found',
-//       });
-//     }
-
-//     res.status(200).json({
-//       success: true,
-//       message: `Appointment ${mode}d successfully`,
-//       updatedAppointment,
-//     });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({
-//       success: false,
-//       message: 'Failed to update appointment',
-//       error,
-//     });
-//   }
-// };
-
-
-
-
-
-
-//   // Update appointment status (mark as completed or cancelled)
-// exports.updateAppointmentStatus = async (req, res) => {
-//     const { status } = req.body;  // Status can be "Completed" or "Cancelled"
-//     const { id } = req.params;
-  
-//     try {
-//       // Find the appointment by ID
-//       const appointment = await AppointmentModel.findById(id);
-      
-//       if (!appointment) {
-//         return res.status(404).json({ success: false, message: 'Appointment not found' });
-//       }
-  
-//       // Check if the status is valid (Completed or Cancelled)
-//       if (status !== 'Completed' && status !== 'Cancelled') {
-//         return res.status(400).json({ success: false, message: 'Invalid status' });
-//       }
-  
-//       // Update the appointment status
-//       appointment.status = status;
-  
-//       // Optionally, add timestamps for when the appointment is completed or cancelled
-//       if (status === 'Completed') {
-//         appointment.completedAt = new Date();
-//       } else if (status === 'Cancelled') {
-//         appointment.cancelledAt = new Date();
-//       }
-  
-//       // Save the updated appointment
-//       await appointment.save();
-  
-//       res.status(200).json({
-//         success: true,
-//         message: 'Appointment status updated successfully',
-//         appointment
-//       });
-//     } catch (error) {
-//       console.error(error);
-//       res.status(500).json({ success: false, message: 'Failed to update appointment status', error });
-//     }
-//   };
-  
-
-//   // Delete an appointment by ID
-// exports.deleteAppointment = async (req, res) => {
-//     try {
-//       const deletedAppointment = await AppointmentModel.findByIdAndDelete(req.params.id);
-//       if (!deletedAppointment) {
-//         return res.status(404).json({success: false, message: 'Appointment not found'});
-//       }
-//       res.status(200).json({success: true, message: 'Appointment deleted successfully'});
-//     } catch (error) {
-//       console.error(error);
-//       res.status(500).json({success: false, message: 'Failed to delete appointment', error});
-//     }
-//   };
-
-
-
-
-
-
-
-
-
 // Create an appointment
 // exports.createAppointment = async (req, res) => {
 //   try {
@@ -255,7 +84,7 @@ exports.createAppointment = async (req, res) => {
     const emailContent = `
       Hello ${client.name},
 
-      Your appointment has been successfully created with the following details:
+      Your appointment has been Schedule with the following details:
 
       - Date & Time: ${formattedDate} at ${formattedTime}
       - Meeting Type: ${meetingType}
@@ -291,6 +120,29 @@ exports.createAppointment = async (req, res) => {
     res.status(500).json({ success: false, message: 'Failed to create appointment', error });
   }
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -332,10 +184,10 @@ exports.getAppointmentsByClientId = async (req, res) => {
 
 
 
-// Update an appointment by ID for the authenticated superAdmin
+
+// when date  and time udpate send email you appoinnt has rescheude with proper content and proper format
 // exports.updateAppointment = async (req, res) => {
 //   try {
-//     const { _id: superAdminId } = req.user;   // Extract superAdminId from the authenticated user
 //     const { id } = req.params;
 //     const { mode, ...updateData } = req.body;
 
@@ -361,9 +213,8 @@ exports.getAppointmentsByClientId = async (req, res) => {
 //       if (notes) updateData.notes = notes; // Include notes if provided
 //     }
 
-//     // Check if the appointment belongs to the authenticated superAdmin
-//     const updatedAppointment = await AppointmentModel.findOneAndUpdate(
-//       { _id: id, superAdminId },
+//     const updatedAppointment = await AppointmentModel.findByIdAndUpdate(
+//       id,
 //       updateData,
 //       { new: true } // Return the updated document
 //     );
@@ -371,7 +222,7 @@ exports.getAppointmentsByClientId = async (req, res) => {
 //     if (!updatedAppointment) {
 //       return res.status(404).json({
 //         success: false,
-//         message: 'Appointment not found or unauthorized',
+//         message: 'Appointment not found',
 //       });
 //     }
 
@@ -391,7 +242,7 @@ exports.getAppointmentsByClientId = async (req, res) => {
 // };
 
 
-// **********when we use above code to update the data then got error unauthorized login first (check route also (::add requiredLogin middleware)) (::fixed later)***********
+
 
 
 
@@ -409,6 +260,7 @@ exports.updateAppointment = async (req, res) => {
     }
 
     // Restrict fields for "reschedule" mode
+    let isRescheduled = false;
     if (mode === 'reschedule') {
       const { date, time, notes } = updateData;
       if (!date || !time) {
@@ -420,6 +272,7 @@ exports.updateAppointment = async (req, res) => {
       updateData.date = new Date(date); // Ensure proper date formatting
       updateData.time = time;
       if (notes) updateData.notes = notes; // Include notes if provided
+      isRescheduled = true;  // Mark that the appointment is being rescheduled
     }
 
     const updatedAppointment = await AppointmentModel.findByIdAndUpdate(
@@ -432,6 +285,53 @@ exports.updateAppointment = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: 'Appointment not found',
+      });
+    }
+
+    // If the appointment was rescheduled, send an email
+    if (isRescheduled) {
+      const client = await ClientModel.findById(updatedAppointment.clientId);
+      const clientEmail = client.email;
+
+      // Format the appointment date and time for email
+      const formattedDate = moment(updatedAppointment.date).format('MMMM Do YYYY, h:mm A');
+      const formattedTime = updatedAppointment.time ? moment(updatedAppointment.time, 'HH:mm').format('h:mm A') : 'Not specified';
+
+      // Prepare email content for rescheduling
+      const emailContent = `
+        Hello ${client.name},
+
+        Your appointment has been rescheduled with the following new details:
+
+        - New Date & Time: ${formattedDate} at ${formattedTime}
+        - Status: Rescheduled
+        - Duration: ${updatedAppointment.duration} minutes
+        - Location: ${updatedAppointment.location || 'Not provided'}
+        - Notes: ${updatedAppointment.notes || 'No additional notes'}
+        
+        We apologize for any inconvenience this may have caused, and we appreciate your understanding.
+
+        Thank you for using our service!
+
+        Best regards,
+        Zoom Creatives Team
+      `;
+
+      // Send an email notification to the client
+      const mailOptions = {
+        from: process.env.MYEMAIL,
+        to: clientEmail,  // Use the client's email
+        subject: 'Appointment Rescheduled',
+        text: emailContent
+      };
+
+      // Send email
+      transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+          console.error('Error sending email:', error);
+        } else {
+          // console.log('Email sent:', info.response);
+        }
       });
     }
 
@@ -455,10 +355,56 @@ exports.updateAppointment = async (req, res) => {
 
 
 // Update appointment status (mark as completed or cancelled) for the authenticated superAdmin
-exports.updateAppointmentStatus = async (req, res) => {
-  const { status } = req.body;  // Status can be "Completed" or "Cancelled"
-  const { id } = req.params;
+// exports.updateAppointmentStatus = async (req, res) => {
+//   const { status } = req.body;  // Status can be "Completed" or "Cancelled"
+//   const { id } = req.params;
 
+
+//   try {
+//     const { _id: superAdminId } = req.user;  // Extract superAdminId from the authenticated user
+//     const appointment = await AppointmentModel.findOne({ _id: id, superAdminId });
+
+//     if (!appointment) {
+//       return res.status(404).json({ success: false, message: 'Appointment not found or unauthorized' });
+//     }
+
+//     if (status !== 'Completed' && status !== 'Cancelled') {
+//       return res.status(400).json({ success: false, message: 'Invalid status' });
+//     }
+
+//     appointment.status = status;
+
+//     if (status === 'Completed') {
+//       appointment.completedAt = new Date();
+//     } else if (status === 'Cancelled') {
+//       appointment.cancelledAt = new Date();
+//     }
+
+//     await appointment.save();
+
+//     res.status(200).json({
+//       success: true,
+//       message: 'Appointment status updated successfully',
+//       appointment,
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ success: false, message: 'Failed to update appointment status', error });
+//   }
+// };
+
+
+
+
+
+
+
+
+
+
+exports.updateAppointmentStatus = async (req, res) => {
+  const { status } = req.body;  // Status can be "Completed", "Cancelled", or "Rescheduled"
+  const { id } = req.params;
 
   try {
     const { _id: superAdminId } = req.user;  // Extract superAdminId from the authenticated user
@@ -468,30 +414,128 @@ exports.updateAppointmentStatus = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Appointment not found or unauthorized' });
     }
 
-    if (status !== 'Completed' && status !== 'Cancelled') {
+    if (status !== 'Completed' && status !== 'Cancelled' && status !== 'Rescheduled') {
       return res.status(400).json({ success: false, message: 'Invalid status' });
     }
 
+    // Set status and timestamps
     appointment.status = status;
-
     if (status === 'Completed') {
       appointment.completedAt = new Date();
     } else if (status === 'Cancelled') {
       appointment.cancelledAt = new Date();
+    } else if (status === 'Rescheduled') {
+      const { date, time } = req.body;
+      appointment.date = new Date(date);
+      appointment.time = time;
+      appointment.rescheduledAt = new Date();
     }
 
     await appointment.save();
 
+    // Get the client's email address
+    const client = await ClientModel.findById(appointment.clientId);
+    const clientEmail = client.email;
+
+    // Format the appointment date and time for email
+    const formattedDate = moment(appointment.date).format('MMMM Do YYYY, h:mm A');
+    const formattedTime = appointment.time ? moment(appointment.time, 'HH:mm').format('h:mm A') : 'Not specified';
+
+    // Prepare email content based on the appointment status
+    let emailContent = '';
+    if (status === 'Completed') {
+      emailContent = `
+        Hello ${client.name},
+
+        Your appointment has been completed successfully with the following details:
+
+        - Date & Time: ${formattedDate} at ${formattedTime}
+        - Status: Completed
+        - Duration: ${appointment.duration} minutes
+        - Location: ${appointment.location || 'Not provided'}
+        
+        Thank you for using our service!
+
+        Best regards,
+        Zoom Creatives Team
+      `;
+    } else if (status === 'Cancelled') {
+      emailContent = `
+        Hello ${client.name},
+
+        We regret to inform you that your appointment has been cancelled. The details are as follows:
+
+        - Date & Time: ${formattedDate} at ${formattedTime}
+        - Status: Cancelled
+        - Duration: ${appointment.duration} minutes
+        - Location: ${appointment.location || 'Not provided'}
+        
+        If you wish to reschedule, please contact us.
+
+        Best regards,
+        Zoom Creatives Team
+      `;
+    } else if (status === 'Rescheduled') {
+      emailContent = `
+        Hello ${client.name},
+
+        Your appointment has been rescheduled with the following new details:
+
+        - New Date & Time: ${formattedDate} at ${formattedTime}
+        - Status: Rescheduled
+        - Duration: ${appointment.duration} minutes
+        - Location: ${appointment.location || 'Not provided'}
+        
+        Thank you for your understanding.
+
+        Best regards,
+        Zoom Creatives Team
+      `;
+    }
+
+    // Send an email notification to the client
+    const mailOptions = {
+      from: process.env.MYEMAIL,
+      to: clientEmail,  // Use the client's email
+      subject: `Appointment ${status} Notification`,
+      text: emailContent
+    };
+
+    // Send email
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.error('Error sending email:', error);
+      } else {
+        console.log('Email sent:', info.response);
+      }
+    });
+
     res.status(200).json({
       success: true,
-      message: 'Appointment status updated successfully',
+      message: `Appointment ${status}d successfully`,
       appointment,
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, message: 'Failed to update appointment status', error });
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update appointment status',
+      error,
+    });
   }
 };
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -516,6 +560,9 @@ exports.deleteAppointment = async (req, res) => {
 
 
 
+
+
+// send the email also when appointment  reschedue , complted or cancel with the proper description and proper format
 
 
 
