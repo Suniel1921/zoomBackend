@@ -159,19 +159,25 @@ const io = new Server(server, {
 // Middleware
 // app.use(cors());
 app.use(cors({
-  origin: (origin, callback) => {
-    const allowedOrigins = [
-      'https://crm.zoomcreatives.jp',  // Production frontend URL
-    ];
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: ['http://localhost:5173', 'https://crm.zoomcreatives.jp'], // Allow specific origins
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  credentials: true,
+  credentials: true, // Allow credentials (cookies, authentication headers)
 }));
+
+// app.use(cors({
+//   origin: (origin, callback) => {
+//     const allowedOrigins = [
+//       'https://crm.zoomcreatives.jp',  // Production frontend URL
+//     ];
+//     if (!origin || allowedOrigins.includes(origin)) {
+//       callback(null, true);
+//     } else {
+//       callback(new Error('Not allowed by CORS'));
+//     }
+//   },
+//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+//   credentials: true,
+// }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
