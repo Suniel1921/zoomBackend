@@ -192,6 +192,64 @@ exports.getClientById = async (req, res) => {
 
 
 //update client controller
+// exports.updateClient = async (req, res) => {
+//   const { _id: superAdminId } = req.user;
+//   if (!superAdminId) {
+//     return res.status(403).json({ success: false, message: 'Unauthorized: SuperAdmin access required.' });
+//   }
+
+//   try {
+//     const client = await ClientModel.findById(req.params.id);
+//     if (!client) {
+//       return res.status(404).json({ success: false, message: 'Client not found.' });
+//     }
+
+//     const {
+//       name,
+//       category,
+//       status,
+//       email,
+//       // password,
+//       phone,
+//       nationality,
+//       postalCode,
+//       prefecture,
+//       city,
+//       street,
+//       building,
+//       modeOfContact,
+//       socialMedia,
+//     } = req.body;
+
+//     client.name = name || client.name;
+//     client.category = category || client.category;
+//     client.status = status || client.status;
+//     client.email = email || client.email;
+//     client.phone = phone || client.phone;
+//     client.nationality = nationality || client.nationality;
+//     client.postalCode = postalCode || client.postalCode;
+//     client.prefecture = prefecture || client.prefecture;
+//     client.city = city || client.city;
+//     client.street = street || client.street;
+//     client.building = building || client.building;
+//     client.modeOfContact = modeOfContact || client.modeOfContact;
+//     client.socialMedia = socialMedia || client.socialMedia;
+
+//     // if (password) {
+//     //   client.password = await bcrypt.hash(password, 10); 
+//     // }
+
+//     const updatedClient = await client.save();
+//     res.status(200).json({ success: true, message: 'Client updated successfully.', updatedClient });
+//   } catch (err) {
+//     res.status(400).json({ success: false, message: 'Error updating client. Please try again later.', error: err });
+//   }
+// };
+
+
+
+
+
 exports.updateClient = async (req, res) => {
   const { _id: superAdminId } = req.user;
   if (!superAdminId) {
@@ -209,7 +267,6 @@ exports.updateClient = async (req, res) => {
       category,
       status,
       email,
-      // password,
       phone,
       nationality,
       postalCode,
@@ -221,6 +278,7 @@ exports.updateClient = async (req, res) => {
       socialMedia,
     } = req.body;
 
+    // Update only provided fields
     client.name = name || client.name;
     client.category = category || client.category;
     client.status = status || client.status;
@@ -235,54 +293,26 @@ exports.updateClient = async (req, res) => {
     client.modeOfContact = modeOfContact || client.modeOfContact;
     client.socialMedia = socialMedia || client.socialMedia;
 
-    // if (password) {
-    //   client.password = await bcrypt.hash(password, 10); 
-    // }
-
     const updatedClient = await client.save();
-    res.status(200).json({ success: true, message: 'Client updated successfully.', updatedClient });
+
+    // Exclude sensitive fields from the response
+    const responseClient = updatedClient.toObject();
+    delete responseClient.password; // Explicitly remove password if it exists
+
+    res.status(200).json({ success: true, message: 'Client updated successfully.', updatedClient: responseClient });
   } catch (err) {
-    res.status(400).json({ success: false, message: 'Error updating client. Please try again later.', error: err });
+    res.status(400).json({
+      success: false,
+      message: 'Error updating client. Please try again later.',
+      error: err.message,
+    });
   }
 };
 
 
 
+
 //update client profile from client side
-
-
-// exports.updateClientProfile = async (req, res) => {
-//   try {
-//     // Ensure the user exists (could also be checked in requireLogin if needed)
-//     const userId = req.user.id;  // Get user ID from the token
-//     const { fullName, email, phone } = req.body;  // Destructure data from the request body
-
-//     // Find the user by ID and update
-//     const updatedUser = await ClientModel.findByIdAndUpdate(
-//       userId,
-//       { fullName, email, phone },
-//       { new: true }  // Return the updated document
-//     );
-
-//     // If user is not found
-//     if (!updatedUser) {
-//       return res.status(404).json({ message: 'User not found' });
-//     }
-
-//     // Respond with success and the updated user data
-//     return res.status(200).json({
-//       success: true,
-//       message: 'Profile updated successfully',
-//       updatedClient: updatedUser,
-//     });
-//   } catch (error) {
-//     return res.status(500).json({ message: 'Error updating profile', error: error.message });
-//   }
-// };
-
-
-
-// controllers/profileController.js
 exports.updateClientProfile = async (req, res) => {
   if (!req.user) {
     return res.status(401).json({ message: 'Unauthorized. User not authenticated.' });

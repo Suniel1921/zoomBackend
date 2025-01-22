@@ -104,8 +104,6 @@
 
 
 
-
-
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
@@ -131,6 +129,9 @@ const globalSearchRoute = require('./routes/newRoutes/globalSearchRoute');
 const noteRoute = require('./routes/newRoutes/noteRoute');
 const backupDataRoute = require('./routes/newRoutes/backupDataRoute');
 const auditLogRoute = require('./routes/newRoutes/auditLogRoute');
+const callLogsRoute = require ('./routes/newRoutes/callLogsRoute');
+
+
 
 dotenv.config();
 
@@ -218,6 +219,7 @@ app.use('/api/v1/globalSearch', globalSearchRoute);
 app.use('/api/v1/note', noteRoute);
 app.use('/api/v1/backup', backupDataRoute);
 app.use('/api/v1/logs', auditLogRoute);
+app.use('/api/v1/callLogs', callLogsRoute);
 
 // Default Route
 app.get('/', (req, res) => {

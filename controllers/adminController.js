@@ -1,8 +1,5 @@
-
 const bcrypt = require('bcryptjs');
 const AdminModel = require('../models/newModel/adminModel');
-
-
 
 
 // Create new admin controller
