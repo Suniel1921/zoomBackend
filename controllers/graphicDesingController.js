@@ -14,7 +14,7 @@ exports.createGraphicDesign = async (req, res) => {
 
     // Role-based check: Only 'superadmin' or 'admin' are allowed
     if (role !== "superadmin" && (!superAdminId || role !== "admin")) {
-      console.log("Unauthorized access attempt:", req.user); // Log for debugging
+      console.log("Unauthorized access attempt:", req.user); 
       return res
         .status(403)
         .json({ success: false, message: "Unauthorized: Access denied." });
@@ -189,7 +189,7 @@ exports.getGraphicDesignById = async (req, res) => {
 exports.updateGraphicDesign = async (req, res) => {
   try {
     const { amount, advancePaid } = req.body;
-    const { _id: adminId, role, superAdminId } = req.user; // Destructure superAdminId for admin role
+    const { _id: adminId, role, superAdminId } = req.user; 
     const { id } = req.params;
 
     // Validate request body
@@ -248,7 +248,7 @@ exports.updateGraphicDesign = async (req, res) => {
     const updatedGraphicDesign = await GraphicDesignModel.findByIdAndUpdate(
       id,
       { ...req.body, dueAmount },
-      { new: true } // Return the updated document
+      { new: true }
     );
 
     if (!updatedGraphicDesign) {

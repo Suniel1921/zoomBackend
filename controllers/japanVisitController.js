@@ -14,7 +14,7 @@ exports.createJapanVisitApplication = async (req, res) => {
 
       // Role-based check: Only 'superadmin' or 'admin' are allowed
       if (role !== 'superadmin' && (!superAdminId || role !== 'admin')) {
-        console.log('Unauthorized access attempt:', req.user);  // Log for debugging
+        console.log('Unauthorized access attempt:', req.user);  
         return res.status(403).json({ success: false, message: 'Unauthorized: Access denied.' });
       }
 
@@ -88,14 +88,14 @@ exports.getAllJapanVisitApplications = async (req, res) => {
 
     // Query to get applications based on role and superAdminId
     const applications = await japanVisitApplicationModel
-      .find(query)  // Apply the query to find applications
+      .find(query)  
       .populate({
-        path: 'createdBy',  // Populate createdBy field with user info (admin or super admin)
-        select: 'name email', // Fields to include from the user model
+        path: 'createdBy',  
+        select: 'name email', 
       })
       .populate({
-        path: 'clientId',  // Populate the clientId field (client model)
-        select: 'name email phone'  // Fields to include from the client model
+        path: 'clientId',  
+        select: 'name email phone'  
       })
       .exec();
 
@@ -198,7 +198,7 @@ exports.updateJapanVisitApplication = async (req, res) => {
 
   // Ensure the payment object exists in updateData
   if (!updateData.payment) {
-    updateData.payment = {}; // Create an empty payment object if it's missing
+    updateData.payment = {};
   }
 
   // Calculate total payment

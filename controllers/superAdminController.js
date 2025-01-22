@@ -181,7 +181,7 @@ exports.deleteSuperAdmin = async (req, res) => {
   exports.updateSuperAdmin = async (req, res) => {
     const { name, email } = req.body;
     const superAdminId = req.params.id;
-    const superAdminPhoto = req.file ? req.file.path : null; // Check if a new file is uploaded
+    const superAdminPhoto = req.file ? req.file.path : null; 
   
     try {
       // Find the super admin in both models
@@ -199,7 +199,7 @@ exports.deleteSuperAdmin = async (req, res) => {
       const updatedAdminData = {
         name,
         email,
-        superAdminPhoto: superAdminPhoto || currentData.superAdminPhoto, // Preserve old photo if no new one
+        superAdminPhoto: superAdminPhoto || currentData.superAdminPhoto, 
       };
   
       // Update the super admin document
@@ -227,7 +227,7 @@ exports.deleteSuperAdmin = async (req, res) => {
       // Find user in both models
       let user = await SuperAdminModel.findById(id);
       if (!user) {
-        user = await AdminModel.findById(id); // Check AdminModel
+        user = await AdminModel.findById(id); 
       }
   
       if (!user) {

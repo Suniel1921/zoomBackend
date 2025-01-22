@@ -147,7 +147,7 @@ exports.getServiceRequestById = async (req, res) => {
 
 exports.updateServiceRequestStatus = async (req, res) => {
   try {
-    const { id } = req.params; // Expecting the `id` from the route parameter
+    const { id } = req.params; 
     const { status } = req.body;
 
     // Validate if the id is a valid ObjectId
@@ -162,7 +162,7 @@ exports.updateServiceRequestStatus = async (req, res) => {
 
     // Update the service request status
     const updatedRequest = await ServiceRequestModel.findOneAndUpdate(
-      { _id: id }, // MongoDB will use the provided id for matching the document
+      { _id: id },
       { status },
       { new: true }
     );
@@ -185,7 +185,7 @@ exports.deleteServiceRequest = async (req, res) => {
     const { _id: superAdminId } = req.user; 
     const { id } = req.params;
 
-    const deletedRequest = await ServiceRequestModel.findOneAndDelete({ _id: id, superAdminId }); // Verify superAdminId ownership
+    const deletedRequest = await ServiceRequestModel.findOneAndDelete({ _id: id, superAdminId });
 
     if (!deletedRequest) {
       return res.status(404).json({ error: 'Service request not found or you do not have access to it.' });

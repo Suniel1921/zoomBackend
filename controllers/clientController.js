@@ -18,120 +18,13 @@ const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
     user: process.env.MYEMAIL,
-    pass: process.env.PASSWORD, // App password
+    pass: process.env.PASSWORD, 
   },
 });
-
-// exports.addClient = [
-//   upload.array('profilePhoto', 1),
-//   async (req, res) => {
-//     const { _id: superAdminId } = req.user;
-
-//     if (!superAdminId) {
-//       return res.status(403).json({ success: false, message: 'Unauthorized: SuperAdmin access required.' });
-//     }
-
-//     try {
-//       const {
-//         name,
-//         category,
-//         status,
-//         email,
-//         password,
-//         phone,
-//         nationality,
-//         postalCode,
-//         prefecture,
-//         city,
-//         street,
-//         building,
-//         modeOfContact,
-//         socialMedia,
-//         timeline,
-//         dateJoined,
-//       } = req.body;
-
-//       const hashedPassword = await bcrypt.hash(password, 10);
- 
-
-//       //client photo is optinal
-//       // if (!req.files || req.files.length === 0) {
-//       //   return res.status(400).json({ success: false, message: 'No file uploaded' });
-//       // }
-
-//       const profilePhotoUrls = [];
-
-//       // Check file size for profile photo
-//       for (const file of req.files) {
-//         if (file.size > MAX_SIZE) {
-//           return res.status(400).json({ success: false, message: 'Profile photo must be less than 2MB.' });
-//         }
-
-//         const result = await cloudinary.uploader.upload(file.path);
-//         profilePhotoUrls.push(result.secure_url);
-//       }
-
-//       const createClient = await ClientModel.create({
-//         superAdminId,
-//         name,
-//         category,
-//         status,
-//         email,
-//         password: hashedPassword,
-//         phone,
-//         nationality,
-//         postalCode,
-//         prefecture,
-//         city,
-//         street,
-//         building,
-//         modeOfContact,
-//         socialMedia,
-//         timeline,
-//         dateJoined,
-//         profilePhoto: profilePhotoUrls[0],
-//       });
-
-//       // Send email with client's details
-//       const mailOptions = {
-//         from: process.env.MYEMAIL,
-//         to: email,
-//         subject: 'Welcome to Zoom Creatives!',
-//         html: `
-//           <h2>Welcome, ${name}!</h2>
-//           <p>Your account has been successfully created.</p>
-//           <p><strong>Email:</strong> ${email}</p>
-//           <p><strong>Password:</strong> ${password}</p>
-//           <p>You can track you application status using the below link </p>
-//           <p><a href="https://crm.zoomcreatives.jp/client-login" target="_blank">Click here to login</a></p>
-//           <p>Please keep your login credentials secure.</p>
-//         `,
-//       };
-
-//       await transporter.sendMail(mailOptions);
-
-//       return res.status(201).json({
-//         success: true,
-//         message: 'Client created successfully and email sent',
-//         createClient,
-//       });
-//     } catch (error) {
-//       return res.status(500).json({ success: false, message: 'Internal Server Error', error });
-//     }
-//   },
-// ];
-
-
-
 
 
 
 //get all clients controller
-
-
-
-
-
 
 exports.addClient = [
   upload.array('profilePhoto', 1),
@@ -141,7 +34,7 @@ exports.addClient = [
     // If the user is a superadmin, they don't need superAdminId for client creation
     // If the user is an admin, ensure superAdminId is provided
     if (role !== 'superadmin' && (!superAdminId || role !== 'admin')) {
-      console.log('Unauthorized access attempt:', req.user);  // Log for debugging
+      console.log('Unauthorized access attempt:', req.user); 
       return res.status(403).json({ success: false, message: 'Unauthorized: Access denied.' });
     }
 
@@ -183,7 +76,7 @@ exports.addClient = [
 
       // Create the client with the correct superAdminId
       const createClient = await ClientModel.create({
-        superAdminId: clientSuperAdminId,  // Correctly set superAdminId
+        superAdminId: clientSuperAdminId,  // set superAdminId
         createdBy,     // Track the admin who created this client
         name,
         category,
@@ -316,7 +209,7 @@ exports.updateClient = async (req, res) => {
       category,
       status,
       email,
-      password,
+      // password,
       phone,
       nationality,
       postalCode,
@@ -342,9 +235,9 @@ exports.updateClient = async (req, res) => {
     client.modeOfContact = modeOfContact || client.modeOfContact;
     client.socialMedia = socialMedia || client.socialMedia;
 
-    if (password) {
-      client.password = await bcrypt.hash(password, 10); 
-    }
+    // if (password) {
+    //   client.password = await bcrypt.hash(password, 10); 
+    // }
 
     const updatedClient = await client.save();
     res.status(200).json({ success: true, message: 'Client updated successfully.', updatedClient });

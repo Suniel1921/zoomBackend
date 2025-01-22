@@ -43,20 +43,21 @@ const japanVisitApplicationModel = require("../models/newModel/japanVisitModel")
 
 
 //****************sending email while appointment create ****************
+
 const nodemailer = require('nodemailer');
-const moment = require('moment');  // For date formatting
+const moment = require('moment');  
 // Nodemailer configuration
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: process.env.MYEMAIL,  // Ensure you use environment variable
-    pass: process.env.PASSWORD  // Ensure you use environment variable
+    user: process.env.MYEMAIL, 
+    pass: process.env.PASSWORD 
   }
 });
 
 exports.createAppointment = async (req, res) => {
   try {
-    const { _id: superAdminId } = req.user;  // Extract superAdminId from the authenticated user
+    const { _id: superAdminId } = req.user;  
     const { clientId, ...appointmentData } = req.body;
 
     // Validate if the client exists and belongs to the superAdmin
@@ -68,7 +69,7 @@ exports.createAppointment = async (req, res) => {
     const appointment = new AppointmentModel({
       clientId,
       ...appointmentData,
-      superAdminId, // Attach superAdminId
+      superAdminId, 
     });
     await appointment.save();
 
@@ -128,32 +129,13 @@ exports.createAppointment = async (req, res) => {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // Get all appointments for the authenticated superAdmin
 exports.getAllAppointments = async (req, res) => {
   try {
-    // const { _id: superAdminId } = req.user;  // Extract superAdminId from the authenticated user
+    // const { _id: superAdminId } = req.user;  
     // const appointments = await AppointmentModel.find({ superAdminId })
     const appointments = await AppointmentModel.find()
-      .populate('clientId', 'name phone')  // Populate client information
+      .populate('clientId', 'name phone')  
       .sort({ createdAt: -1 });
 
     res.status(200).json({ success: true, message: 'appointment fetched sucessfully', appointments });
@@ -269,16 +251,16 @@ exports.updateAppointment = async (req, res) => {
           message: 'Date and Time are required for rescheduling.',
         });
       }
-      updateData.date = new Date(date); // Ensure proper date formatting
+      updateData.date = new Date(date); 
       updateData.time = time;
-      if (notes) updateData.notes = notes; // Include notes if provided
-      isRescheduled = true;  // Mark that the appointment is being rescheduled
+      if (notes) updateData.notes = notes; 
+      isRescheduled = true; 
     }
 
     const updatedAppointment = await AppointmentModel.findByIdAndUpdate(
       id,
       updateData,
-      { new: true } // Return the updated document
+      { new: true } 
     );
 
     if (!updatedAppointment) {

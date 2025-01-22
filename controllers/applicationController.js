@@ -62,7 +62,7 @@ exports.createApplication = async (req, res) => {
 
 // Get all applications for the authenticated user (superadmin or admin)
 exports.getApplications = async (req, res) => {
-  const { _id, role, superAdminId } = req.user; // Extract user ID and role from authenticated user
+  const { _id, role, superAdminId } = req.user; 
 
   // Role-based check: Only 'superadmin' or 'admin' are allowed
   if (!role || (role !== 'superadmin' && role !== 'admin')) {
@@ -74,17 +74,15 @@ exports.getApplications = async (req, res) => {
 
   
     if (role === 'superadmin') {
-      // SuperAdmin: Fetch all clients under their `superAdminId`
       query = { superAdminId: _id };
     } else if (role === 'admin') {
-      // Admin: Fetch clients created by the admin or under their `superAdminId`
       query = { $or: [{ createdBy: _id }, { superAdminId }] };
     }
 
     // Query to get applications based on role and superAdminId
     const applications = await applicationModel
-      .find(query)  // Apply the query to find applications
-      .populate('createdBy', 'name email')  // Populate client details associated with the application
+      .find(query)
+      .populate('createdBy', 'name email') 
       .exec();
 
     // If no applications are found, return a 404 error

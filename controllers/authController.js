@@ -43,7 +43,7 @@ exports.register = async (req, res) => {
     return res.status(201).json({
       success: true,
       message: 'Account created successfully! Please log in.',
-      user: newUser // Include the new user object
+      user: newUser 
     });
 
   } catch (error) {
@@ -146,7 +146,7 @@ exports.login = async (req, res) => {
       { model: SuperAdminModel, role: "superadmin", include: {} },
       { model: AdminModel, role: "admin", include: { superAdminId: 1 } },
       { model: ClientModel, role: "client", include: { superAdminId: 1 } },
-      { model: authModel, role: "user", include: {} }, // Add authModel last for fallback
+      { model: authModel, role: "user", include: {} }, 
     ];
 
     let user = null;
@@ -178,7 +178,7 @@ exports.login = async (req, res) => {
       _id: user._id,
       email: user.email,
       role,
-      ...(user.superAdminId && { superAdminId: user.superAdminId }), // Include superAdminId if available
+      ...(user.superAdminId && { superAdminId: user.superAdminId }), 
     };
 
     // Log the payload for debugging
@@ -193,7 +193,7 @@ exports.login = async (req, res) => {
       message: "Login successful",
       user: {
         id: user._id,
-        fullName: user.name || user.email, // Use name if available, otherwise email
+        fullName: user.name || user.email, 
         email: user.email,
         role,
         phone: user.phone || null,
@@ -222,7 +222,7 @@ exports.login = async (req, res) => {
 
 //FORGOT PASSOWRD CONTROLLER
 const nodemailer = require('nodemailer');
-const tempUserStore = new Map(); // You may use a better in-memory store or database for production
+const tempUserStore = new Map(); 
 
 // FORGOT PASSWORD CONTROLLER
 exports.forgotPassword = async (req, res) => {
@@ -320,7 +320,7 @@ exports.resetPassword = async (req, res) => {
       token,
     });
   } catch (error) {
-    console.error(error); // Log the error for debugging
+    console.error(error); 
     return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };

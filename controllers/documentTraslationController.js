@@ -38,7 +38,7 @@ exports.createDocumentTranslation = async (req, res) => {
       superAdminId: clientSuperAdminId,
       createdBy,
       clientId,
-      steps: applicationSteps, // Direct assignment of steps
+      steps: applicationSteps, 
       sourceLanguage,
       targetLanguage,
       nameInTargetScript,
@@ -95,14 +95,14 @@ exports.getAllDocumentTranslation = async (req, res) => {
 
     // Query to get applications based on role and superAdminId
     const translations = await documentTranslationModel
-      .find(query) // Apply the query to find applications
+      .find(query)
       .populate({
-        path: "createdBy", // Populate createdBy field with user info (admin or super admin)
-        select: "name email", // Fields to include from the user model
+        path: "createdBy", 
+        select: "name email", 
       })
       .populate({
-        path: "clientId", // Populate the clientId field (client model)
-        select: "name email phone", // Fields to include from the client model
+        path: "clientId", 
+        select: "name email phone", 
       })
       .exec();
 
@@ -147,7 +147,7 @@ exports.getDocumentTranslationByID = async (req, res) => {
     // Find the document that matches the ID and superAdminId
     const translation = await documentTranslationModel
       .findOne({ _id: id, superAdminId })
-      .populate("clientId"); // Populate client info if needed
+      .populate("clientId");
 
     if (!translation) {
       return res

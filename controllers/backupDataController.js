@@ -186,7 +186,7 @@ exports.handleScheduleBackup = (frequency, time) => {
 
 // Route to schedule automated backup
 exports.scheduleBackup = (req, res) => {
-  const { frequency, time } = req.body; // Get frequency and time from the request body
+  const { frequency, time } = req.body;
 
   try {
     exports.handleScheduleBackup(frequency, time);
@@ -200,7 +200,7 @@ exports.scheduleBackup = (req, res) => {
 // Restore Function
 exports.restoreBackup = async (req, res) => {
   try {
-    const { data } = req.body; // Backup data
+    const { data } = req.body; 
 
     // Check if the data is valid
     if (!data || typeof data !== 'object') {

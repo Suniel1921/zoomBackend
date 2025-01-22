@@ -50,7 +50,7 @@ exports.getNotesBySuperAdmin = async (req, res) => {
 // Get a single note by ID for a specific super admin
 exports.getNoteById = async (req, res) => {
   try {
-    const { _id: superAdminId } = req.user; // Assuming user is authenticated and has _id field
+    const { _id: superAdminId } = req.user;
     const noteId = req.params.id;
 
     const note = await noteModel.findOne({ _id: noteId, superAdminId });
@@ -96,7 +96,7 @@ exports.createNote = async (req, res) => {
 // Update a note for a specific super admin
 exports.updateNote = async (req, res) => {
   try {
-    const { _id: superAdminId } = req.user; // Assuming user is authenticated and has _id field
+    const { _id: superAdminId } = req.user;
     const noteId = req.params.id;
 
     const note = await noteModel.findOne({ _id: noteId, superAdminId });
@@ -113,7 +113,7 @@ exports.updateNote = async (req, res) => {
 // Delete a note by ID for a specific super admin
 exports.deleteNote = async (req, res) => {
   try {
-    const { _id: superAdminId } = req.user; // Assuming user is authenticated and has _id field
+    const { _id: superAdminId } = req.user; 
     const noteId = req.params.id;
 
     const note = await noteModel.findOne({ _id: noteId, superAdminId });

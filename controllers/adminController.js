@@ -72,7 +72,7 @@ exports.getAdmins = async (req, res) => {
     }
 
     const admins = await AdminModel.find(query)
-      .exec(); // Execute the query to find admins
+      .exec(); 
 
     // if (admins.length === 0) {
     //   return res.status(404).json({ success: false, message: 'No admins found' });
@@ -94,7 +94,7 @@ exports.getAdmins = async (req, res) => {
 // Get admin by ID for the authenticated superAdmin
 exports.getAdminById = async (req, res) => {
   try {
-    const { _id: superAdminId } = req.user; // Get superAdminId from the authenticated user
+    const { _id: superAdminId } = req.user; 
     const admin = await AdminModel.findOne({ _id: req.params.id, superAdminId });
     
     if (!admin) {
@@ -110,7 +110,7 @@ exports.getAdminById = async (req, res) => {
 // Update admin
 exports.updateAdmin = async (req, res) => {
   try {
-    const { _id: superAdminId } = req.user; // Get superAdminId from the authenticated user
+    const { _id: superAdminId } = req.user; 
     const { name, email, role, status } = req.body;
 
     const admin = await AdminModel.findOne({ _id: req.params.id, superAdminId });
@@ -133,7 +133,7 @@ exports.updateAdmin = async (req, res) => {
 // Delete admin
 exports.deleteAdmin = async (req, res) => {
   try {
-    const { _id: superAdminId } = req.user; // Get superAdminId from the authenticated user
+    const { _id: superAdminId } = req.user; 
 
     const admin = await AdminModel.findOneAndDelete({ _id: req.params.id, superAdminId });
     if (!admin) {

@@ -12,8 +12,8 @@ const japanVisitApplicationModel = require("../models/newModel/japanVisitModel")
 const OtherServiceModel = require("../models/newModel/otherServicesModel");
 
 exports.globalSearch = async (req, res) => {
-    const { query } = req.query; // Use req.query for GET requests
-    const { _id: superAdminId } = req.user;  // Extract superAdminId from the authenticated user
+    const { query } = req.query; 
+    const { _id: superAdminId } = req.user; 
   
     if (!query || query.trim() === '') {
       return res.status(400).json({ error: 'Search query is required' });
@@ -24,7 +24,7 @@ exports.globalSearch = async (req, res) => {
   
       // Search in ClientModel with superAdminId
       const clients = await ClientModel.find({
-        superAdminId,  // Add superAdminId check
+        superAdminId, 
         $or: [
           { name: regex }, 
           { email: regex },

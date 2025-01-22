@@ -11,7 +11,7 @@ exports.createEpassport = async (req, res) => {
 
     // Role-based check: Only 'superadmin' or 'admin' are allowed
   if (role !== "superadmin" && (!superAdminId || role !== "admin")) {
-    console.log("Unauthorized access attempt:", req.user); // Log for debugging
+    console.log("Unauthorized access attempt:", req.user); 
     return res
       .status(403)
       .json({ success: false, message: "Unauthorized: Access denied." });
@@ -51,7 +51,7 @@ exports.createEpassport = async (req, res) => {
 // Get all ePassport applications for authenticated superAdmin
 
 exports.getAllEpassports = async (req, res) => {
-  const { _id, role, superAdminId } = req.user; // Extract user ID and role from authenticated user
+  const { _id, role, superAdminId } = req.user; 
 
   // Role-based check: Only 'superadmin' or 'admin' are allowed
   if (!role || (role !== "superadmin" && role !== "admin")) {
@@ -73,14 +73,14 @@ exports.getAllEpassports = async (req, res) => {
 
     // Query to get applications based on role and superAdminId
     const epassports = await ePassportModel
-      .find(query) // Apply the query to find applications
+      .find(query) 
       .populate({
-        path: "createdBy", // Populate createdBy field with user info (admin or super admin)
-        select: "name email", // Fields to include from the user model
+        path: "createdBy",
+        select: "name email", 
       })
       .populate({
-        path: "clientId", // Populate the clientId field (client model)
-        select: "name email phone", // Fields to include from the client model
+        path: "clientId", 
+        select: "name email phone", 
       })
       .exec();
 
@@ -208,14 +208,14 @@ exports.updateEpassport = async (req, res) => {
         ? { _id: epassportId } // Superadmin can update any ePassport
         : { _id: epassportId }; // Admin can update any ePassport (no restrictions)
 
-    console.log("Query being used:", query); // Log the query for debugging
+    // console.log("Query being used:", query); 
 
     // Find the ePassport
     const epassport = await ePassportModel.findOne(query);
 
     // Check if the document exists
     if (!epassport) {
-      console.log("No ePassport found with the query:", query); // Log for debugging
+      console.log("No ePassport found with the query:", query); 
       return res.status(404).json({ success: false, message: "ePassport not found" });
     }
 
@@ -352,11 +352,11 @@ const upload = require('../config/multerConfig');
 const cloudinary = require('cloudinary').v2;
 
 exports.uploadFileForApplication = [
-  upload.array('clientFiles', 5), // Handling multiple file uploads (max 5 files)
+  upload.array('clientFiles', 5), 
   async (req, res) => {
     try {
       const { clientId } = req.params;
-      const { _id: createdBy } = req.user; // Get the admin's ID from the authenticated user
+      const { _id: createdBy } = req.user; 
       console.log('Params:', req.params);
       
       if (!clientId) {
@@ -384,12 +384,12 @@ exports.uploadFileForApplication = [
       const clientFilesUrls = [];
       for (const file of req.files) {
         const result = await cloudinary.uploader.upload(file.path);
-        clientFilesUrls.push(result.secure_url); // Collect all the uploaded file URLs
+        clientFilesUrls.push(result.secure_url); 
       }
 
       // Save the uploaded file URLs in the application model
-      application.clientFiles = application.clientFiles || []; // Initialize the files array if not already
-      application.clientFiles.push(...clientFilesUrls); // Add the new file URLs
+      application.clientFiles = application.clientFiles || []; 
+      application.clientFiles.push(...clientFilesUrls); 
 
       // Save the updated application data
       await application.save();
@@ -397,7 +397,7 @@ exports.uploadFileForApplication = [
       return res.status(200).json({
         success: true,
         message: 'Files uploaded successfully',
-        fileUrls: clientFilesUrls, // Return the list of URLs to the client
+        fileUrls: clientFilesUrls, 
       });
     } catch (error) {
       console.error('Error uploading files:', error);

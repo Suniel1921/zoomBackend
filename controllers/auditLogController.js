@@ -25,16 +25,16 @@ exports.exportLogs = async (req, res) => {
     if (format === 'csv') {
       // Prepare CSV content
       const csvContent = [
-        ['Timestamp', 'User', 'Action', 'Details', 'IP Address'].join(','), // Header row
+        ['Timestamp', 'User', 'Action', 'Details', 'IP Address'].join(','),
         ...logs.map(log =>
           [
             log.timestamp,
             log.userName,
             log.action,
-            JSON.stringify(log.details).replace(/"/g, '""'), // Escape double quotes for CSV
+            JSON.stringify(log.details).replace(/"/g, '""'), 
             log.ipAddress,
           ]
-          .map(value => `"${value}"`) // Wrap each field in quotes
+          .map(value => `"${value}"`) 
           .join(',')
         ),
       ].join('\n');

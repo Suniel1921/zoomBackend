@@ -80,7 +80,7 @@ exports.createOtherServices = async (req, res) => {
 // Get all services for the authenticated superAdmin
 
 exports.getAllOtherServices = async (req, res) => {
-  const { _id, role, superAdminId } = req.user; // Extract user ID and role from authenticated user
+  const { _id, role, superAdminId } = req.user; 
 
   // Role-based check: Only 'superadmin' or 'admin' are allowed
   if (!role || (role !== "superadmin" && role !== "admin")) {
@@ -102,14 +102,14 @@ exports.getAllOtherServices = async (req, res) => {
 
     // Query to get applications based on role and superAdminId
     const services = await OtherServiceModel
-      .find(query) // Apply the query to find applications
+      .find(query) 
       .populate({
-        path: "createdBy", // Populate createdBy field with user info (admin or super admin)
-        select: "name email", // Fields to include from the user model
+        path: "createdBy", 
+        select: "name email", 
       })
       .populate({
-        path: "clientId", // Populate the clientId field (client model)
-        select: "name email phone", // Fields to include from the client model
+        path: "clientId", 
+        select: "name email phone", 
       })
       .exec();
 
