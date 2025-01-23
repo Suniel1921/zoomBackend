@@ -8,7 +8,7 @@ const clientSchema = new mongoose.Schema({
     },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'AdminModel', // Can be a super admin or admin
+      ref: 'AdminModel', 
       required: true,
     },
     name: {

@@ -49,7 +49,7 @@ const documentTranslationSchema = new mongoose.Schema(
     },
     nameInTargetScript: {
       type: String,
-      required: true,
+      required: false,
     },
     pages: {
       type: Number,
