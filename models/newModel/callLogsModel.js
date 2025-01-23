@@ -29,12 +29,17 @@ const callLogSchema = new mongoose.Schema({
         type: String,
         required : false,
     },
+    followUp: {
+        type: String,
+        required: false,
+        enum : ['Yes', 'No'],
+    },
     remarks: {
         type: String,
         enum: ['Done', 'Working on it', 'Stuck', 'Complete'],
         required: false,
     }
-})
+},{timestamps: true})
 
 const CallLogsModel = mongoose.model('CallLogsModel', callLogSchema);
 module.exports = CallLogsModel;
