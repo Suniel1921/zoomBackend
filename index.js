@@ -59,8 +59,7 @@ app.use(cors({
   credentials: true, // Allow credentials (cookies, authentication headers)
 }));
 
-// Handle preflight requests
-app.options('*', cors()); // Enable preflight for all routes
+
 
 
 app.use(express.json());

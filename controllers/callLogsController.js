@@ -4,7 +4,7 @@ const CallLogsModel = require('../models/newModel/callLogsModel');
 exports.createCallLogs = async (req, res) => {
   try {
     const { superAdminId, _id: createdBy, role } = req.user;
-    const { name, phone, purpose, handler, followUp, remarks } = req.body;
+    const { name, phone, purpose, handler, followUp, remarks, notes } = req.body;
 
     
 
