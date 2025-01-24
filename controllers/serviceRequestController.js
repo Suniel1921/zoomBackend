@@ -59,7 +59,7 @@ exports.createServiceRequest = async (req, res) => {
 
     const superAdminId = req.user ? req.user._id : null;
 
-    if (!clientName || !phoneNumber || !serviceName || !message) {
+    if (!clientName  || !serviceName || !message) {
       return res.status(400).json({ error: 'All fields are required.' });
     }
 

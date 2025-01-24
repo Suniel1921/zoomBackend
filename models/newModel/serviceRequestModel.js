@@ -61,7 +61,7 @@ const serviceRequestSchema = new mongoose.Schema({
   },
   phoneNumber: {
     type: String,
-    required: true,
+    required: false,
   },
   serviceName: {
     type: String,
