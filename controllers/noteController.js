@@ -1,24 +1,5 @@
 const noteModel = require('../models/newModel/noteModel');
 
-// Get all notes for a specific super admin
-// exports.getNotesBySuperAdmin = async (req, res) => {
-//     try {
-//       const { _id: superAdminId } = req.user;
-//       console.log('Fetching notes for SuperAdmin ID:', superAdminId);
-//       const notes = await noteModel.find({ superAdminId });
-//       console.log(notes)
-//       if (!notes || notes.length === 0) {
-//         return res.status(404).json({ error: 'No notes found' });
-//       }
-//       res.status(200).json(notes);
-//     } catch (err) {
-//       console.error('Error fetching notes:', err);
-//       res.status(500).json({ error: 'Failed to fetch notes' });
-//     }
-//   };
-
-
-
 
 //get all clients controller
 exports.getNotesBySuperAdmin = async (req, res) => {

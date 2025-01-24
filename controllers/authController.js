@@ -5,7 +5,9 @@ const bcrypt = require('bcryptjs');
 const  JWT = require ("jsonwebtoken");
 const ClientModel = require("../models/newModel/clientModel");
 const SuperAdminModel = require("../models/newModel/superAdminModel");
-const AdminModel = require ("../models/newModel/adminModel");
+const nodemailer = require('nodemailer');
+const AdminModel = require("../models/newModel/adminModel");
+const AuditLogController = require('../controllers/auditLogController'); 
 
 exports.register = async (req, res) => {
   try {
@@ -55,7 +57,6 @@ exports.register = async (req, res) => {
 
 
 
-//login controller
 
 // exports.login = async (req, res) => {
 //   try {
@@ -65,27 +66,26 @@ exports.register = async (req, res) => {
 //       return res.status(400).json({ success: false, message: "Email and password are required" });
 //     }
 
-//     let user = await authModel.findOne({ email });
-//     let isClientModel = false;
-//     let isSuperAdminModel = false;
-//     let isAdminModel = false;
+//     // List of models to check, in order of precedence
+//     const models = [
+//       { model: SuperAdminModel, role: "superadmin", include: {} },
+//       { model: AdminModel, role: "admin", include: { superAdminId: 1 } },
+//       { model: ClientModel, role: "client", include: { superAdminId: 1 } },
+//       { model: authModel, role: "user", include: {} }, 
+//     ];
 
-//     // Check if the user exists in ClientModel
-//     if (!user) {
-//       user = await ClientModel.findOne({ email });
-//       isClientModel = true;
-//     }
+//     let user = null;
+//     let role = null;
+//     let additionalData = {};
 
-//     // Check if the user exists in SuperAdminModel
-//     if (!user) {
-//       user = await SuperAdminModel.findOne({ email });
-//       isSuperAdminModel = true;
-//     }
-
-//     //check if the admin exits in adminmodel
-//     if(!user){
-//       user = await AdminModel.findOne( {email });
-//       isAdminModel = true;
+//     // Check each model for the user
+//     for (const { model, role: modelRole, include } of models) {
+//       user = await model.findOne({ email }).select({ ...include, password: 1, name: 1, email: 1, phone: 1, profilePhoto: 1 });
+//       if (user) {
+//         role = modelRole;
+//         additionalData = include;
+//         break;
+//       }
 //     }
 
 //     if (!user) {
@@ -98,37 +98,142 @@ exports.register = async (req, res) => {
 //       return res.status(401).json({ success: false, message: "Invalid email or password" });
 //     }
 
+//     // Prepare JWT payload
+//     const payload = {
+//       _id: user._id,
+//       email: user.email,
+//       role,
+//       ...(user.superAdminId && { superAdminId: user.superAdminId }), 
+//     };
+
+//     // Log the payload for debugging
+//     console.log('JWT Payload:', payload);
+
 //     // Generate JWT token
-//     const token = JWT.sign(
-//       { _id: user._id, email: user.email, role: isSuperAdminModel ? 'superadmin' : (user.role || 'client') },
-//       process.env.SECRET_KEY,
-//       { expiresIn: "7d" }
-//     );
+//     const token = JWT.sign(payload, process.env.SECRET_KEY, { expiresIn: "7d" });
 
-//     const fullName = isClientModel ? user.name : (isSuperAdminModel ? user.email : user.fullName);
-
+//     // Return user data with the token
 //     return res.status(200).json({
 //       success: true,
 //       message: "Login successful",
-    
 //       user: {
-//               id: user._id,
-//               fullName, 
-//               email: user.email,
-//               role: user.role || 'client', 
-//               phone: user.phone,
-//               profilePhoto: user.profilePhoto
-//               },
+//         id: user._id,
+//         fullName: user.name || user.email, 
+//         email: user.email,
+//         role,
+//         phone: user.phone || null,
+//         profilePhoto: user.profilePhoto || null,
+//         ...additionalData, // Include additional fields like `superAdminId`
+//       },
 //       token,
 //     });
 //   } catch (error) {
-//     console.error('Login Error:', error.message);
+//     console.error("Login Error:", error);
 //     return res.status(500).json({
 //       success: false,
 //       message: "An error occurred during login. Please try again later.",
 //     });
 //   }
 // };
+
+
+
+
+
+// **********tracking last login*****
+
+
+
+// Login controller
+// exports.login = async (req, res) => {
+//   try {
+//     const { email, password } = req.body;
+
+//     if (!email || !password) {
+//       return res.status(400).json({ success: false, message: "Email and password are required" });
+//     }
+
+//     // List of models to check, in order of precedence
+//     const models = [
+//       { model: SuperAdminModel, role: "superadmin", include: {} },
+//       { model: AdminModel, role: "admin", include: { superAdminId: 1 } },
+//       { model: ClientModel, role: "client", include: { superAdminId: 1 } },
+//       { model: authModel, role: "user", include: {} }, 
+//     ];
+
+//     let user = null;
+//     let role = null;
+//     let additionalData = {};
+
+//     // Check each model for the user
+//     for (const { model, role: modelRole, include } of models) {
+//       user = await model.findOne({ email }).select({ ...include, password: 1, name: 1, email: 1, phone: 1, profilePhoto: 1 });
+//       if (user) {
+//         role = modelRole;
+//         additionalData = include;
+//         break;
+//       }
+//     }
+
+//     if (!user) {
+//       return res.status(401).json({ success: false, message: "Invalid email or password" });
+//     }
+
+//     // Verify password
+//     const isPasswordValid = await bcrypt.compare(password, user.password);
+//     if (!isPasswordValid) {
+//       return res.status(401).json({ success: false, message: "Invalid email or password" });
+//     }
+
+//     // Update last login time for admin
+//     if (role === 'admin') {
+//       console.log(`Updating last login for admin: ${user._id}`);
+//       await AdminModel.findByIdAndUpdate(user._id, { lastLogin: new Date() });
+//       console.log(`Last login updated for admin: ${user._id}`);
+//     }
+
+//     // Prepare JWT payload
+//     const payload = {
+//       _id: user._id,
+//       email: user.email,
+//       role,
+//       ...(user.superAdminId && { superAdminId: user.superAdminId }), 
+//     };
+
+//     // Log the payload for debugging
+//     console.log('JWT Payload:', payload);
+
+//     // Generate JWT token
+//     const token = JWT.sign(payload, process.env.SECRET_KEY, { expiresIn: "7d" });
+
+//     // Return user data with the token
+//     return res.status(200).json({
+//       success: true,
+//       message: "Login successful",
+//       user: {
+//         id: user._id,
+//         fullName: user.name || user.email, 
+//         email: user.email,
+//         role,
+//         phone: user.phone || null,
+//         profilePhoto: user.profilePhoto || null,
+//         ...additionalData, // Include additional fields like `superAdminId`
+//       },
+//       token,
+//     });
+//   } catch (error) {
+//     console.error("Login Error:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "An error occurred during login. Please try again later.",
+//     });
+//   }
+// };
+
+
+
+
+
 
 
 
@@ -164,14 +269,51 @@ exports.login = async (req, res) => {
     }
 
     if (!user) {
+      // Log failed login attempt (user not found)
+      await AuditLogController.addLog(
+        "failed_login", // Action
+        "unknown",      // User type (unknown since user doesn't exist)
+        null,           // User ID
+        email,          // Use email as the identifier
+        req.ip,         // IP address
+        { message: "User not found" } // Additional details
+      );
+
       return res.status(401).json({ success: false, message: "Invalid email or password" });
     }
 
     // Verify password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
+      // Log failed login attempt (invalid password)
+      await AuditLogController.addLog(
+        "failed_login", // Action
+        role,           // User type (e.g., admin, superadmin, etc.)
+        user._id,       // User ID
+        user.name || user.email, // User name or email
+        req.ip,         // IP address
+        { message: "Invalid password" } // Additional details
+      );
+
       return res.status(401).json({ success: false, message: "Invalid email or password" });
     }
+
+    // Update last login time for admin
+    if (role === 'admin') {
+      console.log(`Updating last login for admin: ${user._id}`);
+      await AdminModel.findByIdAndUpdate(user._id, { lastLogin: new Date() });
+      console.log(`Last login updated for admin: ${user._id}`);
+    }
+
+    // Log successful login
+    await AuditLogController.addLog(
+      "login",          // Action
+      role,             // User type (e.g., admin, superadmin, etc.)
+      user._id,         // User ID
+      user.name || user.email, // User name or email
+      req.ip,           // IP address
+      { message: "Login successful" } // Additional details
+    );
 
     // Prepare JWT payload
     const payload = {
@@ -204,6 +346,17 @@ exports.login = async (req, res) => {
     });
   } catch (error) {
     console.error("Login Error:", error);
+
+    // Log the error
+    await AuditLogController.addLog(
+      "error",          // Action
+      "system",         // User type (system error)
+      null,             // User ID
+      "Login Controller", // Identifier
+      req.ip,           // IP address
+      { error: error.message } // Additional details
+    );
+
     return res.status(500).json({
       success: false,
       message: "An error occurred during login. Please try again later.",
@@ -214,14 +367,11 @@ exports.login = async (req, res) => {
 
 
 
-
-
-
-
 // ***********************FORGOT PASSWORD****************************
 
 //FORGOT PASSOWRD CONTROLLER
-const nodemailer = require('nodemailer');
+
+
 const tempUserStore = new Map(); 
 
 // FORGOT PASSWORD CONTROLLER
