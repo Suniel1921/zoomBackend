@@ -10,7 +10,7 @@ router.post('/createEpassport', requireLogin, controller.createEpassport);
 router.put('/updateEpassport/:id',  requireLogin, controller.updateEpassport);
 router.delete('/deleteEpassport/:id',  requireLogin, controller.deleteEpassport);
 
-// **file uplaod route**
+// **file upload route**
 router.post('/uploadMultipleFiles/:clientId', requireLogin, controller.uploadFileForApplication);
 
 // *****file upload route for all mode based on model name (this api route called in FileTab component)****
