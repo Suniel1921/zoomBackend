@@ -147,25 +147,6 @@ exports.getClients = async (req, res) => {
 };
 
 
-// exports.getClients = async (req, res) => {
-//   const { _id: superAdminId } = req.user;  
-  
-//   if (!superAdminId) {
-//     return res.status(403).json({ success: false, message: 'Unauthorized: SuperAdmin access required.' });
-//   }
-
-//   try {
-//     // Fetch clients where the superAdminId matches the logged-in user's superAdminId
-//     const clients = await ClientModel.find({ superAdminId }); 
-//     res.json({ success: true, clients });
-//   } catch (err) {
-//     res.status(500).json({ success: false, message: err.message });
-//   }
-// };
-
-
-//get client by id controller
-
 
 
 
@@ -188,63 +169,6 @@ exports.getClientById = async (req, res) => {
   }
 };
 
-
-
-
-//update client controller
-// exports.updateClient = async (req, res) => {
-//   const { _id: superAdminId } = req.user;
-//   if (!superAdminId) {
-//     return res.status(403).json({ success: false, message: 'Unauthorized: SuperAdmin access required.' });
-//   }
-
-//   try {
-//     const client = await ClientModel.findById(req.params.id);
-//     if (!client) {
-//       return res.status(404).json({ success: false, message: 'Client not found.' });
-//     }
-
-//     const {
-//       name,
-//       category,
-//       status,
-//       email,
-//       // password,
-//       phone,
-//       nationality,
-//       postalCode,
-//       prefecture,
-//       city,
-//       street,
-//       building,
-//       modeOfContact,
-//       socialMedia,
-//     } = req.body;
-
-//     client.name = name || client.name;
-//     client.category = category || client.category;
-//     client.status = status || client.status;
-//     client.email = email || client.email;
-//     client.phone = phone || client.phone;
-//     client.nationality = nationality || client.nationality;
-//     client.postalCode = postalCode || client.postalCode;
-//     client.prefecture = prefecture || client.prefecture;
-//     client.city = city || client.city;
-//     client.street = street || client.street;
-//     client.building = building || client.building;
-//     client.modeOfContact = modeOfContact || client.modeOfContact;
-//     client.socialMedia = socialMedia || client.socialMedia;
-
-//     // if (password) {
-//     //   client.password = await bcrypt.hash(password, 10); 
-//     // }
-
-//     const updatedClient = await client.save();
-//     res.status(200).json({ success: true, message: 'Client updated successfully.', updatedClient });
-//   } catch (err) {
-//     res.status(400).json({ success: false, message: 'Error updating client. Please try again later.', error: err });
-//   }
-// };
 
 
 
@@ -418,10 +342,10 @@ if (!fs.existsSync(uploadDir)) {
 // Set up local storage for CSV file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, uploadDir); // Folder to store uploaded files temporarily
+    cb(null, uploadDir); 
   },
   filename: (req, file, cb) => {
-    cb(null, Date.now() + '-' + file.originalname); // Ensure unique filenames
+    cb(null, Date.now() + '-' + file.originalname); 
   },
 });
 
@@ -457,7 +381,7 @@ exports.UploadCSVFile = [uploadCSV.single('csvFile'), async (req, res) => {
     return res.status(400).send('No file uploaded');
   }
 
-  console.log('File uploaded to:', req.file.path); // Log the file path for debugging
+  console.log('File uploaded to:', req.file.path);
 
   const results = [];
 
