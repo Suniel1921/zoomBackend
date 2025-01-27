@@ -127,6 +127,15 @@
 
 
 
+
+
+
+
+
+
+
+
+
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
@@ -168,10 +177,17 @@ const server = createServer(app);
 //     credentials: true, // Allow credentials (cookies, authentication headers)
 //   })
 // );
+app.use(
+  cors({
+    origin: 'https://crm.zoomcreatives.jp', // Explicitly allow this origin
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    credentials: true, // Allow credentials
+  })
+);
 
-app.use(cors());
+// app.use(cors());
 // Handle preflight requests
-app.options('*', cors());
+app.options('*', cors()); // Handle preflight requests for all routes
 
 // Middleware for parsing JSON and URL-encoded data
 app.use(express.json());
