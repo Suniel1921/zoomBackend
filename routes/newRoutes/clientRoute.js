@@ -21,6 +21,13 @@ router.delete('/deleteClient/:id', requireLogin, controller.deleteClient);
 router.post('/uploadCsvFile', requireLogin, controller.UploadCSVFile);
 
 
+// New route to fetch categories
+router.get('/getCategories', controller.getCategories);
+
+// routes/clientRoutes.js
+router.post('/sendEmailByCategory', controller.sendEmailByCategory);
+
+
 
 module.exports = router;
 
