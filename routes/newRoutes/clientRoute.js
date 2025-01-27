@@ -19,7 +19,7 @@ router.delete('/deleteClient/:id', requireLogin, controller.deleteClient);
 
 
 router.post('/uploadCsvFile', requireLogin, controller.UploadCSVFile);
-// router.post('/uploadCsvFile', upload.single('csvFile'), clientController.UploadCSVFile);
+
 
 
 module.exports = router;

@@ -177,13 +177,15 @@ const server = createServer(app);
 //     credentials: true, // Allow credentials (cookies, authentication headers)
 //   })
 // );
+
+
 app.use(
   cors({
-    origin: 'https://crm.zoomcreatives.jp', // Explicitly allow this origin
+    origin: ['https://crm.zoomcreatives.jp', 'http://localhost:5173'], // Allowed origins
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    credentials: true, // Allow credentials
   })
 );
+
 
 // app.use(cors());
 // Handle preflight requests
