@@ -34,12 +34,9 @@ const server = createServer(app);
 const io = new Server(server, {
   cors: {
     origin: (origin, callback) => {
-      // const allowedOrigins = [
-      //   'https://crm.zoomcreatives.jp', // Production frontend URL 
-      //   'http://localhost:5173',  // Local frontend URL
-      // ];
       const allowedOrigins = [
-        'https://crm.zoomcreatives.jp', // Production frontend URL 
+        'https://crm.zoomcreatives.jp',  // Production frontend URL 
+        'http://localhost:5173', // Local frontend URL
       ];
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
@@ -56,13 +53,21 @@ const io = new Server(server, {
 
 // Middleware
 // app.use(cors());
-app.use(cors({
-  // origin: ['https://crm.zoomcreatives.jp', 'http://localhost:5173'], // Allow specific origins
-  origin: ['https://crm.zoomcreatives.jp'], // Allow specific origins
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  credentials: true, // Allow credentials (cookies, authentication headers)
-}));
+// app.use(cors({
+//   origin: ['https://crm.zoomcreatives.jp', 'http://localhost:5173'], // Allow specific origins
+//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+//   credentials: true, // Allow credentials (cookies, authentication headers)
+// }));
 
+
+
+
+const corsOptions = {
+  AccessControlAllowOrigin: '*',
+  origin: ['https://crm.zoomcreatives.jp', 'http://localhost:5173'], 
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE'
+}
+app.use(cors(corsOptions))
 
 
 
@@ -121,3 +126,4 @@ server.listen(PORT, () => {
 
 
 
+// in local when i upload csv file its working fine but on production got cors error fix his 
