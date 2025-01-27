@@ -63,6 +63,7 @@ app.use(
 // Handle preflight requests
 app.options('*', cors());
 
+
 // Middleware for parsing JSON and URL-encoded data
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
