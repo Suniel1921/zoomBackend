@@ -475,9 +475,9 @@ exports.UploadCSVFile = [uploadCSV.single('csvFile'), async (req, res) => {
             superAdminId: clientSuperAdminId,
             createdBy, 
             name: row.name || 'Default Name',   
-            email: row.email || 'default@example.com',  // Default email if not provided
-            city: row.city || 'City not provided',  // Default city if not provided
-            // status: 'active', // You can adjust this as needed
+            email: row.email || 'default@example.com', 
+            city: row.city || 'City not provided',  
+            status: 'active', 
             phone : row.phone,
             category : row.category,
           };

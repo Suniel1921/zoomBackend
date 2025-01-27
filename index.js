@@ -169,6 +169,11 @@ dotenv.config();
 const app = express();
 const server = createServer(app);
 
+
+// Middleware for parsing JSON and URL-encoded data
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 // CORS Middleware
 // app.use(
 //   cors({
@@ -181,19 +186,20 @@ const server = createServer(app);
 
 app.use(
   cors({
-    origin: ['https://crm.zoomcreatives.jp', 'http://localhost:5173'], // Allowed origins
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  })
-);
+    origin: ["https://crm.zoomcreatives.jp", "http://localhost:5173"], // Allow both production and development origins
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"], // Explicitly allow these headers
+  }),
+)
 
 
 // app.use(cors());
 // Handle preflight requests
-app.options('*', cors()); // Handle preflight requests for all routes
+// Handle preflight requests
+app.options("*", cors())
 
-// Middleware for parsing JSON and URL-encoded data
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+
 
 // Custom middleware for logging
 app.use(logMiddleware);
