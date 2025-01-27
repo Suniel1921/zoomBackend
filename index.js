@@ -23,19 +23,21 @@ const globalSearchRoute = require('./routes/newRoutes/globalSearchRoute');
 const noteRoute = require('./routes/newRoutes/noteRoute');
 const backupDataRoute = require('./routes/newRoutes/backupDataRoute');
 const auditLogRoute = require('./routes/newRoutes/auditLogRoute');
-const callLogsRoute = require ('./routes/newRoutes/callLogsRoute');
+const callLogsRoute = require('./routes/newRoutes/callLogsRoute');
 
-
-
+// Load environment variables
 dotenv.config();
 
+// Initialize Express app
 const app = express();
 const server = createServer(app);
+
+// Socket.IO configuration
 const io = new Server(server, {
   cors: {
     origin: (origin, callback) => {
       const allowedOrigins = [
-        'https://crm.zoomcreatives.jp',  // Production frontend URL 
+        'https://crm.zoomcreatives.jp', // Production frontend URL
         'http://localhost:5173', // Local frontend URL
       ];
       if (!origin || allowedOrigins.includes(origin)) {
@@ -49,30 +51,23 @@ const io = new Server(server, {
   },
 });
 
+// CORS Middleware
+app.use(
+  cors({
+    origin: ['https://crm.zoomcreatives.jp', 'http://localhost:5173'], // Allow specific origins
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Allowed HTTP methods
+    credentials: true, // Allow credentials (cookies, authentication headers)
+  })
+);
 
+// Handle preflight requests
+app.options('*', cors());
 
-// Middleware
-// app.use(cors());
-// app.use(cors({
-//   origin: ['https://crm.zoomcreatives.jp', 'http://localhost:5173'], // Allow specific origins
-//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-//   credentials: true, // Allow credentials (cookies, authentication headers)
-// }));
-
-
-
-
-const corsOptions = {
-  AccessControlAllowOrigin: '*',
-  origin: ['https://crm.zoomcreatives.jp', 'http://localhost:5173'], 
-  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE'
-}
-app.use(cors(corsOptions))
-
-
-
+// Middleware for parsing JSON and URL-encoded data
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Custom middleware for logging
 app.use(logMiddleware);
 
 // Database Connection
@@ -87,9 +82,9 @@ io.on('connection', (socket) => {
   });
 });
 
-// Broadcast new service request notifications
+// Attach `io` to `req` for use in controllers
 app.use((req, res, next) => {
-  req.io = io; // Attach `io` to `req` so it can be used in controllers
+  req.io = io;
   next();
 });
 
@@ -122,8 +117,3 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`Server is running on port: ${PORT}`);
 });
-
-
-
-
-// in local when i upload csv file its working fine but on production got cors error fix his 
