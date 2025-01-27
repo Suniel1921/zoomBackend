@@ -479,6 +479,7 @@ exports.UploadCSVFile = [uploadCSV.single('csvFile'), async (req, res) => {
             city: row.city || 'City not provided',  // Default city if not provided
             status: 'active', // You can adjust this as needed
             phone : row.phone,
+            category : row.category,
           };
         });
 
