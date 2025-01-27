@@ -34,9 +34,12 @@ const server = createServer(app);
 const io = new Server(server, {
   cors: {
     origin: (origin, callback) => {
+      // const allowedOrigins = [
+      //   'https://crm.zoomcreatives.jp', // Production frontend URL 
+      //   'http://localhost:5173',  // Local frontend URL
+      // ];
       const allowedOrigins = [
-        'https://crm.zoomcreatives.jp',  // Local frontend URL
-        'http://localhost:5173',  // Production frontend URL
+        'https://crm.zoomcreatives.jp', // Production frontend URL 
       ];
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
@@ -54,7 +57,8 @@ const io = new Server(server, {
 // Middleware
 // app.use(cors());
 app.use(cors({
-  origin: ['https://crm.zoomcreatives.jp', 'http://localhost:5173'], // Allow specific origins
+  // origin: ['https://crm.zoomcreatives.jp', 'http://localhost:5173'], // Allow specific origins
+  origin: ['https://crm.zoomcreatives.jp'], // Allow specific origins
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true, // Allow credentials (cookies, authentication headers)
 }));
