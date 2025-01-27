@@ -49,17 +49,13 @@ const mongoose = require('mongoose');
 
 
 
-
-
-
-
 exports.createServiceRequest = async (req, res) => {
   try {
     const { clientId, clientName, phoneNumber, serviceId, serviceName, message } = req.body;
 
     const superAdminId = req.user ? req.user._id : null;
 
-    if (!clientName  || !serviceName || !message) {
+    if (!clientName || !serviceName || !message) {
       return res.status(400).json({ error: 'All fields are required.' });
     }
 
@@ -75,16 +71,6 @@ exports.createServiceRequest = async (req, res) => {
 
     await newRequest.save();
 
-    // Emit notification to connected clients
-    req.io.emit('newServiceRequest', {
-      clientId,
-      clientName,
-      phoneNumber,
-      serviceName,
-      message,
-      createdAt: newRequest.createdAt,
-    });
-
     res.status(201).json({ message: 'Service request created successfully.', data: newRequest });
   } catch (error) {
     console.error('Error creating service request:', error);
@@ -92,20 +78,10 @@ exports.createServiceRequest = async (req, res) => {
   }
 };
 
-
-
-
-
 // Get all service requests Controller
 exports.getAllServiceRequests = async (req, res) => {
   try {
     const requests = await ServiceRequestModel.find().sort({ createdAt: -1 });
-
-    // Emit notification to connected clients (only when requests are fetched successfully)
-    req.io.emit('newServiceRequests', {
-      message: 'New service requests fetched.',
-      data: requests,
-    });
 
     res.status(200).json({ data: requests });
   } catch (error) {
