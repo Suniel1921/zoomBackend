@@ -412,6 +412,7 @@ exports.uploadCSVFile = async (req, res) => {
       status: 'active',
       phone: row.phone,
       category: row.category,
+      postalCode: row.postalCode || "0000000",
     }));
 
     await ClientModel.insertMany(clients); // Bulk insert data into the database
