@@ -186,8 +186,8 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(
   cors({
-    // origin: ["https://crm.zoomcreatives.jp", "http://localhost:5173"], 
-    origin : '*',
+    origin: ["https://crm.zoomcreatives.jp"], 
+    // origin : '*',
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true, // This is crucial for allowing credentials
