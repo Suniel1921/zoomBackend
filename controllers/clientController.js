@@ -366,13 +366,10 @@ exports.sendEmailByCategory = async (req, res) => {
 // *******************clients import(csv file)  ********************
 
 
-
-
 const fs = require('fs');
 const csvParser = require('csv-parser');
 const multer = require('multer');
 const path = require('path');
-
 
 // Ensure the 'uploads' folder exists
 const uploadDir = path.join(__dirname, 'uploads');
@@ -391,19 +388,6 @@ const storage = multer.diskStorage({
 });
 
 // Multer configuration for CSV upload
-// const uploadCSV = multer({
-//   storage: storage,
-//   fileFilter: (req, file, cb) => {
-//     const ext = path.extname(file.originalname);
-//     if (ext !== '.csv') {
-//       return cb(new Error('Only CSV files are allowed'), false);
-//     }
-//     cb(null, true);
-//   }
-// });
-
-
-// Multer configuration for CSV upload
 const uploadCSV = multer({
   storage: storage,
   limits: { fileSize: 50 * 1024 * 1024 }, // 50MB file size limit
@@ -415,7 +399,6 @@ const uploadCSV = multer({
     cb(null, true);  // Accept the file if it's a CSV
   }
 });
-
 
 // Route for uploading CSV file
 exports.UploadCSVFile = [uploadCSV.single('csvFile'), async (req, res) => {

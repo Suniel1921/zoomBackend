@@ -172,32 +172,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // CORS Middleware
-// app.use(
-//   cors({
-//     origin: ["https://crm.zoomcreatives.jp", "http://localhost:5173"],
-//     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-//     allowedHeaders: ["Content-Type", "Authorization"],
-//     credentials: true,
-//   })
-// );
-
-// // Handle preflight OPTIONS requests globally
-// app.options("*", cors());
-
-
-// const corsOptions = {
-//   origin: [
-//     "https://crm.zoomcreatives.jp", // Production frontend URL
-//     "http://localhost:5173",       // Development frontend URL
-//   ],
-//   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-//   allowedHeaders: ["Content-Type", "Authorization"],
-//   credentials: true, // Necessary if you're using cookies or Authorization headers
-// };
-
-// app.use(cors(corsOptions));
-// app.options("*", cors(corsOptions)); // Explicitly handle preflight OPTIONS requests
-
+app.use(cors({
+  origin: '*',  // Allow all origins or specify the frontend domain (e.g., 'https://crm.zoomcreatives.jp')
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 // Custom middleware for logging
 app.use(logMiddleware);
 
