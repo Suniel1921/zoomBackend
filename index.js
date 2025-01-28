@@ -134,6 +134,8 @@
 
 
 
+
+
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
@@ -167,18 +169,35 @@ dotenv.config();
 const app = express();
 const server = createServer(app);
 
+
 // Middleware for parsing JSON and URL-encoded data
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // CORS Middleware
-app.use(cors({
-  origin: 'https://crm.zoomcreatives.jp',  // Only allow this domain
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,  // Allow cookies and authentication headers to be sent
-  preflightContinue: false  // This prevents Express from sending its own OPTIONS response
-}));
+// app.use(
+//   cors({
+//     origin: ['https://crm.zoomcreatives.jp', 'http://localhost:5173'], // Allow specific origins
+//     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Allowed HTTP methods
+//     credentials: true, // Allow credentials (cookies, authentication headers)
+//   })
+// );
+
+
+app.use(
+  cors({
+    origin: ["https://crm.zoomcreatives.jp", "http://localhost:5173"], 
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true, // This is crucial for allowing credentials
+  }),
+)
+
+
+// app.use(cors());
+// Handle preflight requests
+app.options("*", cors())
+
 
 
 // Custom middleware for logging
@@ -208,7 +227,7 @@ app.use('/api/v1/callLogs', callLogsRoute);
 
 // Default Route
 app.get('/', (req, res) => {
-  res.json({ success: true, message: 'Welcome to the Zoom Creatives Server!' });
+  res.json({ success: true, message: 'Welcome to the Zoom Createives Server!' });
 });
 
 // Start the server

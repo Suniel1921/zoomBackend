@@ -17,6 +17,7 @@ router.put('/updateClientProfile/:id', requireLogin, controller.updateClientProf
 //delete client
 router.delete('/deleteClient/:id', requireLogin, controller.deleteClient);
 
+
 router.post('/uploadCsvFile', requireLogin, controller.UploadCSVFile);
 
 
