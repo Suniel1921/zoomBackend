@@ -172,12 +172,13 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // CORS Middleware
-app.use(cors({
-  origin: 'https://crm.zoomcreatives.jp', 
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true  
-}));
+// app.use(cors({
+//   origin: 'https://crm.zoomcreatives.jp', 
+//   methods: ['GET', 'POST', 'PUT', 'DELETE'],
+//   allowedHeaders: ['Content-Type', 'Authorization'],
+//   credentials: true  
+// }));
+app.use(cors())
 
 
 // Custom middleware for logging
