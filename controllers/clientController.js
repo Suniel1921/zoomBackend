@@ -403,66 +403,60 @@ const uploadCSV = multer({
 });
 
 // Route for uploading CSV file
-exports.UploadCSVFile = [uploadCSV.single('csvFile'), async (req, res) => {
-  // const { superAdminId } = req.user; // Ensure user is authenticated and has super admin role
-  const { superAdminId, _id: createdBy, role } = req.user;
+exports.UploadCSVFile = [
+  uploadCSV.single('csvFile'),
+  async (req, res) => {
+    const { superAdminId, _id: createdBy, role } = req.user;
 
-  // Role-based check: Only 'superadmin' or 'admin' are allowed
-  if (role !== "superadmin" && (!superAdminId || role !== "admin")) {
-    console.log("Unauthorized access attempt:", req.user); // Log for debugging
-    return res
-      .status(403)
-      .json({ success: false, message: "Unauthorized: Access denied." });
-  }
+    // Check for authorization
+    if (role !== 'superadmin' && (!superAdminId || role !== 'admin')) {
+      console.log('Unauthorized access attempt:', req.user);
+      return res.status(403).json({ success: false, message: 'Unauthorized: Access denied.' });
+    }
 
-  // If the user is a superadmin, use their userId as superAdminId
-  const clientSuperAdminId = role === "superadmin" ? createdBy : superAdminId;
+    if (!req.file) {
+      return res.status(400).send('No file uploaded');
+    }
 
-  if (!req.file) {
-    return res.status(400).send('No file uploaded');
-  }
+    console.log('File uploaded to:', req.file.path);
 
-  console.log('File uploaded to:', req.file.path);
+    const results = [];
+    try {
+      // Parse CSV file
+      fs.createReadStream(req.file.path)
+        .pipe(csvParser())
+        .on('data', (row) => results.push(row))
+        .on('end', async () => {
+          try {
+            const clients = results.map((row) => ({
+              superAdminId: role === 'superadmin' ? createdBy : superAdminId,
+              createdBy,
+              name: row.name || 'Default Name',
+              email: row.email || 'default@example.com',
+              city: row.city || 'City not provided',
+              status: 'active',
+              phone: row.phone,
+              category: row.category,
+            }));
 
-  const results = [];
-
-  // Parse the CSV file and store each row
-  fs.createReadStream(req.file.path)
-    .pipe(csvParser())
-    .on('data', (row) => {
-      results.push(row);
-    })
-    .on('end', async () => {
-      try {
-        // Map and save data to the database
-        const clients = results.map((row) => {
-          return {
-            superAdminId: clientSuperAdminId,
-            createdBy, 
-            name: row.name || 'Default Name',   
-            email: row.email || 'default@example.com', 
-            city: row.city || 'City not provided',  
-            status: 'active', 
-            phone : row.phone,
-            category : row.category,
-          };
+            await ClientModel.insertMany(clients);
+            res.status(200).json({ success: true, message: 'CSV data imported successfully', clients });
+          } catch (err) {
+            console.error('Error saving to database:', err);
+            res.status(500).json({ success: false, message: 'Error importing CSV data', error: err.message });
+          } finally {
+            // Clean up uploaded file
+            fs.unlinkSync(req.file.path);
+          }
         });
+    } catch (err) {
+      console.error('Error processing file:', err);
+      res.status(500).json({ success: false, message: 'Error processing file', error: err.message });
+      fs.unlinkSync(req.file.path); // Clean up file even on error
+    }
+  }
+];
 
-        await ClientModel.insertMany(clients); // Bulk insert data into the database
-        res.status(200).send('CSV data imported successfully');
-      } catch (err) {
-        console.error(err);
-        res.status(500).json({ success: false, message: 'Error importing CSV data', error: err });
-      } finally {
-        // Delete the uploaded CSV file after processing
-        if (fs.existsSync(req.file.path)) {
-          fs.unlinkSync(req.file.path);
-        } else {
-          console.log('File not found for deletion:', req.file.path);
-        }
-      }
-    });
-}];
 
 
 
