@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const controller = require ('../../controllers/clientController');
 const { requireLogin } = require('../../middleware/newMiddleware/authMiddleware');
-const cors = require ('cors')
 
 
 // Get all clients
@@ -18,10 +17,7 @@ router.put('/updateClientProfile/:id', requireLogin, controller.updateClientProf
 //delete client
 router.delete('/deleteClient/:id', requireLogin, controller.deleteClient);
 
-
-router.options('/uploadCsvFile', cors()); // Handle preflight requests for this route
 router.post('/uploadCsvFile', requireLogin, controller.UploadCSVFile);
-// router.post('/uploadCsvFile', requireLogin, controller.UploadCSVFile);
 
 
 // New route to fetch categories

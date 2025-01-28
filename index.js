@@ -134,8 +134,6 @@
 
 
 
-
-
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
@@ -169,44 +167,36 @@ dotenv.config();
 const app = express();
 const server = createServer(app);
 
-
 // Middleware for parsing JSON and URL-encoded data
-// app.use(express.json());
-// app.use(express.urlencoded({ extended: true }));
-
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
-
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // CORS Middleware
 // app.use(
 //   cors({
-//     origin: ['https://crm.zoomcreatives.jp', 'http://localhost:5173'], // Allow specific origins
-//     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Allowed HTTP methods
-//     credentials: true, // Allow credentials (cookies, authentication headers)
+//     origin: ["https://crm.zoomcreatives.jp", "http://localhost:5173"],
+//     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+//     allowedHeaders: ["Content-Type", "Authorization"],
+//     credentials: true,
 //   })
 // );
 
-
-app.use(
-  cors({
-    origin: ["https://crm.zoomcreatives.jp", "http://localhost:5173"],
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "Content-Disposition"], // Add any custom headers here
-    credentials: true,
-  })
-);
-
-// Explicitly handle preflight requests
-app.options('*', cors()); // Allow preflight requests for all routes
+// // Handle preflight OPTIONS requests globally
+// app.options("*", cors());
 
 
+const corsOptions = {
+  origin: [
+    "https://crm.zoomcreatives.jp", // Production frontend URL
+    "http://localhost:5173",       // Development frontend URL
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true, // Necessary if you're using cookies or Authorization headers
+};
 
-// app.use(cors());
-// Handle preflight requests
-// app.options("*", cors())
-
-
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions)); // Explicitly handle preflight OPTIONS requests
 
 // Custom middleware for logging
 app.use(logMiddleware);
@@ -235,7 +225,7 @@ app.use('/api/v1/callLogs', callLogsRoute);
 
 // Default Route
 app.get('/', (req, res) => {
-  res.json({ success: true, message: 'Welcome to the Zoom Createives Server!' });
+  res.json({ success: true, message: 'Welcome to the Zoom Creatives Server!' });
 });
 
 // Start the server
