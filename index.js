@@ -184,20 +184,30 @@ app.use(express.urlencoded({ extended: true }));
 // );
 
 
+// app.use(cors());
+
 app.use(
   cors({
-    origin: ["https://crm.zoomcreatives.jp", "http://localhost:5173"], 
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true, // This is crucial for allowing credentials
-  }),
-)
+    origin: ["https://crm.zoomcreatives.jp", "http://localhost:5173"], // Allowed origins
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Allowed HTTP methods
+    allowedHeaders: ["Content-Type", "Authorization"], // Include Authorization header
+    credentials: false, // Since you're not using cookies
+  })
+);
+
+// Handle preflight requests
+app.options("*", (req, res) => {
+  res.setHeader("Access-Control-Allow-Origin", req.headers.origin || "*");
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Authorization, Content-Type, Accept"
+  );
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.setHeader("Access-Control-Allow-Credentials", "false"); // Since local storage is used
+  res.status(204).end(); // No Content
+});
 
 
-// app.use(cors());
-// Handle preflight requests
-// Handle preflight requests
-app.options("*", cors())
 
 
 

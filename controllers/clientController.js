@@ -23,7 +23,6 @@ const transporter = nodemailer.createTransport({
 });
 
 
-
 //get all clients controller
 
 exports.addClient = [
@@ -32,7 +31,6 @@ exports.addClient = [
     const { superAdminId, _id: createdBy, role } = req.user;
 
     // If the user is a superadmin, they don't need superAdminId for client creation
-    // If the user is an admin, ensure superAdminId is provided
     if (role !== 'superadmin' && (!superAdminId || role !== 'admin')) {
       console.log('Unauthorized access attempt:', req.user); 
       return res.status(403).json({ success: false, message: 'Unauthorized: Access denied.' });
@@ -70,14 +68,13 @@ exports.addClient = [
         profilePhotoUrls.push(result.secure_url);
       }
 
-      // If the user is a superadmin, set superAdminId directly to the superadmin's ID
       // If the user is an admin, superAdminId will come from the req.user (the current logged-in superadmin)
       const clientSuperAdminId = role === 'superadmin' ? createdBy : superAdminId;
 
       // Create the client with the correct superAdminId
       const createClient = await ClientModel.create({
-        superAdminId: clientSuperAdminId,  // set superAdminId
-        createdBy,     // Track the admin who created this client
+        superAdminId: clientSuperAdminId, 
+        createdBy,     
         name,
         category,
         status,
@@ -133,7 +130,7 @@ exports.getClients = async (req, res) => {
     }
 
     const clients = await ClientModel.find(query)
-      .populate('createdBy', 'name email') // Populate who created the client
+      .populate('createdBy', 'name email')
       .exec();
 
     return res.status(200).json({
@@ -221,7 +218,7 @@ exports.updateClient = async (req, res) => {
 
     // Exclude sensitive fields from the response
     const responseClient = updatedClient.toObject();
-    delete responseClient.password; // Explicitly remove password if it exists
+    delete responseClient.password; 
 
     res.status(200).json({ success: true, message: 'Client updated successfully.', updatedClient: responseClient });
   } catch (err) {
@@ -243,13 +240,13 @@ exports.updateClientProfile = async (req, res) => {
   }
 
   try {
-    const userId = req.user.id; // Get user ID from the token
-    const { fullName, email, phone } = req.body; // Destructure data from the request body
+    const userId = req.user.id; 
+    const { fullName, email, phone } = req.body; 
 
     const updatedUser = await ClientModel.findByIdAndUpdate(
       userId,
       { fullName, email, phone },
-      { new: true } // Return the updated document
+      { new: true } 
     );
 
     if (!updatedUser) {
@@ -310,59 +307,6 @@ exports.getCategories = async (req, res) => {
 };
 
 //sending email to the selected client category
-
-
-
-// // controllers/clientController.js
-// exports.sendEmailByCategory = async (req, res) => {
-//   const { category, subject, message } = req.body;
-
-//   if (!category || !subject || !message) {
-//     return res.status(400).json({ success: false, message: 'Category, subject, and message are required.' });
-//   }
-
-//   try {
-//     // Fetch all users in the selected category
-//     const clients = await ClientModel.find({ category });
-
-//     if (clients.length === 0) {
-//       return res.status(404).json({ success: false, message: 'No users found in this category.' });
-//     }
-
-//     // Send email to each user
-//     const emailPromises = clients.map((client) => {
-//       const mailOptions = {
-//         from: process.env.MYEMAIL,
-//         to: client.email,
-//         subject,
-//         html: message,
-//       };
-
-//       return transporter.sendMail(mailOptions);
-//     });
-
-//     await Promise.all(emailPromises);
-
-//     res.status(200).json({ success: true, message: 'Emails sent successfully.' });
-//   } catch (error) {
-//     console.error('Error sending emails:', error.message);
-//     res.status(500).json({ success: false, message: 'Internal Server Error', error });
-//   }
-// };
-
-
-
-
-
-
-
-
-
-
-
-
-
-// controllers/clientController.js
 exports.sendEmailByCategory = async (req, res) => {
   const { category, subject, message } = req.body;
 
