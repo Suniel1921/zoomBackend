@@ -367,55 +367,111 @@ exports.sendEmailByCategory = async (req, res) => {
 
 
 
+// exports.uploadCSVFile = async (req, res) => {
+//   const { superAdminId, _id: createdBy, role } = req.user;
+
+//   // Role-based check: Only 'superadmin' or 'admin' are allowed
+//   if (role !== "superadmin" && (!superAdminId || role !== "admin")) {
+//     console.log("Unauthorized access attempt:", req.user); // Log for debugging
+//     return res.status(403).json({ success: false, message: "Unauthorized: Access denied." });
+//   }
+
+//   const clientSuperAdminId = role === "superadmin" ? createdBy : superAdminId;
+
+//   // Check if CSV data is provided in the request body
+//   if (!req.body.csvData) {
+//     return res.status(400).json({ success: false, message: "No CSV data provided" });
+//   }
+
+//   const results = [];
+//   const csvData = req.body.csvData;
+
+//   // Parse the CSV data
+//   const lines = csvData.split('\n');
+//   const headers = lines[0].split(',');
+
+//   for (let i = 1; i < lines.length; i++) {
+//     const row = lines[i].split(',');
+//     if (row.length === headers.length) {
+//       const rowData = {};
+//       for (let j = 0; j < headers.length; j++) {
+//         rowData[headers[j]] = row[j];
+//       }
+//       results.push(rowData);
+//     }
+//   }
+
+//   try {
+//     // Map and save data to the database
+//     const clients = results.map((row) => ({
+//       superAdminId: clientSuperAdminId,
+//       createdBy,
+//       name: row.name || 'Default Name',
+//       email: row.email || 'default@example.com',
+//       city: row.city || 'City not provided',
+//       status: 'active',
+//       phone: row.phone,
+//       category: row.category,
+//     }));
+
+//     await ClientModel.insertMany(clients); // Bulk insert data into the database
+//     res.status(200).json({ success: true, message: 'CSV data imported successfully' });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ success: false, message: 'Error importing CSV data', error: err.message });
+//   }
+// };
+
+
+
+
+
+const Papa = require('papaparse');
+
 exports.uploadCSVFile = async (req, res) => {
   const { superAdminId, _id: createdBy, role } = req.user;
 
-  // Role-based check: Only 'superadmin' or 'admin' are allowed
+  // Role-based check
   if (role !== "superadmin" && (!superAdminId || role !== "admin")) {
-    console.log("Unauthorized access attempt:", req.user); // Log for debugging
     return res.status(403).json({ success: false, message: "Unauthorized: Access denied." });
   }
 
   const clientSuperAdminId = role === "superadmin" ? createdBy : superAdminId;
 
-  // Check if CSV data is provided in the request body
   if (!req.body.csvData) {
     return res.status(400).json({ success: false, message: "No CSV data provided" });
   }
 
-  const results = [];
-  const csvData = req.body.csvData;
-
-  // Parse the CSV data
-  const lines = csvData.split('\n');
-  const headers = lines[0].split(',');
-
-  for (let i = 1; i < lines.length; i++) {
-    const row = lines[i].split(',');
-    if (row.length === headers.length) {
-      const rowData = {};
-      for (let j = 0; j < headers.length; j++) {
-        rowData[headers[j]] = row[j];
-      }
-      results.push(rowData);
-    }
-  }
-
   try {
-    // Map and save data to the database
-    const clients = results.map((row) => ({
-      superAdminId: clientSuperAdminId,
-      createdBy,
-      name: row.name || 'Default Name',
-      email: row.email || 'default@example.com',
-      city: row.city || 'City not provided',
-      status: 'active',
-      phone: row.phone,
-      category: row.category,
-    }));
+    // Parse CSV data using PapaParse
+    const results = Papa.parse(req.body.csvData, {
+      header: true, // Use the first row as headers
+      skipEmptyLines: true, // Skip empty lines
+    });
 
-    await ClientModel.insertMany(clients); // Bulk insert data into the database
-    res.status(200).json({ success: true, message: 'CSV data imported successfully' });
+    if (results.errors.length > 0) {
+      console.error("CSV parsing errors:", results.errors);
+      return res.status(400).json({ success: false, message: "Error parsing CSV data", errors: results.errors });
+    }
+
+    // Map and validate data
+    const clients = results.data.map((row) => {
+      const city = row.city || "No City Provided"; // Default city if not provided
+      return {
+        superAdminId: clientSuperAdminId,
+        createdBy,
+        name: row.name || 'Default Name',
+        email: row.email || 'default@example.com',
+        city: city,
+        status: 'active',
+        phone: row.phone,
+        category: row.category,
+      };
+    });
+
+    // Insert data into the database
+    await ClientModel.insertMany(clients);
+    res.status(200).json({ success: true, message: 'CSV data imported successfully', data: clients });
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: 'Error importing CSV data', error: err.message });

@@ -50,7 +50,7 @@ const clientSchema = new mongoose.Schema({
       type: String
     },
     city: {
-      type: [String]
+      type: String
     },
     street: {
       type: String
