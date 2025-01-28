@@ -173,10 +173,13 @@ app.use(express.urlencoded({ extended: true }));
 
 // CORS Middleware
 app.use(cors({
-  origin: '*',  // Allow all origins or specify the frontend domain (e.g., 'https://crm.zoomcreatives.jp')
+  origin: 'https://crm.zoomcreatives.jp', 
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true  
 }));
+
+
 // Custom middleware for logging
 app.use(logMiddleware);
 
