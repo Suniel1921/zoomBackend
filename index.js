@@ -185,12 +185,9 @@ app.use(express.urlencoded({ extended: true }));
 
 
 app.use(cors({
-  origin: 'https://crm.zoomcreatives.jp',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true, // Include credentials (cookies, auth headers)
+  origin: 'https://crm.zoomcreatives.jp', // Allow only this origin
+  credentials: true, // Include credentials if needed
 }));
-
 // Handle preflight OPTIONS requests globally
 app.options('*', cors());
 
