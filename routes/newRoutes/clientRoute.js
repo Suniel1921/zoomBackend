@@ -18,7 +18,7 @@ router.put('/updateClientProfile/:id', requireLogin, controller.updateClientProf
 router.delete('/deleteClient/:id', requireLogin, controller.deleteClient);
 
 
-router.post('/uploadCsvFile', requireLogin, controller.UploadCSVFile);
+router.post('/uploadCsvFile', controller.UploadCSVFile);
 
 
 // New route to fetch categories
