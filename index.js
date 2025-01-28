@@ -176,7 +176,8 @@ app.use(cors({
   origin: 'https://crm.zoomcreatives.jp',  // Only allow this domain
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true  // Allow cookies and authentication headers to be sent
+  credentials: true,  // Allow cookies and authentication headers to be sent
+  preflightContinue: false  // This prevents Express from sending its own OPTIONS response
 }));
 
 
