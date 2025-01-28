@@ -171,8 +171,12 @@ const server = createServer(app);
 
 
 // Middleware for parsing JSON and URL-encoded data
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// app.use(express.json());
+// app.use(express.urlencoded({ extended: true }));
+
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
 
 // CORS Middleware
 // app.use(
@@ -184,30 +188,23 @@ app.use(express.urlencoded({ extended: true }));
 // );
 
 
-// app.use(cors());
-
 app.use(
   cors({
-    origin: ["https://crm.zoomcreatives.jp", "http://localhost:5173"], // Allowed origins
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Allowed HTTP methods
-    allowedHeaders: ["Content-Type", "Authorization"], // Include Authorization header
-    credentials: false, // Since you're not using cookies
+    origin: ["https://crm.zoomcreatives.jp", "http://localhost:5173"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "Content-Disposition"], // Add any custom headers here
+    credentials: true,
   })
 );
 
+// Explicitly handle preflight requests
+app.options('*', cors()); // Allow preflight requests for all routes
+
+
+
+// app.use(cors());
 // Handle preflight requests
-app.options("*", (req, res) => {
-  res.setHeader("Access-Control-Allow-Origin", req.headers.origin || "*");
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "Authorization, Content-Type, Accept"
-  );
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-  res.setHeader("Access-Control-Allow-Credentials", "false"); // Since local storage is used
-  res.status(204).end(); // No Content
-});
-
-
+// app.options("*", cors())
 
 
 
