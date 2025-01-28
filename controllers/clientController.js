@@ -449,9 +449,14 @@ exports.UploadCSVFile = [uploadCSV.single('csvFile'), async (req, res) => {
         });
 
         await ClientModel.insertMany(clients); // Bulk insert data into the database
+        res.header('Access-Control-Allow-Origin', 'https://crm.zoomcreatives.jp');
+        res.header('Access-Control-Allow-Credentials', 'true');
+        res.status(200).send('CSV data imported successfully');
         res.status(200).send('CSV data imported successfully');
       } catch (err) {
         console.error(err);
+        res.header('Access-Control-Allow-Origin', 'https://crm.zoomcreatives.jp');
+        res.header('Access-Control-Allow-Credentials', 'true');        
         res.status(500).json({ success: false, message: 'Error importing CSV data', error: err });
       } finally {
         // Delete the uploaded CSV file after processing
