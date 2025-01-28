@@ -426,7 +426,7 @@ exports.sendEmailByCategory = async (req, res) => {
 
 
 
-const Papa = require('papaparse');
+
 
 exports.uploadCSVFile = async (req, res) => {
   const { superAdminId, _id: createdBy, role } = req.user;
@@ -442,21 +442,35 @@ exports.uploadCSVFile = async (req, res) => {
     return res.status(400).json({ success: false, message: "No CSV data provided" });
   }
 
-  try {
-    // Parse CSV data using PapaParse
-    const results = Papa.parse(req.body.csvData, {
-      header: true, // Use the first row as headers
-      skipEmptyLines: true, // Skip empty lines
-    });
+  const results = [];
+  const csvData = req.body.csvData;
+  const lines = csvData.split('\n');
+  const headers = lines[0].split(',');
 
-    if (results.errors.length > 0) {
-      console.error("CSV parsing errors:", results.errors);
-      return res.status(400).json({ success: false, message: "Error parsing CSV data", errors: results.errors });
+  for (let i = 1; i < lines.length; i++) {
+    const row = lines[i].split(',');
+    if (row.length === headers.length) {
+      const rowData = {};
+      for (let j = 0; j < headers.length; j++) {
+        rowData[headers[j]] = row[j];
+      }
+      results.push(rowData);
     }
+  }
 
-    // Map and validate data
-    const clients = results.data.map((row) => {
-      const city = row.city || "No City Provided"; // Default city if not provided
+  const allowedCities = ["Bunkyo", "Meguro"]; // Add allowed cities here
+
+  const extractCity = (address) => {
+    const cityMatch = address.match(/Tokyo-to, (\w+)-Ku/);
+    return cityMatch ? cityMatch[1] : "No City Provided";
+  };
+
+  try {
+    const clients = results.map((row) => {
+      const city = extractCity(row.city);
+      if (!allowedCities.includes(city)) {
+        console.warn(`Invalid city format in row: ${row.city}`);
+      }
       return {
         superAdminId: clientSuperAdminId,
         createdBy,
@@ -469,9 +483,8 @@ exports.uploadCSVFile = async (req, res) => {
       };
     });
 
-    // Insert data into the database
     await ClientModel.insertMany(clients);
-    res.status(200).json({ success: true, message: 'CSV data imported successfully', data: clients });
+    res.status(200).json({ success: true, message: 'CSV data imported successfully' });
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: 'Error importing CSV data', error: err.message });
