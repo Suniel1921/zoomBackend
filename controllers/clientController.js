@@ -391,16 +391,31 @@ const storage = multer.diskStorage({
 });
 
 // Multer configuration for CSV upload
+// const uploadCSV = multer({
+//   storage: storage,
+//   fileFilter: (req, file, cb) => {
+//     const ext = path.extname(file.originalname);
+//     if (ext !== '.csv') {
+//       return cb(new Error('Only CSV files are allowed'), false);
+//     }
+//     cb(null, true);
+//   }
+// });
+
+
+// Multer configuration for CSV upload
 const uploadCSV = multer({
   storage: storage,
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB file size limit
   fileFilter: (req, file, cb) => {
     const ext = path.extname(file.originalname);
     if (ext !== '.csv') {
       return cb(new Error('Only CSV files are allowed'), false);
     }
-    cb(null, true);
+    cb(null, true);  // Accept the file if it's a CSV
   }
 });
+
 
 // Route for uploading CSV file
 exports.UploadCSVFile = [uploadCSV.single('csvFile'), async (req, res) => {
