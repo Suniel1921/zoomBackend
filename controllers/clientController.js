@@ -417,7 +417,7 @@ exports.uploadCSVFile = async (req, res) => {
     await ClientModel.insertMany(clients); // Bulk insert data into the database
     res.status(200).json({ success: true, message: 'CSV data imported successfully' });
   } catch (err) {
-    console.error(err);
+    // console.error(err);
     res.status(500).json({ success: false, message: 'Error importing CSV data', error: err.message });
   }
 };
