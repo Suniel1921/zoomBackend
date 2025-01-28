@@ -32,6 +32,7 @@
     "mysql2": "^3.9.2",
     "node-cron": "^3.0.3",
     "nodemailer": "^6.9.16",
+    "papaparse": "^5.5.2",
     "sequelize": "^6.37.1",
     "update": "^0.7.4",
     "uuid": "^11.0.4",

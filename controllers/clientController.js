@@ -476,7 +476,7 @@ exports.uploadCSVFile = async (req, res) => {
         createdBy,
         name: row.name || 'Default Name',
         email: row.email || 'default@example.com',
-        city: city,
+        city: row.city,
         status: 'active',
         phone: row.phone,
         category: row.category,
