@@ -95,7 +95,7 @@ exports.addLog = async (action, userType, userId, userName, ipAddress, details =
       userType,
       userId,
       userName,
-      ipAddress,
+      ipAddress, 
       details,
     });
     await log.save();

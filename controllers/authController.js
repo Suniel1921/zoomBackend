@@ -58,7 +58,11 @@ exports.register = async (req, res) => {
 
 
 
+
+
 // **********tracking last login*****
+
+
 // Login controller
 // exports.login = async (req, res) => {
 //   try {
@@ -190,7 +194,7 @@ exports.login = async (req, res) => {
         "unknown",      // User type (unknown since user doesn't exist)
         null,           // User ID
         email,          // Use email as the identifier
-        req.ipAddress,         // ipAddress address
+        req.ip,         // IP address
         { message: "User not found" } // Additional details
       );
 
@@ -206,7 +210,7 @@ exports.login = async (req, res) => {
         role,           // User type (e.g., admin, superadmin, etc.)
         user._id,       // User ID
         user.name || user.email, // User name or email
-        req.ipAddress,         // ipAddress address
+        req.ip,         // IP address
         { message: "Invalid password" } // Additional details
       );
 
@@ -226,7 +230,7 @@ exports.login = async (req, res) => {
       role,             // User type (e.g., admin, superadmin, etc.)
       user._id,         // User ID
       user.name || user.email, // User name or email
-      req.ipAddress,           // ipAddress address
+      req.ip,           // IP address
       { message: "Login successful" } // Additional details
     );
 
@@ -268,7 +272,7 @@ exports.login = async (req, res) => {
       "system",         // User type (system error)
       null,             // User ID
       "Login Controller", // Identifier
-      req.ipAddress,           // ipAddress address
+      req.ip,           // IP address
       { error: error.message } // Additional details
     );
 

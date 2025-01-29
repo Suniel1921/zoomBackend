@@ -111,8 +111,47 @@ exports.addClient = [
 
 
 
+// exports.getClients = async (req, res) => {
+//   const { _id, role, superAdminId } = req.user;
+
+//   if (!role || (role !== 'superadmin' && role !== 'admin')) {
+//     return res.status(403).json({ success: false, message: 'Unauthorized: Access denied.' });
+//   }
+
+//   try {
+//     let query = {};
+
+//     if (role === 'superadmin') {
+//       // SuperAdmin: Fetch all clients under their `superAdminId`
+//       query = { superAdminId: _id };
+//     } else if (role === 'admin') {
+//       // Admin: Fetch clients created by the admin or under their `superAdminId`
+//       query = { $or: [{ createdBy: _id }, { superAdminId }] };
+//     }
+
+//     const clients = await ClientModel.find(query)
+//       .populate('createdBy', 'name email')
+//       .exec();
+
+//     return res.status(200).json({
+//       success: true,
+//       clients,
+//     });
+//   } catch (error) {
+//     console.error('Error fetching clients:', error.message);
+//     return res.status(500).json({ success: false, message: 'Internal Server Error', error });
+//   }
+// };
+
+
+
+// **************only 20 client fecthing per page form db**************
+
 exports.getClients = async (req, res) => {
   const { _id, role, superAdminId } = req.user;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 20;
+  const skip = (page - 1) * limit;
 
   if (!role || (role !== 'superadmin' && role !== 'admin')) {
     return res.status(403).json({ success: false, message: 'Unauthorized: Access denied.' });
@@ -122,29 +161,34 @@ exports.getClients = async (req, res) => {
     let query = {};
 
     if (role === 'superadmin') {
-      // SuperAdmin: Fetch all clients under their `superAdminId`
       query = { superAdminId: _id };
     } else if (role === 'admin') {
-      // Admin: Fetch clients created by the admin or under their `superAdminId`
       query = { $or: [{ createdBy: _id }, { superAdminId }] };
     }
 
-    const clients = await ClientModel.find(query)
-      .populate('createdBy', 'name email')
-      .exec();
+    const [clients, total] = await Promise.all([
+      ClientModel.find(query)
+        .populate('createdBy', 'name email')
+        .skip(skip)
+        .limit(limit)
+        .exec(),
+      ClientModel.countDocuments(query)
+    ]);
 
     return res.status(200).json({
       success: true,
       clients,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(total / limit),
+        totalClients: total
+      }
     });
   } catch (error) {
     console.error('Error fetching clients:', error.message);
     return res.status(500).json({ success: false, message: 'Internal Server Error', error });
   }
 };
-
-
-
 
 
 
