@@ -161,6 +161,8 @@ const noteRoute = require('./routes/newRoutes/noteRoute');
 const backupDataRoute = require('./routes/newRoutes/backupDataRoute');
 const auditLogRoute = require('./routes/newRoutes/auditLogRoute');
 const callLogsRoute = require('./routes/newRoutes/callLogsRoute');
+// const campaignRoute = require ('./routes/newRoutes/campaignRoute');
+const campaignRoute = require ('./routes/newRoutes/campaignRoute');
 
 // Load environment variables
 dotenv.config();
@@ -222,6 +224,8 @@ app.use('/api/v1/note', noteRoute);
 app.use('/api/v1/backup', backupDataRoute);
 app.use('/api/v1/logs', auditLogRoute);
 app.use('/api/v1/callLogs', callLogsRoute);
+app.use('/api/v1/campaign', campaignRoute);
+
 
 // Default Route
 app.get('/', (req, res) => {

@@ -295,53 +295,53 @@ exports.deleteClient = async (req, res) => {
 
 
 
-//get all client category
-exports.getCategories = async (req, res) => {
-  try {
-    const categories = await ClientModel.distinct('category');
-    res.status(200).json({ success: true, categories });
-  } catch (error) {
-    console.error('Error fetching categories:', error.message);
-    res.status(500).json({ success: false, message: 'Internal Server Error', error });
-  }
-};
+// //get all client category
+// exports.getCategories = async (req, res) => {
+//   try {
+//     const categories = await ClientModel.distinct('category');
+//     res.status(200).json({ success: true, categories });
+//   } catch (error) {
+//     console.error('Error fetching categories:', error.message);
+//     res.status(500).json({ success: false, message: 'Internal Server Error', error });
+//   }
+// };
 
-//sending email to the selected client category
-exports.sendEmailByCategory = async (req, res) => {
-  const { category, subject, message } = req.body;
+// //sending email to the selected client category
+// exports.sendEmailByCategory = async (req, res) => {
+//   const { category, subject, message } = req.body;
 
-  if (!category || !subject || !message) {
-    return res.status(400).json({ success: false, message: 'Category, subject, and message are required.' });
-  }
+//   if (!category || !subject || !message) {
+//     return res.status(400).json({ success: false, message: 'Category, subject, and message are required.' });
+//   }
 
-  try {
-    // Fetch all users in the selected category
-    const clients = await ClientModel.find({ category });
+//   try {
+//     // Fetch all users in the selected category
+//     const clients = await ClientModel.find({ category });
 
-    if (clients.length === 0) {
-      return res.status(404).json({ success: false, message: 'No users found in this category.' });
-    }
+//     if (clients.length === 0) {
+//       return res.status(404).json({ success: false, message: 'No users found in this category.' });
+//     }
 
-    // Send email to each user
-    const emailPromises = clients.map((client) => {
-      const mailOptions = {
-        from: process.env.MYEMAIL,
-        to: client.email,
-        subject,
-        html: message, // Use HTML content for the email body
-      };
+//     // Send email to each user
+//     const emailPromises = clients.map((client) => {
+//       const mailOptions = {
+//         from: process.env.MYEMAIL,
+//         to: client.email,
+//         subject,
+//         html: message, // Use HTML content for the email body
+//       };
 
-      return transporter.sendMail(mailOptions);
-    });
+//       return transporter.sendMail(mailOptions);
+//     });
 
-    await Promise.all(emailPromises);
+//     await Promise.all(emailPromises);
 
-    res.status(200).json({ success: true, message: 'Emails sent successfully.' });
-  } catch (error) {
-    console.error('Error sending emails:', error.message);
-    res.status(500).json({ success: false, message: 'Internal Server Error', error });
-  }
-};
+//     res.status(200).json({ success: true, message: 'Emails sent successfully.' });
+//   } catch (error) {
+//     console.error('Error sending emails:', error.message);
+//     res.status(500).json({ success: false, message: 'Internal Server Error', error });
+//   }
+// };
 
 
 
