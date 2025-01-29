@@ -6,7 +6,7 @@ const logSchema = new mongoose.Schema({
   userType: { type: String, required: false },
   userId: { type: mongoose.Schema.Types.ObjectId, required: true },
   userName: { type: String, required: false },
-  ipAddress: { type: String, required: true }, 
+  ipAddress: { type: String, required: false }, 
   timestamp: { type: Date, default: Date.now },
   details: { type: Object },
 });

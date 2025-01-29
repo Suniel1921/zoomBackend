@@ -13,7 +13,18 @@ const OtherServiceModel = require("../models/newModel/otherServicesModel");
 
 exports.globalSearch = async (req, res) => {
     const { query } = req.query; 
-    const { _id: superAdminId } = req.user; 
+    const { superAdminId, _id: createdBy, role } = req.user; 
+
+    // Role-based check: Only 'superadmin' or 'admin' are allowed
+  if (role !== "superadmin" && (!superAdminId || role !== "admin")) {
+    console.log("Unauthorized access attempt:", req.user); 
+    return res
+      .status(403)
+      .json({ success: false, message: "Unauthorized: Access denied." });
+  }
+
+  // If the user is a superadmin, use their userId as superAdminId
+  const clientSuperAdminId = role === "superadmin" ? createdBy : superAdminId;
   
     if (!query || query.trim() === '') {
       return res.status(400).json({ error: 'Search query is required' });
