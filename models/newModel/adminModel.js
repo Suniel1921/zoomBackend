@@ -57,47 +57,61 @@
 
 
 
+
+
+
+
 // *********tracking last login of admin ******
 
 
-const mongoose = require('mongoose');
 
-const adminSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
-  },
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  password: {
-    type: String,
-    required: true,
-  },
-  role: {
-    type: String,
-    default: 'admin',
-  },
-  status: {
-    type: String,
-    default: 'active',
-  },
-  lastLogin: {
-    type: Date,
-    default: null,
-  },
-  superAdminId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'SuperAdmin',
-  },
-  permissions: {
-    type: Array,
-    default: [],
-  },
-}, { timestamps: true });
+const mongoose = require("mongoose");
 
-const AdminModel = mongoose.model('AdminModel', adminSchema);
+const adminSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    password: {
+      type: String,
+      required: true,
+    },
+    role: {
+      type: String,
+      default: "admin",
+    },
+    status: {
+      type: String,
+      default: "active",
+    },
+    lastLogin: {
+      type: Date,
+      default: null,
+    },
+    superAdminId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "SuperAdmin",
+    },
+
+    superAdminPhoto: {
+      type: String,
+      default: "",
+    },
+
+    permissions: {
+      type: Array,
+      default: [],
+    },
+  },
+  { timestamps: true }
+);
+
+const AdminModel = mongoose.model("AdminModel", adminSchema);
 
 module.exports = AdminModel;
