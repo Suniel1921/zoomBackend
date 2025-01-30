@@ -111,47 +111,8 @@ exports.addClient = [
 
 
 
-// exports.getClients = async (req, res) => {
-//   const { _id, role, superAdminId } = req.user;
-
-//   if (!role || (role !== 'superadmin' && role !== 'admin')) {
-//     return res.status(403).json({ success: false, message: 'Unauthorized: Access denied.' });
-//   }
-
-//   try {
-//     let query = {};
-
-//     if (role === 'superadmin') {
-//       // SuperAdmin: Fetch all clients under their `superAdminId`
-//       query = { superAdminId: _id };
-//     } else if (role === 'admin') {
-//       // Admin: Fetch clients created by the admin or under their `superAdminId`
-//       query = { $or: [{ createdBy: _id }, { superAdminId }] };
-//     }
-
-//     const clients = await ClientModel.find(query)
-//       .populate('createdBy', 'name email')
-//       .exec();
-
-//     return res.status(200).json({
-//       success: true,
-//       clients,
-//     });
-//   } catch (error) {
-//     console.error('Error fetching clients:', error.message);
-//     return res.status(500).json({ success: false, message: 'Internal Server Error', error });
-//   }
-// };
-
-
-
-// **************only 20 client fecthing per page form db**************
-
 exports.getClients = async (req, res) => {
   const { _id, role, superAdminId } = req.user;
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 20;
-  const skip = (page - 1) * limit;
 
   if (!role || (role !== 'superadmin' && role !== 'admin')) {
     return res.status(403).json({ success: false, message: 'Unauthorized: Access denied.' });
@@ -161,34 +122,37 @@ exports.getClients = async (req, res) => {
     let query = {};
 
     if (role === 'superadmin') {
+      // SuperAdmin: Fetch all clients under their `superAdminId`
       query = { superAdminId: _id };
     } else if (role === 'admin') {
+      // Admin: Fetch clients created by the admin or under their `superAdminId`
       query = { $or: [{ createdBy: _id }, { superAdminId }] };
     }
 
-    const [clients, total] = await Promise.all([
-      ClientModel.find(query)
-        .populate('createdBy', 'name email')
-        .skip(skip)
-        .limit(limit)
-        .exec(),
-      ClientModel.countDocuments(query)
-    ]);
+    const clients = await ClientModel.find(query)
+      .populate('createdBy', 'name email')
+      .exec();
 
     return res.status(200).json({
       success: true,
       clients,
-      pagination: {
-        currentPage: page,
-        totalPages: Math.ceil(total / limit),
-        totalClients: total
-      }
     });
   } catch (error) {
     console.error('Error fetching clients:', error.message);
     return res.status(500).json({ success: false, message: 'Internal Server Error', error });
   }
 };
+
+
+
+// **************only 20 client fecthing per page form db**************
+
+
+
+//NOTE : -- when fetching 20 client then when i search 21 or 22 no. client then those client are not showing 
+// and when i fetch all client and search then its working fine so , what will be the best way to solve this problem when i load all client at a time then on frontend UI is too slow
+// so what will be the best alrogith / approach to solve this problem on frontend i want to show only 20 client and make sure all client are searchable if i have 5000 client then make sure i search all cilent and on fronend only show 20 client at once and when usr click on next then load 20 client
+//i dont want to fecth only 20 client form backend server i want to fetch all data but on frontend i want to show only 20 data client and make sure UI will be fast is this any way  
 
 
 
