@@ -89,7 +89,7 @@ const OtherServiceSchema = new mongoose.Schema({
   },
   jobStatus: {
     type: String,
-    enum: ['Details Pending', 'Under Process', 'Completed'],
+    enum: ["Processing", "Waiting for Payment", "Completed", "Cancelled"],
     required: true,
   },
   remarks: { type: String },

@@ -86,7 +86,7 @@ const documentTranslationSchema = new mongoose.Schema(
     },
     translationStatus: {
       type: String,
-      enum: ["Not Started", "Processing", "Completed", "Delivered"],
+      enum: ["Processing", "Waiting for Payment", "Completed", "Cancelled"],
       required: true,
     },
     deliveryType: {

@@ -46,7 +46,7 @@ const japanVistiApplicationSchema = new mongoose.Schema({
      },
      status: {
       type: String,
-      enum: ['In Progress', 'Completed', 'Cancelled'],
+      enum: ["Processing", "Waiting for Payment", "Completed", "Cancelled"],
       required: true
     },
   package: { type: String, enum: ['Standard Package', 'Premium Package'], required: true },

@@ -108,13 +108,7 @@ const epassportSchema = new mongoose.Schema(
 
     applicationStatus: {
       type: String,
-      enum: [
-        "Details Pending",
-        "Ready to Process",
-        "Under Progress",
-        "Cancelled",
-        "Completed",
-      ],
+      enum: ["Processing", "Waiting for Payment", "Completed", "Cancelled"],
       required: true,
     },
 

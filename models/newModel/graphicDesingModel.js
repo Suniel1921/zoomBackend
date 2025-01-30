@@ -76,7 +76,7 @@ const graphicDesignSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['In Progress', 'Completed', 'Cancelled'],
+    enum: ["Processing", "Waiting for Payment", "Completed", "Cancelled"],
     required: true
   },
   deadline: {
