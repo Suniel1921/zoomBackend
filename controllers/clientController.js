@@ -3,6 +3,7 @@
 
 
 const upload = require('../config/multerConfig');
+const { getRedisClient } = require('../config/redisClient');
 const ClientModel = require('../models/newModel/clientModel');
 const bcrypt = require('bcryptjs'); 
 const cloudinary = require ('cloudinary').v2;
