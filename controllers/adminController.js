@@ -34,19 +34,6 @@ exports.createAdmin = async (req, res) => {
 
 
 
-// Get all admins for the authenticated superAdmin
-// exports.getAdmins = async (req, res) => {
-//   try {
-//     const { _id: superAdminId } = req.user; 
-
-//     const admins = await AdminModel.find({ superAdminId });
-//     res.status(200).json({ success: true, admins });
-//   } catch (error) {
-//     res.status(500).json({ success: false, message: 'Error fetching admins', error: error.message });
-//   }
-// };
-
-
 
 // Get all admins for the authenticated superadmin or admin
 exports.getAdmins = async (req, res) => {

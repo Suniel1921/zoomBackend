@@ -129,18 +129,13 @@
 
 
 
-
-
-
-
-
-
-
+// Import dependencies
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const { createServer } = require('http');
-const dbConnection = require('./config/dbConn');
+const redis = require('redis');
+const dbConnection = require('./config/dbConn');  // Assuming you have your DB connection set up
 const logMiddleware = require('./middleware/newMiddleware/auditLogMiddleware');
 
 // Import Routes
@@ -161,8 +156,8 @@ const noteRoute = require('./routes/newRoutes/noteRoute');
 const backupDataRoute = require('./routes/newRoutes/backupDataRoute');
 const auditLogRoute = require('./routes/newRoutes/auditLogRoute');
 const callLogsRoute = require('./routes/newRoutes/callLogsRoute');
-// const campaignRoute = require ('./routes/newRoutes/campaignRoute');
-const campaignRoute = require ('./routes/newRoutes/campaignRoute');
+const campaignRoute = require('./routes/newRoutes/campaignRoute');
+const { initRedisClient } = require('./config/redisClient');
 
 // Load environment variables
 dotenv.config();
@@ -170,7 +165,6 @@ dotenv.config();
 // Initialize Express app
 const app = express();
 const server = createServer(app);
-
 
 // Middleware for parsing JSON and URL-encoded data
 app.use(express.json());
@@ -185,26 +179,16 @@ app.use(
   })
 );
 
-
-// app.use(
-//   cors({
-//     origin: "https://crm.zoomcreatives.jp", // Allow requests from the frontend domain
-//     credentials: true, // Allow cookies and credentials
-//   })
-// );
-
-
-// app.use(cors());
-// Handle preflight requests
-// app.options("*", cors())
-
-
-
 // Custom middleware for logging
 app.use(logMiddleware);
 
 // Database Connection
 dbConnection();
+
+// Initialize Redis client
+
+initRedisClient();
+
 
 // Routes
 app.use('/api/v1/auth', authRoute);
@@ -226,10 +210,9 @@ app.use('/api/v1/logs', auditLogRoute);
 app.use('/api/v1/callLogs', callLogsRoute);
 app.use('/api/v1/campaign', campaignRoute);
 
-
 // Default Route
 app.get('/', (req, res) => {
-  res.json({ success: true, message: 'Welcome to the Zoom Createives Server!' });
+  res.json({ success: true, message: 'Welcome to the Zoom Creatives Server!' });
 });
 
 // Start the server
@@ -237,3 +220,4 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`Server is running on port: ${PORT}`);
 });
+

@@ -53,8 +53,8 @@ exports.createNote = async (req, res) => {
   
 
     const { title, content, priority, reminders, subtasks } = req.body;
-    if (!title || !content) {
-      return res.status(400).json({ error: 'Title and content are required.' });
+    if (!title) {
+      return res.status(400).json({ error: 'Title are required.' });
     }
 
     const newNote = new noteModel({

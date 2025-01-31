@@ -12,8 +12,4 @@ router.put('/updateAdmin/:id', requireLogin, controller.updateAdmin);
 router.delete('/deleteAdmin/:id', requireLogin, controller.deleteAdmin);
 
 
-
-
-
-
 module.exports = router;
