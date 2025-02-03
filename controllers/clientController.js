@@ -111,99 +111,47 @@ exports.addClient = [
 
 
 
-
-// exports.getClients = async (req, res) => {
-//   const { _id, role, superAdminId } = req.user;
-
-//   if (!role || (role !== 'superadmin' && role !== 'admin')) {
-//     return res.status(403).json({ success: false, message: 'Unauthorized: Access denied.' });
-//   }
-
-//   try {
-//     let query = {};
-
-//     if (role === 'superadmin') {
-//       // SuperAdmin: Fetch all clients under their `superAdminId`
-//       query = { superAdminId: _id };
-//     } else if (role === 'admin') {
-//       // Admin: Fetch clients created by the admin or under their `superAdminId`
-//       query = { $or: [{ createdBy: _id }, { superAdminId }] };
-//     }
-
-//     const clients = await ClientModel.find(query)
-//       .populate('createdBy', 'name email')
-//       .exec();
-
-//     return res.status(200).json({
-//       success: true,
-//       clients,
-//     });
-//   } catch (error) {
-//     console.error('Error fetching clients:', error.message);
-//     return res.status(500).json({ success: false, message: 'Internal Server Error', error });
-//   }
-// };
-
-
-
-
 // **********fetching client from redis cache************
-exports.getClients = async (req, res) => {
-  const { _id, role, superAdminId } = req.user;
 
-  // Authorization check
-  if (!role || (role !== 'superadmin' && role !== 'admin')) {
-    return res.status(403).json({ success: false, message: 'Unauthorized: Access denied.' });
+
+exports.getClients = async (req, res) => {
+  const { _id, role, superAdminId } = req.user
+
+  if (!role || (role !== "superadmin" && role !== "admin")) {
+    return res.status(403).json({ success: false, message: "Unauthorized: Access denied." })
   }
 
   try {
-    let query = {};
-    let redisKey = ''; // Key used to store data in Redis
+    let query = {}
+    let redisKey = ""
 
-    // Set query based on user role
-    if (role === 'superadmin') {
-      query = { superAdminId: _id };
-      redisKey = `superadmin_clients:${_id}`;
-    } else if (role === 'admin') {
-      query = { $or: [{ createdBy: _id }, { superAdminId }] };
-      redisKey = `admin_clients:${_id}`;
+    if (role === "superadmin") {
+      query = { superAdminId: _id }
+      redisKey = `superadmin_clients:${_id}`
+    } else if (role === "admin") {
+      query = { $or: [{ createdBy: _id }, { superAdminId }] }
+      redisKey = `admin_clients:${_id}`
     }
 
-    // Get the Redis client
-    const redisClient = await getRedisClient();
+    const redisClient = await getRedisClient()
+    const cachedClients = await redisClient.get(redisKey)
 
-    // Check if data exists in Redis cache
-    const cachedClients = await redisClient.get(redisKey);
-
-    if (cachedClients) {
-      // Return cached data from Redis
-      console.log('Returning cached clients data from Redis');
-      return res.status(200).json({
-        success: true,
-        clients: JSON.parse(cachedClients),  // Parse the cached JSON data
-      });
+    let clients
+    if (cachedClients && !req.query.forceRefresh) {
+      console.log("Returning cached clients data from Redis")
+      clients = JSON.parse(cachedClients)
+    } else {
+      console.log("Fetching fresh clients data from DB")
+      clients = await ClientModel.find(query).populate("createdBy", "name email").exec()
+      await redisClient.set(redisKey, JSON.stringify(clients), "EX", 300) // Cache for 5 minutes
     }
 
-    // If data is not in Redis, query the database
-    const clients = await ClientModel.find(query)
-      .populate('createdBy', 'name email')
-      .exec();
-
-    // Cache the clients data in Redis for 1 hour (3600 seconds)
-    await redisClient.set(redisKey, JSON.stringify(clients), 'EX', 3600);
-
-    console.log('Returning fresh clients data from DB');
-    return res.status(200).json({
-      success: true,
-      clients,
-    });
+    return res.status(200).json({ success: true, clients })
   } catch (error) {
-    console.error('Error fetching clients:', error.message);
-    return res.status(500).json({ success: false, message: 'Internal Server Error', error });
+    console.error("Error fetching clients:", error.message)
+    return res.status(500).json({ success: false, message: "Internal Server Error", error })
   }
-};
-
-
+}
 
 
 
@@ -223,8 +171,6 @@ exports.getClientById = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
-
-
 
 
 
@@ -326,11 +272,6 @@ exports.updateClientProfile = async (req, res) => {
 
 
 
-
-
-
-
-
 //delete client controller
 exports.deleteClient = async (req, res) => {
   const { _id: superAdminId } = req.user;
@@ -348,76 +289,6 @@ exports.deleteClient = async (req, res) => {
     res.status(500).json({ success: false, message: 'Internal Server Error', error });
   }
 };
-
-
-
-
-
-// //get all client category
-// exports.getCategories = async (req, res) => {
-//   try {
-//     const categories = await ClientModel.distinct('category');
-//     res.status(200).json({ success: true, categories });
-//   } catch (error) {
-//     console.error('Error fetching categories:', error.message);
-//     res.status(500).json({ success: false, message: 'Internal Server Error', error });
-//   }
-// };
-
-// //sending email to the selected client category
-// exports.sendEmailByCategory = async (req, res) => {
-//   const { category, subject, message } = req.body;
-
-//   if (!category || !subject || !message) {
-//     return res.status(400).json({ success: false, message: 'Category, subject, and message are required.' });
-//   }
-
-//   try {
-//     // Fetch all users in the selected category
-//     const clients = await ClientModel.find({ category });
-
-//     if (clients.length === 0) {
-//       return res.status(404).json({ success: false, message: 'No users found in this category.' });
-//     }
-
-//     // Send email to each user
-//     const emailPromises = clients.map((client) => {
-//       const mailOptions = {
-//         from: process.env.MYEMAIL,
-//         to: client.email,
-//         subject,
-//         html: message, // Use HTML content for the email body
-//       };
-
-//       return transporter.sendMail(mailOptions);
-//     });
-
-//     await Promise.all(emailPromises);
-
-//     res.status(200).json({ success: true, message: 'Emails sent successfully.' });
-//   } catch (error) {
-//     console.error('Error sending emails:', error.message);
-//     res.status(500).json({ success: false, message: 'Internal Server Error', error });
-//   }
-// };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
