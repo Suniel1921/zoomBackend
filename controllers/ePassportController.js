@@ -339,11 +339,6 @@ exports.deleteEpassport = async (req, res) => {
 
 
 
-
-
-
-
-
 // ********************file uploading based on model and client id****************************
 
 
@@ -408,7 +403,91 @@ exports.uploadFileForApplication = [
 
 
 
+// const pdf = require('pdf-parse'); // Library to extract text from PDF
+// const fs = require('fs');
 
+
+
+// exports.uploadFileForApplication = [
+//   upload.array('clientFiles', 5),
+//   async (req, res) => {
+//     try {
+//       const { clientId } = req.params;
+//       const { _id: createdBy } = req.user;
+//       console.log('Params:', req.params);
+
+//       if (!clientId) {
+//         return res.status(404).json({ success: false, message: 'Client ID not found' });
+//       }
+
+//       // Check if files were uploaded
+//       if (!req.files || req.files.length === 0) {
+//         return res.status(400).json({ success: false, message: 'No files uploaded' });
+//       }
+
+//       // Find the application (ePassport) for the specific clientId
+//       const application = await ePassportModel.findOne({ clientId });
+
+//       if (!application) {
+//         return res.status(404).json({ success: false, message: 'Application not found for this user' });
+//       }
+
+//       // Set the createdBy field (if it's not already set)
+//       if (!application.createdBy) {
+//         application.createdBy = createdBy;
+//       }
+
+//       // Process each file
+//       const clientFilesUrls = [];
+//       for (const file of req.files) {
+//         if (file.mimetype === 'application/pdf') {
+//           // Extract text from PDF
+//           const dataBuffer = fs.readFileSync(file.path); // Ensure this is a valid local file path
+//           const data = await pdf(dataBuffer);
+
+//           // Convert extracted text to a readable format (e.g., plain text)
+//           const readableText = data.text;
+
+//           // Optionally, save the extracted text as a file
+//           const textFilePath = `${file.path}.txt`;
+//           fs.writeFileSync(textFilePath, readableText);
+
+//           // Upload the extracted text file to Cloudinary
+//           const result = await cloudinary.uploader.upload(textFilePath, {
+//             resource_type: 'raw', // Treat the file as raw data
+//           });
+//           clientFilesUrls.push(result.secure_url);
+
+//           // Clean up the temporary text file
+//           fs.unlinkSync(textFilePath);
+//         } else {
+//           // Upload non-PDF files directly to Cloudinary
+//           const result = await cloudinary.uploader.upload(file.path);
+//           clientFilesUrls.push(result.secure_url);
+//         }
+
+//         // Clean up the temporary uploaded file
+//         fs.unlinkSync(file.path);
+//       }
+
+//       // Save the uploaded file URLs in the application model
+//       application.clientFiles = application.clientFiles || [];
+//       application.clientFiles.push(...clientFilesUrls);
+
+//       // Save the updated application data
+//       await application.save();
+
+//       return res.status(200).json({
+//         success: true,
+//         message: 'Files uploaded successfully',
+//         fileUrls: clientFilesUrls,
+//       });
+//     } catch (error) {
+//       console.error('Error uploading files:', error);
+//       return res.status(500).json({ success: false, message: 'Server error while uploading files' });
+//     }
+//   },
+// ];
 
 
 const applicationModel = require("../models/newModel/applicationModel");

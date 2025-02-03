@@ -130,7 +130,6 @@ exports.addClient = [
 
 
 
-
 // **********fetching client from redis cache************
 exports.getClients = async (req, res) => {
   const { _id, role, superAdminId } = req.user;

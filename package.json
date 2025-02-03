@@ -33,6 +33,7 @@
     "node-cron": "^3.0.3",
     "nodemailer": "^6.9.16",
     "papaparse": "^5.5.2",
+    "pdf-parse": "^1.1.1",
     "redis": "^4.7.0",
     "sequelize": "^6.37.1",
     "socket.io": "^4.8.1",
