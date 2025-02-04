@@ -186,6 +186,37 @@ exports.login = async (req, res) => {
 
 
 
+
+// Fetch logged-in user details
+exports.loggedIndUserData = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const role = req.user.role;
+
+    let user = null;
+
+    if (role === "superadmin") user = await SuperAdminModel.findById(userId).select("name email phone");
+    else if (role === "admin") user = await AdminModel.findById(userId).select("name email phone");
+    else if (role === "client") user = await ClientModel.findById(userId).select("name email phone");
+    else user = await authModel.findById(userId).select("name email phone");
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    res.json({ success: true, user });
+  } catch (error) {
+    console.error("Fetch User Error:", error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+}
+
+
+
+
+
+
+
 // ***********************FORGOT PASSWORD****************************
 
 //FORGOT PASSOWRD CONTROLLER

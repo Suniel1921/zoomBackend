@@ -131,65 +131,6 @@ exports.addClient = [
 
 
 // **********fetching client from redis cache************
-exports.getClients = async (req, res) => {
-  const { _id, role, superAdminId } = req.user;
-
-  // Authorization check
-  if (!role || (role !== 'superadmin' && role !== 'admin')) {
-    return res.status(403).json({ success: false, message: 'Unauthorized: Access denied.' });
-  }
-
-  try {
-    let query = {};
-    let redisKey = ''; // Key used to store data in Redis
-
-    // Set query based on user role
-    if (role === 'superadmin') {
-      query = { superAdminId: _id };
-      redisKey = `superadmin_clients:${_id}`;
-    } else if (role === 'admin') {
-      query = { $or: [{ createdBy: _id }, { superAdminId }] };
-      redisKey = `admin_clients:${_id}`;
-    }
-
-    // Get the Redis client
-    const redisClient = await getRedisClient();
-
-    // Check if data exists in Redis cache
-    const cachedClients = await redisClient.get(redisKey);
-
-    if (cachedClients) {
-      // Return cached data from Redis
-      console.log('Returning cached clients data from Redis');
-      return res.status(200).json({
-        success: true,
-        clients: JSON.parse(cachedClients),  // Parse the cached JSON data
-      });
-    }
-
-    // If data is not in Redis, query the database
-    const clients = await ClientModel.find(query)
-      .populate('createdBy', 'name email')
-      .exec();
-
-    // Cache the clients data in Redis for 1 hour (3600 seconds)
-    await redisClient.set(redisKey, JSON.stringify(clients), 'EX', 3600);
-
-    console.log('Returning fresh clients data from DB');
-    return res.status(200).json({
-      success: true,
-      clients,
-    });
-  } catch (error) {
-    console.error('Error fetching clients:', error.message);
-    return res.status(500).json({ success: false, message: 'Internal Server Error', error });
-  }
-};
-
-
-
-
-
 
 // exports.getClients = async (req, res) => {
 //   const { _id, role, superAdminId } = req.user;
@@ -201,7 +142,7 @@ exports.getClients = async (req, res) => {
 
 //   try {
 //     let query = {};
-//     let redisKey = '';
+//     let redisKey = ''; // Key used to store data in Redis
 
 //     // Set query based on user role
 //     if (role === 'superadmin') {
@@ -212,36 +153,30 @@ exports.getClients = async (req, res) => {
 //       redisKey = `admin_clients:${_id}`;
 //     }
 
-//     console.log('Redis Key:', redisKey); // Debugging: Log the Redis key
-
 //     // Get the Redis client
 //     const redisClient = await getRedisClient();
-//     console.log('Redis Client Connected:', redisClient.connected); // Debugging: Check Redis connection
 
-//     // Check if data exists in Redis cache and forceRefresh is not set
-//     if (!req.query.forceRefresh) {
-//       const cachedClients = await redisClient.get(redisKey);
-//       console.log('Cached Clients:', cachedClients); // Debugging: Log cached data
+//     // Check if data exists in Redis cache
+//     const cachedClients = await redisClient.get(redisKey);
 
-//       if (cachedClients) {
-//         console.log('Returning cached clients data from Redis');
-//         return res.status(200).json({
-//           success: true,
-//           clients: JSON.parse(cachedClients),
-//         });
-//       }
+//     if (cachedClients) {
+//       // Return cached data from Redis
+//       console.log('Returning cached clients data from Redis');
+//       return res.status(200).json({
+//         success: true,
+//         clients: JSON.parse(cachedClients),  // Parse the cached JSON data
+//       });
 //     }
 
-//     // If data is not in Redis or forceRefresh is set, query the database
-//     console.log('Fetching fresh clients data from DB');
+//     // If data is not in Redis, query the database
 //     const clients = await ClientModel.find(query)
 //       .populate('createdBy', 'name email')
 //       .exec();
 
-//     // Cache the clients data in Redis for 5 minutes (300 seconds)
-//     await redisClient.set(redisKey, JSON.stringify(clients), 'EX', 300);
-//     console.log('Data cached in Redis with key:', redisKey); // Debugging: Log cache set
+//     // Cache the clients data in Redis for 1 hour (3600 seconds)
+//     await redisClient.set(redisKey, JSON.stringify(clients), 'EX', 3600);
 
+//     console.log('Returning fresh clients data from DB');
 //     return res.status(200).json({
 //       success: true,
 //       clients,
@@ -251,6 +186,72 @@ exports.getClients = async (req, res) => {
 //     return res.status(500).json({ success: false, message: 'Internal Server Error', error });
 //   }
 // };
+
+
+
+
+
+
+exports.getClients = async (req, res) => {
+  const { _id, role, superAdminId } = req.user;
+
+  // Authorization check
+  if (!role || (role !== 'superadmin' && role !== 'admin')) {
+    return res.status(403).json({ success: false, message: 'Unauthorized: Access denied.' });
+  }
+
+  try {
+    let query = {};
+    let redisKey = '';
+
+    // Set query based on user role
+    if (role === 'superadmin') {
+      query = { superAdminId: _id };
+      redisKey = `superadmin_clients:${_id}`;
+    } else if (role === 'admin') {
+      query = { $or: [{ createdBy: _id }, { superAdminId }] };
+      redisKey = `admin_clients:${_id}`;
+    }
+
+    console.log('Redis Key:', redisKey); // Debugging: Log the Redis key
+
+    // Get the Redis client
+    const redisClient = await getRedisClient();
+    console.log('Redis Client Connected:', redisClient.connected); // Debugging: Check Redis connection
+
+    // Check if data exists in Redis cache and forceRefresh is not set
+    if (!req.query.forceRefresh) {
+      const cachedClients = await redisClient.get(redisKey);
+      console.log('Cached Clients:', cachedClients); // Debugging: Log cached data
+
+      if (cachedClients) {
+        console.log('Returning cached clients data from Redis');
+        return res.status(200).json({
+          success: true,
+          clients: JSON.parse(cachedClients),
+        });
+      }
+    }
+
+    // If data is not in Redis or forceRefresh is set, query the database
+    console.log('Fetching fresh clients data from DB');
+    const clients = await ClientModel.find(query)
+      .populate('createdBy', 'name email')
+      .exec();
+
+    // Cache the clients data in Redis for 5 minutes (300 seconds)
+    await redisClient.set(redisKey, JSON.stringify(clients), 'EX', 300);
+    console.log('Data cached in Redis with key:', redisKey); // Debugging: Log cache set
+
+    return res.status(200).json({
+      success: true,
+      clients,
+    });
+  } catch (error) {
+    console.error('Error fetching clients:', error.message);
+    return res.status(500).json({ success: false, message: 'Internal Server Error', error });
+  }
+};
 
 
 
