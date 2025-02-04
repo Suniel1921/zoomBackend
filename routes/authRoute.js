@@ -10,7 +10,7 @@ const { loginRateLimiter } = require("../middleware/newMiddleware/loginRateLimit
 
 router.post('/register', controller.register);
 router.post('/login', loginRateLimiter, controller.login);
-router.get('/loggedInuserData', controller.loggedIndUserData);
+router.get('/getLoggedInUser', requireLogin, controller.loggedIndUserData);
 router.get('/protectedRoute', requireLogin, controller.protectedRoute);
 router.get('/admin', requireLogin, isAdmin, controller.admin);
 
