@@ -64,7 +64,11 @@ const japanVistiApplicationSchema = new mongoose.Schema({
   discount: { type: Number, required: true, min: 0 },
   deliveryCharge: { type: Number, required: true, min: 0 },
   dueAmount: { type: Number, required: true },
-  paymentStatus: { type: String, enum: ['Due', 'Paid'], required: true },
+   paymentStatus: {
+      type: String,
+      enum: ["Due", "Paid"],
+      required: true,
+    },
   paymentMethod: {
     type: String,
     enum: ['Bank Furicomy', 'Counter Cash', 'Credit Card', 'Paypay', 'Line Pay'],

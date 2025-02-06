@@ -1,33 +1,31 @@
-
-// ******************showing client based data on the basis of super admin (this is also a normal user treat as for now) *************************
-
-
 const upload = require('../config/multerConfig');
-const { getRedisClient } = require('../config/redisClient');
 const ClientModel = require('../models/newModel/clientModel');
-const bcrypt = require('bcryptjs'); 
-const cloudinary = require ('cloudinary').v2;
-
-
-//create client controller
+const bcrypt = require('bcryptjs');
+const cloudinary = require('cloudinary').v2;
 const nodemailer = require('nodemailer');
 
+
+// Constants
+const MAX_SIZE = 2 * 1024 * 1024; // 2MB in bytes for file size validation
+
+// Configure Nodemailer transporter for email sending
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
     user: process.env.MYEMAIL,
-    pass: process.env.PASSWORD, 
+    pass: process.env.PASSWORD,
   },
 });
 
 // Add Client Controller
 exports.addClient = [
-  upload.array('profilePhoto', 1),
+  upload.array('profilePhoto', 1), // Allow only 1 profile photo upload
   async (req, res) => {
     const { superAdminId, _id: createdBy, role } = req.user;
 
+    // Role-based access control
     if (role !== 'superadmin' && (!superAdminId || role !== 'admin')) {
-      console.log('Unauthorized access attempt:', req.user); 
+      console.log('Unauthorized access attempt:', req.user);
       return res.status(403).json({ success: false, message: 'Unauthorized: Access denied.' });
     }
 
@@ -51,23 +49,43 @@ exports.addClient = [
         dateJoined,
       } = req.body;
 
+      // Validate required fields
+      const requiredFields = ['name', 'email', 'password', 'phone'];
+      for (let field of requiredFields) {
+        if (!req.body[field]) {
+          return res.status(400).json({ success: false, message: `${field.charAt(0).toUpperCase() + field.slice(1)} is required.` });
+        }
+      }
+
+      // Hash the password
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      const profilePhotoUrls = [];
-      for (const file of req.files) {
+      // Upload profile photo to Cloudinary (if provided)
+      let profilePhotoUrl = null;
+      if (req.files && req.files.length > 0) {
+        const file = req.files[0];
+
+        // Validate file size
         if (file.size > MAX_SIZE) {
           return res.status(400).json({ success: false, message: 'Profile photo must be less than 2MB.' });
         }
 
-        const result = await cloudinary.uploader.upload(file.path);
-        profilePhotoUrls.push(result.secure_url);
+        try {
+          const result = await cloudinary.uploader.upload(file.path);
+          profilePhotoUrl = result.secure_url;
+        } catch (error) {
+          console.error('Cloudinary upload error:', error.message);
+          return res.status(500).json({ success: false, message: 'Error uploading profile photo.' });
+        }
       }
 
+      // Determine superAdminId based on role
       const clientSuperAdminId = role === 'superadmin' ? createdBy : superAdminId;
 
-      const createClient = await ClientModel.create({
-        superAdminId: clientSuperAdminId, 
-        createdBy,     
+      // Create client in the database
+      const newClient = await ClientModel.create({
+        superAdminId: clientSuperAdminId,
+        createdBy,
         name,
         category,
         status,
@@ -84,14 +102,14 @@ exports.addClient = [
         socialMedia,
         timeline,
         dateJoined,
-        profilePhoto: profilePhotoUrls[0],
+        profilePhoto: profilePhotoUrl,
       });
 
       // Send login credentials email
       const mailOptions = {
-        from: process.env.MYEMAIL, // sender address
-        to: email, // recipient
-        subject: 'Your Login Credentials - Zoom Creatives CRM', // Email subject
+        from: process.env.MYEMAIL, // Sender address
+        to: email, // Recipient address
+        subject: 'Your Login Credentials - CRM', // Email subject
         html: `
           <p>Dear ${name},</p>
           <p>Welcome to our CRM system!</p>
@@ -99,10 +117,10 @@ exports.addClient = [
           <p><strong>Email:</strong> ${email}</p>
           <p><strong>Password:</strong> ${password}</p>
           <p>Please log in to track your application.</p>
-          <p><a href="https://crm.zoomcreatives.jp/client-login" target="_blank">Login Here</a></p>
+          <p><a href="https://crm.yourcompany.com/client-login" target="_blank">Login Here</a></p>
           <p>If you did not request this account, please contact support immediately.</p>
           <br>
-          <p>Best Regards,<br>Zoom Creatives CRM Team</p>
+          <p>Best Regards,<br>Your Company CRM Team</p>
         `,
       };
 
@@ -114,84 +132,26 @@ exports.addClient = [
         }
       });
 
+      // Return success response
       return res.status(201).json({
         success: true,
         message: 'Client created successfully. Login credentials have been sent via email.',
-        createClient,
+        client: newClient,
       });
     } catch (error) {
       console.error('Error creating client:', error.message);
-      return res.status(500).json({ success: false, message: 'Internal Server Error', error });
+
+      // Handle specific errors
+      if (error.code === 11000) {
+        return res.status(400).json({ success: false, message: 'Email or phone number already exists.' });
+      }
+
+      return res.status(500).json({ success: false, message: 'Internal Server Error', error: error.message });
     }
   },
 ];
 
-
-
-
-
-// **********fetching client from redis cache************
-
-// exports.getClients = async (req, res) => {
-//   const { _id, role, superAdminId } = req.user;
-
-//   // Authorization check
-//   if (!role || (role !== 'superadmin' && role !== 'admin')) {
-//     return res.status(403).json({ success: false, message: 'Unauthorized: Access denied.' });
-//   }
-
-//   try {
-//     let query = {};
-//     let redisKey = ''; // Key used to store data in Redis
-
-//     // Set query based on user role
-//     if (role === 'superadmin') {
-//       query = { superAdminId: _id };
-//       redisKey = `superadmin_clients:${_id}`;
-//     } else if (role === 'admin') {
-//       query = { $or: [{ createdBy: _id }, { superAdminId }] };
-//       redisKey = `admin_clients:${_id}`;
-//     }
-
-//     // Get the Redis client
-//     const redisClient = await getRedisClient();
-
-//     // Check if data exists in Redis cache
-//     const cachedClients = await redisClient.get(redisKey);
-
-//     if (cachedClients) {
-//       // Return cached data from Redis
-//       console.log('Returning cached clients data from Redis');
-//       return res.status(200).json({
-//         success: true,
-//         clients: JSON.parse(cachedClients),  // Parse the cached JSON data
-//       });
-//     }
-
-//     // If data is not in Redis, query the database
-//     const clients = await ClientModel.find(query)
-//       .populate('createdBy', 'name email')
-//       .exec();
-
-//     // Cache the clients data in Redis for 1 hour (3600 seconds)
-//     await redisClient.set(redisKey, JSON.stringify(clients), 'EX', 3600);
-
-//     console.log('Returning fresh clients data from DB');
-//     return res.status(200).json({
-//       success: true,
-//       clients,
-//     });
-//   } catch (error) {
-//     console.error('Error fetching clients:', error.message);
-//     return res.status(500).json({ success: false, message: 'Internal Server Error', error });
-//   }
-// };
-
-
-
-
-
-
+// Get all Clients (without cache)
 exports.getClients = async (req, res) => {
   const { _id, role, superAdminId } = req.user;
 
@@ -201,47 +161,23 @@ exports.getClients = async (req, res) => {
   }
 
   try {
+    // Initialize query based on role
     let query = {};
-    let redisKey = '';
-
-    // Set query based on user role
-    if (role === 'superadmin') {
-      query = { superAdminId: _id };
-      redisKey = `superadmin_clients:${_id}`;
-    } else if (role === 'admin') {
-      query = { $or: [{ createdBy: _id }, { superAdminId }] };
-      redisKey = `admin_clients:${_id}`;
+    switch (role) {
+      case 'superadmin':
+        query = { superAdminId: _id };
+        break;
+      case 'admin':
+        query = { $or: [{ createdBy: _id }, { superAdminId }] };
+        break;
+      default:
+        throw new Error('Unauthorized role');
     }
 
-    console.log('Redis Key:', redisKey); // Debugging: Log the Redis key
-
-    // Get the Redis client
-    const redisClient = await getRedisClient();
-    console.log('Redis Client Connected:', redisClient.connected); // Debugging: Check Redis connection
-
-    // Check if data exists in Redis cache and forceRefresh is not set
-    if (!req.query.forceRefresh) {
-      const cachedClients = await redisClient.get(redisKey);
-      console.log('Cached Clients:', cachedClients); // Debugging: Log cached data
-
-      if (cachedClients) {
-        console.log('Returning cached clients data from Redis');
-        return res.status(200).json({
-          success: true,
-          clients: JSON.parse(cachedClients),
-        });
-      }
-    }
-
-    // If data is not in Redis or forceRefresh is set, query the database
-    console.log('Fetching fresh clients data from DB');
+    // Fetch clients from the database
     const clients = await ClientModel.find(query)
-      .populate('createdBy', 'name email')
+      .populate('createdBy', 'name email') // Populate createdBy field with name and email
       .exec();
-
-    // Cache the clients data in Redis for 5 minutes (300 seconds)
-    await redisClient.set(redisKey, JSON.stringify(clients), 'EX', 300);
-    console.log('Data cached in Redis with key:', redisKey); // Debugging: Log cache set
 
     return res.status(200).json({
       success: true,
@@ -249,13 +185,11 @@ exports.getClients = async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching clients:', error.message);
-    return res.status(500).json({ success: false, message: 'Internal Server Error', error });
+    return res.status(500).json({ success: false, message: 'Internal Server Error', error: error.message });
   }
 };
 
-
-
-
+// Get Client by ID (without cache)
 exports.getClientById = async (req, res) => {
   const { _id: superAdminId } = req.user;
   if (!superAdminId) {
@@ -263,50 +197,40 @@ exports.getClientById = async (req, res) => {
   }
 
   try {
-    const client = await ClientModel.findById(req.params.id);
+    const clientId = req.params.id;
+
+    const client = await ClientModel.findById(clientId);
     if (!client) {
       return res.status(404).json({ success: false, message: 'Client not found.' });
     }
+
     res.json({ success: true, client });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 };
 
-
-
-
-
-
+// Update Client (without cache)
 exports.updateClient = async (req, res) => {
-  const { _id: superAdminId } = req.user;
+  const { _id: superAdminId, role } = req.user;
   if (!superAdminId) {
     return res.status(403).json({ success: false, message: 'Unauthorized: SuperAdmin access required.' });
   }
 
   try {
+    // Find the client by ID
     const client = await ClientModel.findById(req.params.id);
     if (!client) {
       return res.status(404).json({ success: false, message: 'Client not found.' });
     }
 
+    // Destructure the fields from the request body
     const {
-      name,
-      category,
-      status,
-      email,
-      phone,
-      nationality,
-      postalCode,
-      prefecture,
-      city,
-      street,
-      building,
-      modeOfContact,
-      socialMedia,
+      name, category, status, email, phone, nationality, postalCode,
+      prefecture, city, street, building, modeOfContact, socialMedia,
     } = req.body;
 
-    // Update only provided fields
+    // Update the client with the new values
     client.name = name || client.name;
     client.category = category || client.category;
     client.status = status || client.status;
@@ -321,13 +245,19 @@ exports.updateClient = async (req, res) => {
     client.modeOfContact = modeOfContact || client.modeOfContact;
     client.socialMedia = socialMedia || client.socialMedia;
 
+    // Save the updated client to the database
     const updatedClient = await client.save();
 
-    // Exclude sensitive fields from the response
+    // Exclude sensitive fields (like password) from the response
     const responseClient = updatedClient.toObject();
-    delete responseClient.password; 
+    delete responseClient.password;
 
-    res.status(200).json({ success: true, message: 'Client updated successfully.', updatedClient: responseClient });
+    // Return the updated client
+    res.status(200).json({
+      success: true,
+      message: 'Client updated successfully.',
+      updatedClient: responseClient,
+    });
   } catch (err) {
     res.status(400).json({
       success: false,
@@ -337,6 +267,29 @@ exports.updateClient = async (req, res) => {
   }
 };
 
+// Delete Client (without cache)
+exports.deleteClient = async (req, res) => {
+  const { _id: superAdminId } = req.user;
+  if (!superAdminId) {
+    return res.status(403).json({ success: false, message: 'Unauthorized: SuperAdmin access required.' });
+  }
+
+  try {
+    const clientId = req.params.id;
+    const client = await ClientModel.findByIdAndDelete(clientId);
+    
+    if (!client) {
+      return res.status(404).json({ success: false, message: 'Client not found.' });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Client deleted successfully.',
+    });
+  } catch (err) {
+    res.status(400).json({ success: false, message: 'Error deleting client.' });
+  }
+};
 
 
 
@@ -369,103 +322,6 @@ exports.updateClientProfile = async (req, res) => {
     return res.status(500).json({ message: 'Error updating profile', error: error.message });
   }
 };
-
-
-
-
-
-
-
-
-
-
-
-//delete client controller
-exports.deleteClient = async (req, res) => {
-  const { _id: superAdminId } = req.user;
-  if (!superAdminId) {
-    return res.status(403).json({ success: false, message: 'Unauthorized: SuperAdmin access required.' });
-  }
-
-  try {
-    const client = await ClientModel.findByIdAndDelete(req.params.id);
-    if (!client) {
-      return res.status(404).json({ success: false, message: 'Client not found.' });
-    }
-    res.status(200).json({ success: true, message: 'Client deleted successfully.' });
-  } catch (error) {
-    res.status(500).json({ success: false, message: 'Internal Server Error', error });
-  }
-};
-
-
-
-
-
-// //get all client category
-// exports.getCategories = async (req, res) => {
-//   try {
-//     const categories = await ClientModel.distinct('category');
-//     res.status(200).json({ success: true, categories });
-//   } catch (error) {
-//     console.error('Error fetching categories:', error.message);
-//     res.status(500).json({ success: false, message: 'Internal Server Error', error });
-//   }
-// };
-
-// //sending email to the selected client category
-// exports.sendEmailByCategory = async (req, res) => {
-//   const { category, subject, message } = req.body;
-
-//   if (!category || !subject || !message) {
-//     return res.status(400).json({ success: false, message: 'Category, subject, and message are required.' });
-//   }
-
-//   try {
-//     // Fetch all users in the selected category
-//     const clients = await ClientModel.find({ category });
-
-//     if (clients.length === 0) {
-//       return res.status(404).json({ success: false, message: 'No users found in this category.' });
-//     }
-
-//     // Send email to each user
-//     const emailPromises = clients.map((client) => {
-//       const mailOptions = {
-//         from: process.env.MYEMAIL,
-//         to: client.email,
-//         subject,
-//         html: message, // Use HTML content for the email body
-//       };
-
-//       return transporter.sendMail(mailOptions);
-//     });
-
-//     await Promise.all(emailPromises);
-
-//     res.status(200).json({ success: true, message: 'Emails sent successfully.' });
-//   } catch (error) {
-//     console.error('Error sending emails:', error.message);
-//     res.status(500).json({ success: false, message: 'Internal Server Error', error });
-//   }
-// };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -534,3 +390,6 @@ exports.uploadCSVFile = async (req, res) => {
 
 
 
+
+
+// but the problem is when i update the data like i add subodh and update the data to subodh yadav then its showing only subodh instead of showing subodh yadav fix this this is my full code 

@@ -187,7 +187,7 @@ dbConnection();
 
 // Initialize Redis client
 
-initRedisClient();
+// initRedisClient();
 
 
 // Routes
