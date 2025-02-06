@@ -120,7 +120,7 @@ exports.addClient = [
           <p><a href="https://crm.yourcompany.com/client-login" target="_blank">Login Here</a></p>
           <p>If you did not request this account, please contact support immediately.</p>
           <br>
-          <p>Best Regards,<br>Your Company CRM Team</p>
+          <p>Best Regards,<br>Zoom Creatives CRM Team</p>
         `,
       };
 
@@ -211,61 +211,230 @@ exports.getClientById = async (req, res) => {
 };
 
 // Update Client (without cache)
+// exports.updateClient = async (req, res) => {
+//   const { _id: superAdminId, role } = req.user;
+//   if (!superAdminId) {
+//     return res.status(403).json({ success: false, message: 'Unauthorized: SuperAdmin access required.' });
+//   }
+
+//   try {
+//     // Find the client by ID
+//     const client = await ClientModel.findById(req.params.id);
+//     if (!client) {
+//       return res.status(404).json({ success: false, message: 'Client not found.' });
+//     }
+
+//     // Destructure the fields from the request body
+//     const {
+//       name, category, status, email, phone, nationality, postalCode,
+//       prefecture, city, street, building, modeOfContact, socialMedia,
+//     } = req.body;
+
+//     // Update the client with the new values
+//     client.name = name || client.name;
+//     client.category = category || client.category;
+//     client.status = status || client.status;
+//     client.email = email || client.email;
+//     client.phone = phone || client.phone;
+//     client.nationality = nationality || client.nationality;
+//     client.postalCode = postalCode || client.postalCode;
+//     client.prefecture = prefecture || client.prefecture;
+//     client.city = city || client.city;
+//     client.street = street || client.street;
+//     client.building = building || client.building;
+//     client.modeOfContact = modeOfContact || client.modeOfContact;
+//     client.socialMedia = socialMedia || client.socialMedia;
+
+//     // Save the updated client to the database
+//     const updatedClient = await client.save();
+
+//     // Exclude sensitive fields (like password) from the response
+//     const responseClient = updatedClient.toObject();
+//     delete responseClient.password;
+
+//     // Return the updated client
+//     res.status(200).json({
+//       success: true,
+//       message: 'Client updated successfully.',
+//       updatedClient: responseClient,
+//     });
+//   } catch (err) {
+//     res.status(400).json({
+//       success: false,
+//       message: 'Error updating client. Please try again later.',
+//       error: err.message,
+//     });
+//   }
+// };
+
+
+
+
+// Update Client Controller
 exports.updateClient = async (req, res) => {
-  const { _id: superAdminId, role } = req.user;
-  if (!superAdminId) {
-    return res.status(403).json({ success: false, message: 'Unauthorized: SuperAdmin access required.' });
-  }
+  const { _id: adminId, role, superAdminId } = req.user;
 
   try {
     // Find the client by ID
     const client = await ClientModel.findById(req.params.id);
     if (!client) {
-      return res.status(404).json({ success: false, message: 'Client not found.' });
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Client not found.' 
+      });
+    }
+
+    // Authorization check
+    if (role !== 'superadmin' && client.superAdminId.toString() !== superAdminId.toString()) {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Unauthorized: Access denied.' 
+      });
     }
 
     // Destructure the fields from the request body
     const {
-      name, category, status, email, phone, nationality, postalCode,
-      prefecture, city, street, building, modeOfContact, socialMedia,
+      name,
+      category,
+      status,
+      email,
+      phone,
+      nationality,
+      postalCode,
+      prefecture,
+      city,
+      street,
+      building,
+      modeOfContact,
+      socialMedia,
+      timeline,
+      dateJoined,
+      profilePhoto
     } = req.body;
 
+    // Validate email format if provided
+    if (email && !email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid email format.'
+      });
+    }
+
+    // Check if email is already in use by another client
+    if (email && email !== client.email) {
+      const existingClient = await ClientModel.findOne({ 
+        email, 
+        _id: { $ne: client._id } 
+      });
+      
+      if (existingClient) {
+        return res.status(400).json({
+          success: false,
+          message: 'Email is already in use by another client.'
+        });
+      }
+    }
+
+    // Validate phone format if provided
+    if (phone && !phone.match(/^\+?[\d\s-]+$/)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid phone number format.'
+      });
+    }
+
+    // Handle profile photo update
+    let profilePhotoUrl = client.profilePhoto;
+    if (profilePhoto && profilePhoto.startsWith('data:image')) {
+      try {
+        // Upload new profile photo to Cloudinary
+        const result = await cloudinary.uploader.upload(profilePhoto, {
+          folder: 'client-profiles',
+          transformation: [
+            { width: 400, height: 400, crop: 'fill' },
+            { quality: 'auto' }
+          ]
+        });
+        profilePhotoUrl = result.secure_url;
+
+        // Delete old profile photo from Cloudinary if it exists
+        if (client.profilePhoto) {
+          const oldPublicId = client.profilePhoto.split('/').pop().split('.')[0];
+          await cloudinary.uploader.destroy(`client-profiles/${oldPublicId}`);
+        }
+      } catch (error) {
+        console.error('Error uploading profile photo:', error);
+        return res.status(500).json({
+          success: false,
+          message: 'Error uploading profile photo.'
+        });
+      }
+    }
+
     // Update the client with the new values
-    client.name = name || client.name;
-    client.category = category || client.category;
-    client.status = status || client.status;
-    client.email = email || client.email;
-    client.phone = phone || client.phone;
-    client.nationality = nationality || client.nationality;
-    client.postalCode = postalCode || client.postalCode;
-    client.prefecture = prefecture || client.prefecture;
-    client.city = city || client.city;
-    client.street = street || client.street;
-    client.building = building || client.building;
-    client.modeOfContact = modeOfContact || client.modeOfContact;
-    client.socialMedia = socialMedia || client.socialMedia;
+    const updates = {
+      name: name || client.name,
+      category: category || client.category,
+      status: status || client.status,
+      email: email || client.email,
+      phone: phone || client.phone,
+      nationality: nationality || client.nationality,
+      postalCode: postalCode || client.postalCode,
+      prefecture: prefecture || client.prefecture,
+      city: city || client.city,
+      street: street || client.street,
+      building: building || client.building,
+      modeOfContact: modeOfContact || client.modeOfContact,
+      socialMedia: socialMedia || client.socialMedia,
+      timeline: timeline || client.timeline,
+      dateJoined: dateJoined || client.dateJoined,
+      profilePhoto: profilePhotoUrl
+    };
+
+    // Update only the fields that were provided
+    Object.keys(updates).forEach(key => {
+      if (updates[key] !== undefined) {
+        client[key] = updates[key];
+      }
+    });
+
+    // Add update to timeline
+    const timelineEntry = {
+      action: 'update',
+      timestamp: new Date(),
+      updatedBy: adminId,
+      changes: Object.keys(req.body).filter(key => req.body[key] !== undefined)
+    };
+
+    if (!client.timeline) {
+      client.timeline = [];
+    }
+    client.timeline.push(timelineEntry);
 
     // Save the updated client to the database
     const updatedClient = await client.save();
 
-    // Exclude sensitive fields (like password) from the response
+    // Exclude sensitive fields from the response
     const responseClient = updatedClient.toObject();
     delete responseClient.password;
 
     // Return the updated client
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: 'Client updated successfully.',
-      updatedClient: responseClient,
+      updatedClient: responseClient
     });
-  } catch (err) {
-    res.status(400).json({
+
+  } catch (error) {
+    console.error('Error updating client:', error);
+    return res.status(500).json({
       success: false,
       message: 'Error updating client. Please try again later.',
-      error: err.message,
+      error: error.message
     });
   }
 };
+
 
 // Delete Client (without cache)
 exports.deleteClient = async (req, res) => {
@@ -385,11 +554,3 @@ exports.uploadCSVFile = async (req, res) => {
     res.status(500).json({ success: false, message: 'Error importing CSV data', error: err.message });
   }
 };
-
-
-
-
-
-
-
-// but the problem is when i update the data like i add subodh and update the data to subodh yadav then its showing only subodh instead of showing subodh yadav fix this this is my full code 

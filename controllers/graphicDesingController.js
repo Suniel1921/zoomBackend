@@ -1,8 +1,6 @@
 const GraphicDesignModel = require("../models/newModel/graphicDesingModel");
 
 
-
-
 //create graphicDesing Controller
 exports.createGraphicDesign = async (req, res) => {
   try {

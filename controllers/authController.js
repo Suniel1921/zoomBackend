@@ -9,6 +9,7 @@ const nodemailer = require('nodemailer');
 const AdminModel = require("../models/newModel/adminModel");
 const AuditLogController = require('../controllers/auditLogController'); 
 
+
 exports.register = async (req, res) => {
   try {
     const { fullName, phone, nationality, email, password, confirmPassword } = req.body;
@@ -214,9 +215,6 @@ exports.loggedIndUserData = async (req, res) => {
 
 
 
-
-
-
 // ***********************FORGOT PASSWORD****************************
 
 //FORGOT PASSOWRD CONTROLLER
@@ -337,10 +335,6 @@ exports.protectedRoute = async (req, res) => {
 exports.admin = (req, res) => {
   res.status(200).json({ ok: true });
 }
-
-
-
-
 
 
 
