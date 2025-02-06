@@ -609,57 +609,28 @@ exports.deleteAppointment = async (req, res) => {
 
 
   exports.fetchAllModelData = async (req, res) => {
-    const { _id, role, superAdminId } = req.user; // Extract user ID, role, and superAdminId from the authenticated user
-  
-    // Role-based check: Only 'superadmin' or 'admin' are allowed
-    if (!role || (role !== "superadmin" && role !== "admin")) {
-      return res.status(403).json({ success: false, message: "Unauthorized: Access denied." });
-    }
-  
     try {
-      let query = {};
+      const { superAdminId, _id, role } = req.user; 
   
-      if (role === "superadmin") {
-        // SuperAdmin: Fetch all clients under their `superAdminId`
-        query = { superAdminId: _id };
-      } else if (role === "admin") {
-        // Admin: Fetch clients created by the admin or under their `superAdminId`
-        query = { $or: [{ createdBy: _id }, { superAdminId: _id }] };
+      // Role-based check: Only 'superadmin' or 'admin' are allowed
+      if (role !== "superadmin" && role !== "admin") {
+        console.log("Unauthorized access attempt:", req.user);
+        return res.status(403).json({
+          success: false,
+          message: "Unauthorized: Access denied.",
+        });
       }
   
-      // Fetch data from all models in parallel, with 'createdBy' populated in each model
-      const [application, japanVisit, documentTranslation, epassports, otherServices, graphicDesigns, appointment] = await Promise.all([
-        applicationModel.find(query).populate('clientId').populate({
-          path: "createdBy", 
-          select: "name email", 
-        }).lean(),
-        japanVisitApplicationModel.find(query).populate('clientId').populate({
-          path: "createdBy", 
-          select: "name email", 
-        }).lean(),
-        documentTranslationModel.find(query).populate('clientId').populate({
-          path: "createdBy", 
-          select: "name email", 
-        }).lean(),
-        ePassportModel.find(query).populate('clientId').populate({
-          path: "createdBy", 
-          select: "name email", 
-        }).lean(),
-        OtherServiceModel.find(query).populate('clientId').populate({
-          path: "createdBy", 
-          select: "name email", 
-        }).lean(),
-        GraphicDesignModel.find(query).populate('clientId').populate({
-          path: "createdBy", 
-          select: "name email", 
-        }).lean(),
-        AppointmentModel.find(query).populate('clientId').lean(),
-      ]);
-
-      //ALERT ⚠️: in  AppointmentModel not populating createdBy becoz there is not creadtedBy in AppointmentModel model
+      // Define query based on role
+      let query = {};
+      if (role === "superadmin") {
+        query = { superAdminId: _id };
+      } else if (role === "admin") {
+        query = { $or: [{ createdBy: _id }, { superAdminId }] };
+      }
   
-      // Combine the data into a single response object
-      const allData = {
+      // Fetch data from models in parallel
+      const [
         application,
         japanVisit,
         documentTranslation,
@@ -667,21 +638,39 @@ exports.deleteAppointment = async (req, res) => {
         otherServices,
         graphicDesigns,
         appointment,
+      ] = await Promise.allSettled([
+        applicationModel.find(query).populate("clientId").populate("createdBy", "name email").lean(),
+        japanVisitApplicationModel.find(query).populate("clientId").populate("createdBy", "name email").lean(),
+        documentTranslationModel.find(query).populate("clientId").populate("createdBy", "name email").lean(),
+        ePassportModel.find(query).populate("clientId").populate("createdBy", "name email").lean(),
+        OtherServiceModel.find(query).populate("clientId").populate("createdBy", "name email").lean(),
+        GraphicDesignModel.find(query).populate("clientId").populate("createdBy", "name email").lean(),
+        AppointmentModel.find(query).populate("clientId").lean(),
+      ]);
+  
+      // Process results from `Promise.allSettled()`
+      const allData = {
+        application: application.status === "fulfilled" ? application.value : [],
+        japanVisit: japanVisit.status === "fulfilled" ? japanVisit.value : [],
+        documentTranslation: documentTranslation.status === "fulfilled" ? documentTranslation.value : [],
+        epassports: epassports.status === "fulfilled" ? epassports.value : [],
+        otherServices: otherServices.status === "fulfilled" ? otherServices.value : [],
+        graphicDesigns: graphicDesigns.status === "fulfilled" ? graphicDesigns.value : [],
+        appointment: appointment.status === "fulfilled" ? appointment.value : [],
       };
   
-      // Send the combined data as a JSON response
       res.status(200).json({
         success: true,
-        message: 'All model data fetched successfully',
+        message: "All model data fetched successfully",
         allData,
       });
   
     } catch (error) {
-      console.error('Error fetching all data:', error);
+      console.error("Error fetching all data:", error);
       res.status(500).json({
         success: false,
-        message: 'Failed to fetch data from models',
-        error,
+        message: "Failed to fetch data from models",
+        error: error.message,
       });
     }
   };

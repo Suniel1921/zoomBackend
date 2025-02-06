@@ -138,59 +138,6 @@ exports.getEpassportById = async (req, res) => {
   }
 };
 
-// Update an ePassport application for authenticated superAdmin 
-
-
-// exports.updateEpassport = async (req, res) => {
-//   try {
-//     const { _id: createdBy, role } = req.user; // Get the user info
-//     const epassportId = req.params.id; // Get the ePassport ID from the request parameters
-
-//     console.log("User Info:", { createdBy, role });
-//     console.log("Updating ePassport with ID:", epassportId);
-
-//     let query = {};
-
-//     // If superadmin, allow them to update any ePassport
-//     if (role === "superadmin") {
-//       query = { _id: epassportId };
-//     } else if (role === "admin") {
-//       // Admin can update any ePassport they created or under their superAdminId
-//       query = {
-//         _id: epassportId,
-//         $or: [
-//           { createdBy: createdBy }, // Admin can update their own ePassport
-//           { superAdminId: createdBy }, // Admin can update ePassports under their superAdminId
-//         ],
-//       };
-//     }
-
-//     console.log("Query being used:", query); // Log the query to verify it's correct
-
-//     // Find the ePassport by the query
-//     const epassport = await ePassportModel.findOne(query);
-
-//     // Check if the document was found
-//     if (!epassport) {
-//       console.log("No ePassport found with the query:", query); // Log why the document is not found
-//       return res.status(404).json({ success: false, message: "ePassport not found" });
-//     }
-
-//     // If found, update the ePassport with the request body
-//     const updatedEpassport = await ePassportModel.findOneAndUpdate(query, req.body, { new: true });
-
-//     // Return the updated ePassport
-//     res.status(200).json({
-//       success: true,
-//       message: "ePassport data updated successfully",
-//       data: updatedEpassport,
-//     });
-//   } catch (error) {
-//     console.error("Error updating ePassport:", error);
-//     res.status(400).json({ success: false, message: error.message });
-//   }
-// };
-
 
 
 
@@ -198,10 +145,6 @@ exports.updateEpassport = async (req, res) => {
   try {
     const { _id: createdBy, role } = req.user; // Get user info
     const epassportId = req.params.id; // Get ePassport ID from the request parameters
-
-    console.log("User Info:", { createdBy, role });
-    console.log("Updating ePassport with ID:", epassportId);
-
     // Determine query based on role
     const query =
       role === "superadmin"
