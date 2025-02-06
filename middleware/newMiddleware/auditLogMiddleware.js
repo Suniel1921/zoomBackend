@@ -1,187 +1,88 @@
-
-
-// // const AuditLog = require("../../models/newModel/auditLogModel");
-
-// // const logMiddleware = async (req, res, next) => {
-// //   try {
-// //     // Only track specific actions
-// //     const trackableActions = ['POST', 'PUT', 'DELETE', 'LOGIN', 'LOGOUT'];
-// //     const action = req.method.toLowerCase();
-
-// //     if (trackableActions.includes(action.toUpperCase()) || req.path.includes('login') || req.path.includes('logout')) {
-// //       const logData = {
-// //         action: req.path.includes('login') 
-// //           ? (res.statusCode === 401 ? 'login_failed' : 'login') 
-// //           : req.path.includes('logout') ? 'logout' : action,
-// //         userType: req.user?.role || 'unknown', // Assumes `req.user` contains logged-in user info
-// //         userId: req.user?._id || null,
-// //         ipAddress: req.ip,
-// //         details: {
-// //           endpoint: req.originalUrl,
-// //           query: req.query,
-// //           body: req.body,
-// //         },
-// //       };
-
-// //       await AuditLog.create(logData);
-// //     }
-// //   } catch (error) {
-// //     console.error('Failed to log activity:', error);
-// //   }
-  
-// //   next(); // Proceed to the next middleware
-// // };
-
-// // module.exports = logMiddleware;
-
-
-
-
-
-
-
-
-// const AuditLog = require("../../models/newModel/auditLogModel");
-
-
-// const getActionType = (req) => {
-//   // Check for login paths first
-//   if (req.path.includes('login')) {
-//     return 'login';
-//   }
-
-//   // Only map specific HTTP methods to actions
-//   switch (req.method.toUpperCase()) {
-//     case 'POST':
-//       return 'create';
-//     case 'PUT':
-//     case 'PATCH':
-//       return 'update';
-//     case 'DELETE':
-//       return 'delete';
-//     default:
-//       return null; // Return null for actions we don't want to log
-//   }
-// };
-
-// const getUserInfo = (req, res) => {
-//   // For login attempts, get the attempted username from the request body
-//   if (req.path.includes('login')) {
-//     return {
-//       userName: req.body?.email || req.body?.name || 'unknown',
-//       userType: 'unknown', // For login attempts, we don't know the user type yet
-//       userId: null
-//     };
-//   }
-
-//   // For other actions, get the logged-in user info
-//   const user = req.user || req.session?.user;
-//   return {
-//     userName: user?.name || user?.email || 'unknown',
-//     userType: user?.role || 'unknown',
-//     userId: user?._id || null
-//   };
-// };
-
-// const getIpAddress = (req) => {
-//   const forwardedFor = req.headers['x-forwarded-for'];
-//   const ip = forwardedFor ? forwardedFor.split(',')[0].trim() : req.ip;
-//   return ip === '::1' ? '127.0.0.1' : ip;
-// };
-
-// const logMiddleware = async (req, res, next) => {
-//   const originalEnd = res.end;
-//   const originalJson = res.json;
-
-//   // Override res.json to capture status code and response data
-//   res.json = function(data) {
-//     res.locals.responseData = data;
-//     return originalJson.call(this, data);
-//   };
-
-//   // Override res.end
-//   res.end = async function(chunk, encoding) {
-//     res.end = originalEnd;
-
-//     try {
-//       const action = getActionType(req);
-      
-//       // Only proceed if it's an action we want to log
-//       if (action) {
-//         const ipAddress = getIpAddress(req);
-//         const statusCode = res.statusCode;
-
-//         // Determine if it's a failed login attempt
-//         const isFailed = action === 'login' && (statusCode === 401 || statusCode === 400);
-//         const finalAction = isFailed ? 'failed_login' : action;
-
-//         // Get user info after determining if it's a failed login
-//         const { userName, userType, userId } = getUserInfo(req, res);
-
-//         // Only log specific actions
-//         if (['create', 'update', 'delete', 'login', 'failed_login'].includes(finalAction)) {
-//           const logData = {
-//             action: finalAction,
-//             userType,
-//             userName,
-//             userId,
-//             ipAddress,
-//             timestamp: new Date(),
-//             details: {
-//               endpoint: req.originalUrl,
-//               method: req.method,
-//               statusCode,
-//               query: req.query,
-//               // Include relevant request data
-//               body: {
-//                 ...(req.body?.email && { email: req.body.email }),
-//                 ...(req.body?.username && { username: req.body.username }),
-//                 ...(finalAction === 'failed_login' && { 
-//                   reason: res.locals.responseData?.message || 'Authentication failed'
-//                 })
-//               }
-//             }
-//           };
-
-//           await AuditLog.create(logData);
-//         }
-//       }
-//     } catch (error) {
-//       console.error('Failed to create audit log:', error);
-//     }
-
-//     return originalEnd.call(this, chunk, encoding);
-//   };
-
-//   next();
-// };
-
-// module.exports = logMiddleware;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// middleware/newMiddleware/auditLogMiddleware.js
-const AuditLogController = require ('../../controllers/auditLogController')
+const AuditLogController = require('../../controllers/auditLogController');
 
 const auditLogMiddleware = async (req, res, next) => {
-  const { action, userType, userId, userName, ipAddress, details } = req.body;
+  const originalSend = res.send;
+  let logSent = false;
+  
+  res.send = function (data) {
+    if (!logSent) {
+      try {
+        // Only parse JSON responses
+        const body = typeof data === 'string' && data.startsWith('{') 
+          ? JSON.parse(data)
+          : null;
 
-  // Log the action
-  await AuditLogController.addLog(action, userType, userId, userName, ipAddress, details);
+        if (body) {
+          const ipAddress = 
+            req.headers['x-forwarded-for']?.split(',')[0] || 
+            req.connection.remoteAddress ||
+            req.socket.remoteAddress ||
+            req.ip;
 
+          // Handle login attempts
+          if (req.path.includes('/login')) {
+            const userType = body.user?.role || 'unknown';
+            const userId = body.user?.id || null;
+            const userName = body.user?.fullName || body.user?.email || req.body.email || 'unknown';
+            const action = body.success ? 'login' : 'failed_login';
+            
+            if (userName && ipAddress) {
+              AuditLogController.addLog(
+                action,
+                userType,
+                userId,
+                userName,
+                ipAddress,
+                { 
+                  success: body.success,
+                  message: body.message || 'Login attempt',
+                  path: req.path
+                }
+              );
+              logSent = true;
+            }
+          }
+          // Handle logout
+          else if (req.path.includes('/logout') && body.success) {
+            const user = req.user || {};
+            AuditLogController.addLog(
+              'logout',
+              user.role || 'unknown',
+              user.id,
+              user.fullName || user.email || 'unknown',
+              ipAddress,
+              { message: 'User logged out' }
+            );
+            logSent = true;
+          }
+          // Handle other authenticated actions
+          else if (body.success && req.user) {
+            const action = req.method.toLowerCase();
+            AuditLogController.addLog(
+              action,
+              req.user.role || 'unknown',
+              req.user.id,
+              req.user.fullName || req.user.email || 'unknown',
+              ipAddress,
+              { 
+                path: req.path,
+                method: req.method,
+                message: body.message
+              }
+            );
+            logSent = true;
+          }
+        }
+      } catch (error) {
+        if (typeof data === 'string' && data.startsWith('{')) {
+          console.error('Error in audit log middleware:', error);
+        }
+      }
+    }
+    
+    originalSend.call(this, data);
+  };
+  
   next();
 };
 

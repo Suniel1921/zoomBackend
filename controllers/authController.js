@@ -188,7 +188,7 @@ exports.login = async (req, res) => {
 
 
 
-// Fetch logged-in user details
+// Fetch logged-in user details  (for mobile app account page)
 exports.loggedIndUserData = async (req, res) => {
   try {
     const userId = req.user._id;

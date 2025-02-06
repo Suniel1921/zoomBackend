@@ -1,14 +1,12 @@
+
+
+
 // // routes/auditLogRoutes.js
 // const express = require('express');
 // const controller = require ('../../controllers/auditLogController');
 // const router = express.Router();
-// const logsMiddleware = require ('../../middleware/newMiddleware/auditLogMiddleware');
 
-
-
-
-// // router.post('/create-log', controller.addLog);
-// router.get('/get-audit-log',logsMiddleware, controller.getLogs);
+// router.get('/get-audit-log', controller.getLogs);
 // router.get('/exports-logs', controller.exportLogs);
 // router.delete('/clear-all-logs', controller.clearAllLogs);
 // router.delete('/clear-old-logs', controller.clearOldLogs);
@@ -19,17 +17,20 @@
 
 
 
-
-
-
-// routes/auditLogRoutes.js
 const express = require('express');
-const controller = require ('../../controllers/auditLogController');
+const controller = require('../../controllers/auditLogController');
+const {requireLogin} = require ('../../middleware/newMiddleware/authMiddleware')
+
 const router = express.Router();
 
+// Protect all audit log routes with authentication and admin access
+router.use(requireLogin);
+
+
+// Audit log routes
 router.get('/get-audit-log', controller.getLogs);
 router.get('/exports-logs', controller.exportLogs);
 router.delete('/clear-all-logs', controller.clearAllLogs);
-router.delete('/clear-old-logs', controller.clearOldLogs);
+// router.delete('/clear-old-logs', controller.clearOldLogs);
 
 module.exports = router;
