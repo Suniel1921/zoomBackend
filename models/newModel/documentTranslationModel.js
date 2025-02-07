@@ -61,6 +61,11 @@ const documentTranslationSchema = new mongoose.Schema(
       min: 0,
       required: true,
     },
+    paidAmount: {
+      type: Number,
+      min: 0,
+      required: true,
+    },
     paymentStatus: {
       type: String,
       enum: ["Due", "Paid"],

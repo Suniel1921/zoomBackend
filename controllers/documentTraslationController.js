@@ -11,6 +11,7 @@ exports.createDocumentTranslation = async (req, res) => {
     nameInTargetScript,
     pages,
     amount,
+    paidAmount,
     paymentStatus,
     paymentMethod,
     handledBy,
@@ -44,6 +45,7 @@ exports.createDocumentTranslation = async (req, res) => {
       nameInTargetScript,
       pages,
       amount,
+      paidAmount,
       paymentStatus,
       paymentMethod,
       handledBy,
@@ -177,80 +179,6 @@ exports.getDocumentTranslationByID = async (req, res) => {
   }
 };
 
-// UPDATE Document Translation by ID for Authenticated Super Admin
-// exports.updateDocumentTranslation = async (req, res) => {
-//   const { id } = req.params; // Document ID
-//   const { _id: superAdminId } = req.user;
-
-//   if (!superAdminId) {
-//     return res
-//       .status(403)
-//       .json({ success: false, message: "Unauthorized access" });
-//   }
-
-//   const {
-//     clientId,
-//     sourceLanguage,
-//     targetLanguage,
-//     nameInTargetScript,
-//     pages,
-//     amount,
-//     paymentStatus,
-//     paymentMethod,
-//     handledBy,
-//     deadline,
-//     translationStatus,
-//     deliveryType,
-//   } = req.body;
-
-//   try {
-//     // Find and update the document that matches the ID and superAdminId
-//     const updatedTranslation = await documentTranslationModel.findOneAndUpdate(
-//       { _id: id, superAdminId }, // Match both ID and superAdminId
-//       {
-//         clientId,
-//         sourceLanguage,
-//         targetLanguage,
-//         nameInTargetScript,
-//         pages,
-//         amount,
-//         paymentStatus,
-//         paymentMethod,
-//         handledBy,
-//         deadline,
-//         translationStatus,
-//         deliveryType,
-//       },
-//       { new: true }
-//     );
-
-//     if (!updatedTranslation) {
-//       return res
-//         .status(404)
-//         .json({
-//           success: false,
-//           message: "Document not found or unauthorized to update",
-//         });
-//     }
-
-//     res
-//       .status(200)
-//       .json({
-//         success: true,
-//         message: "Document updated successfully",
-//         updatedTranslation,
-//       });
-//   } catch (error) {
-//     console.error("Error updating document translation:", error.message);
-//     res
-//       .status(500)
-//       .json({
-//         success: false,
-//         message: "Error updating translation",
-//         error: error.message,
-//       });
-//   }
-// };
 
 exports.updateDocumentTranslation = async (req, res) => {
   const { id } = req.params; // Document ID
@@ -268,6 +196,7 @@ exports.updateDocumentTranslation = async (req, res) => {
     nameInTargetScript,
     pages,
     amount,
+    paidAmount,
     paymentStatus,
     paymentMethod,
     handledBy,
@@ -297,6 +226,7 @@ exports.updateDocumentTranslation = async (req, res) => {
         nameInTargetScript,
         pages,
         amount,
+        paidAmount,
         paymentStatus,
         paymentMethod,
         handledBy,

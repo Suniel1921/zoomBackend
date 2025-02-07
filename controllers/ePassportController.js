@@ -1,283 +1,97 @@
 const ePassportModel = require("../models/newModel/ePassportModel");
 
-
+// Create ePassport
 exports.createEpassport = async (req, res) => {
   try {
-    const { superAdminId, _id: createdBy, role } = req.user; 
-    const { steps, ...otherData } = req.body; 
+    const { _id: userId, role, superAdminId } = req.user;
+    const { steps, ...otherData } = req.body;
 
-    // Validate steps: Ensure it's an array or default to an empty array
-    const applicationSteps = Array.isArray(steps) ? steps : [];
+    if (role !== "superadmin" && role !== "admin") {
+      return res.status(403).json({ success: false, message: "Unauthorized access." });
+    }
 
-    // Role-based check: Only 'superadmin' or 'admin' are allowed
-  if (role !== "superadmin" && (!superAdminId || role !== "admin")) {
-    console.log("Unauthorized access attempt:", req.user); 
-    return res
-      .status(403)
-      .json({ success: false, message: "Unauthorized: Access denied." });
-  }
-
-  // If the user is a superadmin, use their userId as superAdminId
-  const clientSuperAdminId = role === "superadmin" ? createdBy : superAdminId;
-
-    // Create ePassport instance with validated steps and other data
     const epassport = new ePassportModel({
       ...otherData,
-      steps: applicationSteps,
-      superAdminId: clientSuperAdminId,
-      createdBy,
+      steps: Array.isArray(steps) ? steps : [],
+      superAdminId: role === "superadmin" ? userId : superAdminId,
+      createdBy: userId,
     });
 
-    // Save to the database
     await epassport.save();
-
-    // Return success response
-    res.status(201).json({
-      success: true,
-      message: "ePassport data created successfully",
-      data: epassport,
-    });
+    res.status(201).json({ success: true, message: "ePassport created successfully", data: epassport });
   } catch (error) {
-    console.error("Error creating ePassport:", error);
-    res.status(400).json({
-      success: false,
-      message: "Failed to create ePassport data",
-      error: error.message,
-    });
+    res.status(400).json({ success: false, message: "Failed to create ePassport", error: error.message });
   }
 };
 
-
-// Get all ePassport applications for authenticated superAdmin
-
+// Get all ePassports (SuperAdmin & Admin can access each other's data)
 exports.getAllEpassports = async (req, res) => {
-  const { _id, role, superAdminId } = req.user; 
-
-  // Role-based check: Only 'superadmin' or 'admin' are allowed
-  if (!role || (role !== "superadmin" && role !== "admin")) {
-    return res
-      .status(403)
-      .json({ success: false, message: "Unauthorized: Access denied." });
-  }
-
   try {
-    let query = {};
+    const { _id: userId, role, superAdminId } = req.user;
 
-    if (role === "superadmin") {
-      // SuperAdmin: Fetch all clients under their `superAdminId`
-      query = { superAdminId: _id };
-    } else if (role === "admin") {
-      // Admin: Fetch clients created by the admin or under their `superAdminId`
-      query = { $or: [{ createdBy: _id }, { superAdminId }] };
+    if (!role || (role !== "superadmin" && role !== "admin")) {
+      return res.status(403).json({ success: false, message: "Unauthorized access." });
     }
 
-    // Query to get applications based on role and superAdminId
+    // Ensure all admins under the same SuperAdmin can see each other's data
+    const query = role === "superadmin" ? { superAdminId: userId } : { superAdminId };
+
     const epassports = await ePassportModel
-      .find(query) 
-      .populate({
-        path: "createdBy",
-        select: "name email", 
-      })
-      .populate({
-        path: "clientId", 
-        select: "name email phone", 
-      })
-      .exec();
+      .find(query)
+      .populate("createdBy", "name email")
+      .populate("clientId", "name email phone");
 
-    // If no applications are found, return a 404 error
-    if (epassports.length === 0) {
-      return res
-        .status(404)
-        .json({
-          success: false,
-          message: "No ePassport application found",
-        });
-    }
+    console.log("Returning ePassports:", epassports) // Debugging log
 
-    // Return the list of applications found
-    return res.status(200).json({
-      success: true,
-      data: epassports,
-    });
+    res.status(200).json({ success: true, data: epassports });
   } catch (error) {
-    console.error(
-      "Error fetching epassport applications:",
-      error.message
-    );
-    return res
-      .status(500)
-      .json({ success: false, message: "Internal Server Error", error });
+    res.status(500).json({ success: false, message: "Error fetching ePassports", error: error.message });
   }
 };
 
 
 
-
-
-
-
-
-
-// Get a single ePassport application by ID for authenticated superAdmin
+// Get single ePassport
 exports.getEpassportById = async (req, res) => {
   try {
-    const { _id: superAdminId } = req.user;
-    const epassport = await ePassportModel.findOne({
-      _id: req.params.id,
-      superAdminId,
-    });
+    const { _id: userId, role, superAdminId } = req.user;
+    const query = role === "superadmin" ? { _id: req.params.id, superAdminId: userId } : { _id: req.params.id, superAdminId };
+    const epassport = await ePassportModel.findOne(query);
 
-    if (!epassport) {
-      return res
-        .status(404)
-        .json({ success: false, message: "ePassport not found" });
-    }
+    if (!epassport) return res.status(404).json({ success: false, message: "ePassport not found" });
     res.status(200).json({ success: true, data: epassport });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
-
-
-
+// Update ePassport
 exports.updateEpassport = async (req, res) => {
   try {
-    const { _id: createdBy, role } = req.user; // Get user info
-    const epassportId = req.params.id; // Get ePassport ID from the request parameters
-    // Determine query based on role
-    const query =
-      role === "superadmin"
-        ? { _id: epassportId } // Superadmin can update any ePassport
-        : { _id: epassportId }; // Admin can update any ePassport (no restrictions)
+    const { _id: userId, role, superAdminId } = req.user;
+    const query = role === "superadmin" ? { _id: req.params.id, superAdminId: userId } : { _id: req.params.id, superAdminId };
+    const epassport = await ePassportModel.findOneAndUpdate(query, req.body, { new: true });
 
-    // console.log("Query being used:", query); 
-
-    // Find the ePassport
-    const epassport = await ePassportModel.findOne(query);
-
-    // Check if the document exists
-    if (!epassport) {
-      console.log("No ePassport found with the query:", query); 
-      return res.status(404).json({ success: false, message: "ePassport not found" });
-    }
-
-    // Perform the update
-    const updatedEpassport = await ePassportModel.findOneAndUpdate(query, req.body, { new: true });
-
-    // Return the updated data
-    res.status(200).json({
-      success: true,
-      message: "ePassport data updated successfully",
-      data: updatedEpassport,
-    });
+    if (!epassport) return res.status(404).json({ success: false, message: "ePassport not found" });
+    res.status(200).json({ success: true, message: "ePassport updated successfully", data: epassport });
   } catch (error) {
-    console.error("Error updating ePassport:", error);
     res.status(400).json({ success: false, message: error.message });
   }
 };
 
-
-
-
-
-
-
-
-// Delete an ePassport application for authenticated superAdmin
-
+// Delete ePassport
 exports.deleteEpassport = async (req, res) => {
   try {
-    const { _id: superAdminId } = req.user;
+    const { _id: userId, role, superAdminId } = req.user;
+    const query = role === "superadmin" ? { _id: req.params.id, superAdminId: userId } : { _id: req.params.id, superAdminId };
+    const epassport = await ePassportModel.findOneAndDelete(query);
 
-    const epassport = await ePassportModel.findOneAndDelete({
-      _id: req.params.id,
-      superAdminId,
-    });
-
-    if (!epassport) {
-      return res
-        .status(404)
-        .json({ success: false, message: "ePassport not found" });
-    }
-    res
-      .status(200)
-      .json({ success: true, message: "ePassport deleted successfully" });
+    if (!epassport) return res.status(404).json({ success: false, message: "ePassport not found" });
+    res.status(200).json({ success: true, message: "ePassport deleted successfully" });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-
-
-
-
-// ************upload multiple file***********
-
-
-//ALERT ⚠️ : - WHILE UPLOADING THE THE FILE FOR SAME CLIENT THEN ITS NOT WOKRING 
-// const upload = require('../config/multerConfig');
-// const cloudinary = require('cloudinary').v2;
-
-// exports.uploadFileForApplication = [
-//   upload.array('clientFiles', 5), // Handling multiple file uploads (max 5 files)
-//   async (req, res) => {
-//     try {
-//       const { clientId } = req.params; 
-//       // console.log(clientId)
-//       console.log('Params:', req.params);
-
-
-//       if(!clientId){
-//         return res.status(404).json({success : false, message: 'client id not found'})
-//       }
-
-//       // Check if files were uploaded
-//       if (!req.files || req.files.length === 0) {
-//         return res.status(400).json({ success: false, message: 'No files uploaded' });
-//       }
-
-//       // Find the application (ePassport) for the specific clientId
-//       // const application = await ePassportModel.find(clientId );
-//       const application = await ePassportModel.findOne({ clientId });
-
-
-//       if (!application) {
-//         return res.status(404).json({ success: false, message: 'Application not found for this user' });
-//       }
-
-//       // Process each file and upload to Cloudinary
-//       const clientFilesUrls = [];
-//       for (const file of req.files) {
-//         const result = await cloudinary.uploader.upload(file.path);
-//         clientFilesUrls.push(result.secure_url); // Collect all the uploaded file URLs
-//       }
-
-//       // Save the uploaded file URLs in the application model
-//       application.clientFiles = application.clientFiles || []; // Initialize the files array if not already
-//       application.clientFiles.push(...clientFilesUrls); // Add the new file URLs
-
-//       // Save the updated application data
-//       await application.save();
-
-//       return res.status(200).json({
-//         success: true,
-//         message: 'Files uploaded successfully',
-//         fileUrls: clientFilesUrls, // Return the list of URLs to the client
-//       });
-//     } catch (error) {
-//       console.error('Error uploading files:', error);
-//       return res.status(500).json({ success: false, message: 'Server error while uploading files' });
-//     }
-//   }
-// ];
-
-
-
-
-
-
-
-
 
 
 
@@ -344,93 +158,6 @@ exports.uploadFileForApplication = [
   }
 ];
 
-
-
-// const pdf = require('pdf-parse'); // Library to extract text from PDF
-// const fs = require('fs');
-
-
-
-// exports.uploadFileForApplication = [
-//   upload.array('clientFiles', 5),
-//   async (req, res) => {
-//     try {
-//       const { clientId } = req.params;
-//       const { _id: createdBy } = req.user;
-//       console.log('Params:', req.params);
-
-//       if (!clientId) {
-//         return res.status(404).json({ success: false, message: 'Client ID not found' });
-//       }
-
-//       // Check if files were uploaded
-//       if (!req.files || req.files.length === 0) {
-//         return res.status(400).json({ success: false, message: 'No files uploaded' });
-//       }
-
-//       // Find the application (ePassport) for the specific clientId
-//       const application = await ePassportModel.findOne({ clientId });
-
-//       if (!application) {
-//         return res.status(404).json({ success: false, message: 'Application not found for this user' });
-//       }
-
-//       // Set the createdBy field (if it's not already set)
-//       if (!application.createdBy) {
-//         application.createdBy = createdBy;
-//       }
-
-//       // Process each file
-//       const clientFilesUrls = [];
-//       for (const file of req.files) {
-//         if (file.mimetype === 'application/pdf') {
-//           // Extract text from PDF
-//           const dataBuffer = fs.readFileSync(file.path); // Ensure this is a valid local file path
-//           const data = await pdf(dataBuffer);
-
-//           // Convert extracted text to a readable format (e.g., plain text)
-//           const readableText = data.text;
-
-//           // Optionally, save the extracted text as a file
-//           const textFilePath = `${file.path}.txt`;
-//           fs.writeFileSync(textFilePath, readableText);
-
-//           // Upload the extracted text file to Cloudinary
-//           const result = await cloudinary.uploader.upload(textFilePath, {
-//             resource_type: 'raw', // Treat the file as raw data
-//           });
-//           clientFilesUrls.push(result.secure_url);
-
-//           // Clean up the temporary text file
-//           fs.unlinkSync(textFilePath);
-//         } else {
-//           // Upload non-PDF files directly to Cloudinary
-//           const result = await cloudinary.uploader.upload(file.path);
-//           clientFilesUrls.push(result.secure_url);
-//         }
-
-//         // Clean up the temporary uploaded file
-//         fs.unlinkSync(file.path);
-//       }
-
-//       // Save the uploaded file URLs in the application model
-//       application.clientFiles = application.clientFiles || [];
-//       application.clientFiles.push(...clientFilesUrls);
-
-//       // Save the updated application data
-//       await application.save();
-
-//       return res.status(200).json({
-//         success: true,
-//         message: 'Files uploaded successfully',
-//         fileUrls: clientFilesUrls,
-//       });
-//     } catch (error) {
-//       console.error('Error uploading files:', error);
-//       return res.status(500).json({ success: false, message: 'Server error while uploading files' });
-//     }
-//   },
-// ];
 
 
 const applicationModel = require("../models/newModel/applicationModel");
