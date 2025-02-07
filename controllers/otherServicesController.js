@@ -170,6 +170,82 @@ exports.getOtherServicesByID = async (req, res) => {
 // Update a service by ID for the authenticated superAdmin
 
 
+//  ********this is code allow any admin can update the data check the below code controller if work then remove this code*******
+// exports.updateOtherServices = async (req, res) => {
+//   const { id } = req.params;
+//   const {
+//     serviceTypes,
+//     otherServiceDetails,
+//     contactChannel,
+//     deadline,
+//     amount,
+//     paidAmount,
+//     discount,
+//     paymentMethod,
+//     handledBy,
+//     jobStatus,
+//     remarks,
+//   } = req.body;
+
+//   try {
+//     const { _id: superAdminId, role } = req.user;
+
+//     // Role-based check: Only 'superadmin' or 'admin' are allowed
+//     if (role !== 'superadmin' && role !== 'admin') {
+//       return res.status(403).json({ success: false, message: 'Unauthorized: Access denied.' });
+//     }
+
+//     // Find the service by ID and superAdminId to ensure the user has permission to update it
+//     const service = await OtherServiceModel.findOne({ _id: id });
+//     if (!service) {
+//       return res.status(404).json({ success: false, message: 'Service not found' });
+//     }
+
+//     // If the user is an admin, they can update any service (not just their own)
+//     if (role === 'admin') {
+//       // Allow admin to update any service
+//       // Optionally, you can add additional checks here if needed (e.g., check if the service belongs to the same superAdminId)
+//     }
+
+//     // If the user is a superadmin, they can update any service
+//     if (role === 'superadmin') {
+//       // Allow superadmin to update any service
+//     }
+
+//     // Update the service fields (clientId remains unchanged)
+//     service.serviceTypes = serviceTypes;
+//     service.otherServiceDetails = otherServiceDetails;
+//     service.contactChannel = contactChannel;
+//     service.deadline = deadline;
+//     service.amount = amount;
+//     service.paidAmount = paidAmount;
+//     service.discount = discount;
+//     service.paymentMethod = paymentMethod;
+//     service.handledBy = handledBy;
+//     service.jobStatus = jobStatus;
+//     service.remarks = remarks;
+
+//     // Recalculate the due amount
+//     service.dueAmount = amount - (paidAmount + discount);
+//     service.paymentStatus = service.dueAmount > 0 ? 'Due' : 'Paid';
+
+//     // Save the updated service
+//     await service.save();
+
+//     return res.status(200).json({
+//       success: true,
+//       message: 'Service updated successfully',
+//       data: service,
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({ success: false, message: 'Internal server error', error });
+//   }
+// };
+
+
+
+
 
 exports.updateOtherServices = async (req, res) => {
   const { id } = req.params;
@@ -188,28 +264,23 @@ exports.updateOtherServices = async (req, res) => {
   } = req.body;
 
   try {
-    const { _id: superAdminId, role } = req.user;
+    const { _id: userId, superAdminId, role } = req.user;
 
     // Role-based check: Only 'superadmin' or 'admin' are allowed
     if (role !== 'superadmin' && role !== 'admin') {
       return res.status(403).json({ success: false, message: 'Unauthorized: Access denied.' });
     }
 
-    // Find the service by ID and superAdminId to ensure the user has permission to update it
+    // Find the service by ID
     const service = await OtherServiceModel.findOne({ _id: id });
+
     if (!service) {
       return res.status(404).json({ success: false, message: 'Service not found' });
     }
 
-    // If the user is an admin, they can update any service (not just their own)
-    if (role === 'admin') {
-      // Allow admin to update any service
-      // Optionally, you can add additional checks here if needed (e.g., check if the service belongs to the same superAdminId)
-    }
-
-    // If the user is a superadmin, they can update any service
-    if (role === 'superadmin') {
-      // Allow superadmin to update any service
+    // Check if the service belongs to the same superAdminId
+    if (role === 'admin' && service.superAdminId.toString() !== superAdminId.toString()) {
+      return res.status(403).json({ success: false, message: 'Unauthorized: You do not have permission to update this service.' });
     }
 
     // Update the service fields (clientId remains unchanged)
@@ -242,7 +313,6 @@ exports.updateOtherServices = async (req, res) => {
     return res.status(500).json({ success: false, message: 'Internal server error', error });
   }
 };
-
 
 
 

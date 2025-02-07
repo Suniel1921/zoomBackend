@@ -386,10 +386,3 @@ exports.uploadCSVFile = async (req, res) => {
   }
 };
 
-
-
-
-
-
-
-// but the problem is when i update the data like i add subodh and update the data to subodh yadav then its showing only subodh instead of showing subodh yadav fix this this is my full code 

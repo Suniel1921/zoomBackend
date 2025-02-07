@@ -17,16 +17,6 @@ exports.getNotesBySuperAdmin = async (req, res) => {
       res.status(500).json({ success: false, message: err.message });
     }
   };
-  
-  
-
-
-
-
-
-
-
-
 
 // Get a single note by ID for a specific super admin
 exports.getNoteById = async (req, res) => {

@@ -3,51 +3,6 @@ const mongoose = require('mongoose');
 
 
 
-// Create a new service request
-// exports.createServiceRequest = async (req, res) => {
-//   try {
-//     const { clientId, clientName, phoneNumber, serviceId, serviceName, message } = req.body;
-
-//     // Include superAdminId if available
-//     const superAdminId = req.user ? req.user._id : null;
-
-//     if (!clientName || !phoneNumber || !serviceName || !message) {
-//       return res.status(400).json({ error: 'All fields are required.' });
-//     }
-
-//     // Create a new service request and include clientId
-//     const newRequest = new ServiceRequestModel({
-//       superAdminId,
-//       clientId,  // clientId is included here
-//       clientName,
-//       phoneNumber,
-//       serviceId,
-//       serviceName,
-//       message,
-//     });
-
-//     await newRequest.save();
-//     res.status(201).json({ message: 'Service request created successfully.', data: newRequest });
-//   } catch (error) {
-//     console.error('Error creating service request:', error);
-//     res.status(500).json({ error: 'Failed to create service request.' });
-//   }
-// };
-
-
-// //Get all service requests Controller
-// exports.getAllServiceRequests = async (req, res) => {
-//   try {
-//     const requests = await ServiceRequestModel.find().sort({ createdAt: -1 });
-//     res.status(200).json({ data: requests });
-//   } catch (error) {
-//     console.error('Error fetching service requests:', error);
-//     res.status(500).json({ error: 'Failed to fetch service requests.' });
-//   }
-// };
-
-
-
 
 exports.createServiceRequest = async (req, res) => {
   try {

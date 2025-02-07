@@ -11,37 +11,6 @@ const japanVisitApplicationModel = require("../models/newModel/japanVisitModel")
 
 
 
-
-// Create an appointment
-// exports.createAppointment = async (req, res) => {
-//   try {
-//     const { _id: superAdminId } = req.user;  // Extract superAdminId from the authenticated user
-//     const { clientId, ...appointmentData } = req.body;
-
-//     // Validate if the client exists and belongs to the superAdmin
-//     // const client = await AppointmentModel.findOne({ _id: clientId, superAdminId });
-//     // if (!client) {
-//     //   return res.status(400).json({ success: false, message: 'Client not found or unauthorized' });
-//     // }
-
-//     const appointment = new AppointmentModel({
-//       clientId,
-//       ...appointmentData,
-//       superAdminId, // Attach superAdminId
-//     });
-//     await appointment.save();
-
-//     res.status(201).json({ success: true, message: 'Appointment created successfully', appointment });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ success: false, message: 'Failed to create appointment', error });
-//   }
-// };
-
-
-
-
-
 //****************sending email while appointment create ****************
 
 const nodemailer = require('nodemailer');
@@ -165,69 +134,6 @@ exports.getAppointmentsByClientId = async (req, res) => {
 };
 
 
-
-
-// when date  and time udpate send email you appoinnt has rescheude with proper content and proper format
-// exports.updateAppointment = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const { mode, ...updateData } = req.body;
-
-//     // Ensure the mode is valid (edit or reschedule)
-//     if (!['edit', 'reschedule'].includes(mode)) {
-//       return res.status(400).json({
-//         success: false,
-//         message: 'Invalid mode. Mode must be either "edit" or "reschedule".',
-//       });
-//     }
-
-//     // Restrict fields for "reschedule" mode
-//     if (mode === 'reschedule') {
-//       const { date, time, notes } = updateData;
-//       if (!date || !time) {
-//         return res.status(400).json({
-//           success: false,
-//           message: 'Date and Time are required for rescheduling.',
-//         });
-//       }
-//       updateData.date = new Date(date); // Ensure proper date formatting
-//       updateData.time = time;
-//       if (notes) updateData.notes = notes; // Include notes if provided
-//     }
-
-//     const updatedAppointment = await AppointmentModel.findByIdAndUpdate(
-//       id,
-//       updateData,
-//       { new: true } // Return the updated document
-//     );
-
-//     if (!updatedAppointment) {
-//       return res.status(404).json({
-//         success: false,
-//         message: 'Appointment not found',
-//       });
-//     }
-
-//     res.status(200).json({
-//       success: true,
-//       message: `Appointment ${mode}d successfully`,
-//       updatedAppointment,
-//     });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({
-//       success: false,
-//       message: 'Failed to update appointment',
-//       error,
-//     });
-//   }
-// };
-
-
-
-
-
-
 exports.updateAppointment = async (req, res) => {
   try {
     const { id } = req.params;
@@ -331,58 +237,6 @@ exports.updateAppointment = async (req, res) => {
     });
   }
 };
-
-
-
-
-
-// Update appointment status (mark as completed or cancelled) for the authenticated superAdmin
-// exports.updateAppointmentStatus = async (req, res) => {
-//   const { status } = req.body;  // Status can be "Completed" or "Cancelled"
-//   const { id } = req.params;
-
-
-//   try {
-//     const { _id: superAdminId } = req.user;  // Extract superAdminId from the authenticated user
-//     const appointment = await AppointmentModel.findOne({ _id: id, superAdminId });
-
-//     if (!appointment) {
-//       return res.status(404).json({ success: false, message: 'Appointment not found or unauthorized' });
-//     }
-
-//     if (status !== 'Completed' && status !== 'Cancelled') {
-//       return res.status(400).json({ success: false, message: 'Invalid status' });
-//     }
-
-//     appointment.status = status;
-
-//     if (status === 'Completed') {
-//       appointment.completedAt = new Date();
-//     } else if (status === 'Cancelled') {
-//       appointment.cancelledAt = new Date();
-//     }
-
-//     await appointment.save();
-
-//     res.status(200).json({
-//       success: true,
-//       message: 'Appointment status updated successfully',
-//       appointment,
-//     });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ success: false, message: 'Failed to update appointment status', error });
-//   }
-// };
-
-
-
-
-
-
-
-
-
 
 exports.updateAppointmentStatus = async (req, res) => {
   const { status } = req.body;  // Status can be "Completed", "Cancelled", or "Rescheduled"
@@ -510,17 +364,6 @@ exports.updateAppointmentStatus = async (req, res) => {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
 // Delete an appointment by ID for the authenticated superAdmin
 exports.deleteAppointment = async (req, res) => {
   try {
@@ -544,70 +387,10 @@ exports.deleteAppointment = async (req, res) => {
 
 
 
-// send the email also when appointment  reschedue , complted or cancel with the proper description and proper format
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-
-
-
-
-
-  // *****************************************************GET ALL MODEL DATA AT ONCE FOR ACCOUNT AND TASK (FRONTEND)**************************************************
-
+  // ****************************GET ALL MODEL DATA AT ONCE FOR ACCOUNT AND TASK (FRONTEND) (optimzed later migrate this code in another controller(create new controller route))**************************************************
  
-  // exports.fetchAllModelData = async (req, res) => {
-  //   try {
-  //     const { _id: superAdminId } = req.user;  // Extract superAdminId from the authenticated user
-  
-  //     // Fetch data from all models in parallel, filtering by superAdminId
-  //     const [application, japanVisit, documentTranslation, epassports, otherServices, graphicDesigns, appointment] = await Promise.all([
-  //       applicationModel.find({ superAdminId }).populate('clientId').lean(),
-  //       japanVisitApplicationModel.find({ superAdminId }).populate('clientId').lean(),
-  //       documentTranslationModel.find({ superAdminId }).populate('clientId').lean(),
-  //       ePassportModel.find({ superAdminId }).populate('clientId').lean(),
-  //       OtherServiceModel.find({ superAdminId }).populate('clientId').lean(),
-  //       GraphicDesignModel.find({ superAdminId }).populate('clientId').lean(),
-  //       AppointmentModel.find({ superAdminId }).populate('clientId').lean(),
-  //     ]);
-  
-  //     // Combine the data into a single response object
-  //     const allData = {
-  //       application,
-  //       japanVisit,
-  //       documentTranslation,
-  //       epassports,
-  //       otherServices,
-  //       graphicDesigns,
-  //       appointment,
-  //     };
-  
-  //     // Send the combined data as a JSON response
-  //     res.status(200).json({success: true, message: 'All model data fetched successfully',allData,});
-  //   } catch (error) {
-  //     console.error('Error fetching all data:', error);
-  //     res.status(500).json({success: false, message: 'Failed to fetch data from models',error,});
-  //   }
-  // };
-
-
-
-
   exports.fetchAllModelData = async (req, res) => {
     try {
       const { superAdminId, _id, role } = req.user; 
@@ -677,21 +460,7 @@ exports.deleteAppointment = async (req, res) => {
   
 
 
-
-
-  
-  
-
-
-  
-
-
-
-  // get all model data by id
-  // Define the models array
-  
-  
-  
+  // Define the models array 
   const models = [
     applicationModel,
     japanVisitApplicationModel,
@@ -749,84 +518,6 @@ exports.deleteAppointment = async (req, res) => {
     }
   };
   
-
-
-
-
-// Controller to handle creating a new application step with an object structure for stepNames
-// exports.createApplicationStep = async (req, res) => {
-//   try {
-//     const { clientId, stepNames } = req.body;
-
-//     // Validate required fields
-//     if (!clientId) {
-//       return res.status(400).json({ success: false, message: 'clientId is required' });
-//     }
-
-//     if (typeof stepNames !== 'object' || Object.keys(stepNames).length === 0) {
-//       return res.status(400).json({ success: false, message: 'stepNames must be a non-empty object' });
-//     }
-
-//     // Create a new ApplicationStep document
-//     const newStep = new applicationStepModel({
-//       clientId,  // Make sure clientId is saved at the top level
-//       stepNames,
-//     });
-
-//     // Save the step to the database
-//     const savedStep = await newStep.save();
-
-//     // Return the saved step as a response
-//     res.status(201).json(savedStep);
-//   } catch (error) {
-//     console.error('Error while creating application step:', error.message); // Log error message
-//     console.error('Full error:', error); // Log full error stack
-//     res.status(500).json({
-//       success: false,
-//       message: 'Internal Server Error',
-//       error: error.message || error, // Send specific error message
-//     });
-//   }
-// };
-
-
-
-// Controller to handle fetching the application steps based on clientId
-// exports.getApplicationSteps = async (req, res) => {
-//   try {
-//     // const { clientId } = req.params;  // Get clientId from the request parameters
-
-//     // // Validate clientId
-//     // if (!clientId) {
-//     //   return res.status(400).json({ success: false, message: 'clientId is required' });
-//     // }
-
-//     // Fetch the ApplicationStep document based on the clientId
-//     const applicationStep = await applicationStepModel.findOne();
-
-//     // Check if the application step exists
-//     if (!applicationStep) {
-//       return res.status(404).json({ success: false, message: 'Application steps not found for this client' });
-//     }
-
-//     // Return the fetched application step
-//     res.status(200).json({ success: true, message: 'appliction step retrived success', applicationStep });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ success: false, message: 'Internal Server Error', error });
-//   }
-// };
-
-
-
-
-
-
-
-
-
-
-
 
 
 

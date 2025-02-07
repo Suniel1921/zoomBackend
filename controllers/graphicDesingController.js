@@ -54,25 +54,8 @@ exports.createGraphicDesign = async (req, res) => {
 };
 
 
-// Get all Design Jobs for the authenticated superAdmin
-// exports.getAllGraphicDesign = async (req, res) => {
-//   try {
-//     const { _id: superAdminId } = req.user;
-//     const designJobs = await GraphicDesignModel.find({ superAdminId })
-//       .populate('clientId', 'name')  
-//       .sort({ createdAt: -1 });
-
-//     res.status(200).json({ success: true, message: 'Data fetched', designJobs });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ success: false, message: 'Error fetching design jobs', error });
-//   }
-// };
-
-
-
 exports.getAllGraphicDesign = async (req, res) => {
-  const { _id, role, superAdminId } = req.user; // Extract user ID and role from authenticated user
+  const { _id, role, superAdminId } = req.user; 
 
   // Role-based check: Only 'superadmin' or 'admin' are allowed
   if (!role || (role !== "superadmin" && role !== "admin")) {
@@ -94,14 +77,14 @@ exports.getAllGraphicDesign = async (req, res) => {
 
     // Query to get applications based on role and superAdminId
     const designJobs = await GraphicDesignModel
-      .find(query) // Apply the query to find applications
+      .find(query) 
       .populate({
-        path: "createdBy", // Populate createdBy field with user info (admin or super admin)
-        select: "name email", // Fields to include from the user model
+        path: "createdBy", 
+        select: "name email", 
       })
       .populate({
-        path: "clientId", // Populate the clientId field (client model)
-        select: "name email phone", // Fields to include from the client model
+        path: "clientId", 
+        select: "name email phone", 
       })
       .exec();
 
@@ -154,34 +137,6 @@ exports.getGraphicDesignById = async (req, res) => {
     res.status(500).json({ success: false, message: 'Error fetching design job', error });
   }
 };
-
-
-
-// Update a Design Job by ID for the authenticated superAdmin
-// exports.updateGraphicDesign = async (req, res) => {
-//   try {
-//     const { amount, advancePaid } = req.body;
-//     const dueAmount = amount - advancePaid;  // Calculate dueAmount
-
-//     const graphicDesing = await GraphicDesignModel.findOneAndUpdate(
-//       { _id: req.params.id, superAdminId: req.user._id },
-//       { ...req.body, dueAmount }, // Set the recalculated dueAmount
-//       { new: true }
-//     );
-
-//     if (!graphicDesing) {
-//       return res.status(404).json({ success: false, message: "Graphic design not found" });
-//     }
-
-//     res.status(200).json({
-//       success: true,
-//       message: "Design job updated successfully",
-//       data: graphicDesing,
-//     });
-//   } catch (error) {
-//     res.status(400).json({ success: false, message: error.message });
-//   }
-// };
 
 
 exports.updateGraphicDesign = async (req, res) => {
