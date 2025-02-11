@@ -41,7 +41,7 @@ exports.getAllEpassports = async (req, res) => {
       .populate("createdBy", "name email")
       .populate("clientId", "name email phone");
 
-    console.log("Returning ePassports:", epassports) // Debugging log
+    // console.log("Returning ePassports:", epassports) // Debugging log
 
     res.status(200).json({ success: true, data: epassports });
   } catch (error) {
