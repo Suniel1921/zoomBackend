@@ -1,5 +1,3 @@
-
-//register controller
 const authModel = require("../models/newModel/authModel");
 const bcrypt = require('bcryptjs');
 const  JWT = require ("jsonwebtoken");
@@ -196,10 +194,10 @@ exports.loggedIndUserData = async (req, res) => {
 
     let user = null;
 
-    if (role === "superadmin") user = await SuperAdminModel.findById(userId).select("name email phone");
-    else if (role === "admin") user = await AdminModel.findById(userId).select("name email phone");
-    else if (role === "client") user = await ClientModel.findById(userId).select("name email phone");
-    else user = await authModel.findById(userId).select("name email phone");
+    if (role === "superadmin") user = await SuperAdminModel.findById(userId).select("name email phone profilePhoto");
+    else if (role === "admin") user = await AdminModel.findById(userId).select("name email phone profilePhoto");
+    else if (role === "client") user = await ClientModel.findById(userId).select("name email phone profilePhoto");
+    else user = await authModel.findById(userId).select("name email phone profilePhoto");
 
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
