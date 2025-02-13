@@ -50,6 +50,9 @@ exports.createJapanVisitApplication = async (req, res) => {
   }
 };
 
+
+
+
 // Get All Japan Visit Applications Controller
 exports.getAllJapanVisitApplications = async (req, res) => {
   const { _id, role, superAdminId } = req.user;

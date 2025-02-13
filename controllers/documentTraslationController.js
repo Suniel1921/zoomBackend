@@ -18,6 +18,7 @@ exports.createDocumentTranslation = async (req, res) => {
     deadline,
     translationStatus,
     deliveryType,
+    notes,
   } = req.body;
 
   // Role-based check: Only 'superadmin' or 'admin' are allowed
@@ -52,12 +53,11 @@ exports.createDocumentTranslation = async (req, res) => {
       deadline,
       translationStatus,
       deliveryType,
+      notes,
     });
 
     await newTranslation.save();
-    res
-      .status(201)
-      .json({
+    res.status(201).json({
         success: true,
         message: "Document translation created successfully",
         newTranslation,
@@ -203,16 +203,17 @@ exports.updateDocumentTranslation = async (req, res) => {
     deadline,
     translationStatus,
     deliveryType,
+    notes,
   } = req.body;
 
   try {
     let query = {};
 
     if (role === "superadmin") {
-      // SuperAdmin: Can update any document under their `superAdminId`
+      // admin or superadmin: Can update any document under their `superAdminId`
       query = { _id: id, superAdminId: userId };
     } else if (role === "admin") {
-      // Admin: Can update documents created by them or under their `superAdminId`
+      // Admin: Can update documents created by them or under their `admin`
       query = { _id: id, $or: [{ createdBy: userId }, { superAdminId }] };
     }
 
@@ -233,6 +234,7 @@ exports.updateDocumentTranslation = async (req, res) => {
         deadline,
         translationStatus,
         deliveryType,
+        notes,
       },
       { new: true }
     );

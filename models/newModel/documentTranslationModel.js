@@ -105,6 +105,10 @@ const documentTranslationSchema = new mongoose.Schema(
       ],
       required: true,
     },
+    // Additional Information
+    notes: {
+      type: String,
+    },
   },
   { timestamps: true }
 );
