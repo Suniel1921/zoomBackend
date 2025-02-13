@@ -81,6 +81,7 @@ exports.getApplications = async (req, res) => {
     const applications = await applicationModel
       .find(query)
       .populate('createdBy', 'name email') 
+      .populate("clientId", "name email phone")
       .exec();
 
     // If no applications are found, return a 404 error
