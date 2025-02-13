@@ -213,19 +213,26 @@ exports.getClientById = async (req, res) => {
 
 
 
+
+
 exports.updateClient = [
-  upload.single("profilePhoto"), // Use Multer middleware to handle file upload
+  upload.single('profilePhoto'), // Multer middleware for file upload
   async (req, res) => {
-    const { _id: superAdminId, role } = req.user
+    const { _id: superAdminId, role } = req.user;
     if (!superAdminId) {
-      return res.status(403).json({ success: false, message: "Unauthorized: SuperAdmin access required." })
+      return res.status(403).json({ success: false, message: 'Unauthorized: SuperAdmin access required.' });
     }
+
+      // Authorization check
+  if (!role || (role !== 'superadmin' && role !== 'admin')) {
+    return res.status(403).json({ success: false, message: 'Unauthorized: Access denied.' });
+  }
 
     try {
       // Find the client by ID
-      const client = await ClientModel.findById(req.params.id)
+      const client = await ClientModel.findById(req.params.id);
       if (!client) {
-        return res.status(404).json({ success: false, message: "Client not found." })
+        return res.status(404).json({ success: false, message: 'Client not found.' });
       }
 
       // Destructure the fields from the request body
@@ -243,129 +250,73 @@ exports.updateClient = [
         building,
         modeOfContact,
         socialMedia,
-      } = req.body
+      } = req.body;
 
       // Check if a profile photo is being uploaded
       if (req.file) {
         // Upload profile photo to Cloudinary
         try {
           const result = await cloudinary.uploader.upload(req.file.path, {
-            folder: "client_profiles",
+            folder: 'client_profiles',
             public_id: `profile_${client._id}`,
             width: 500,
             height: 500,
-            crop: "fill",
-          })
+            crop: 'fill',
+          });
 
           // Update client profile photo URL
-          client.profilePhoto = result.secure_url
+          client.profilePhoto = result.secure_url;
         } catch (cloudinaryErr) {
-          console.error("Cloudinary upload error:", cloudinaryErr)
+          console.error('Cloudinary upload error:', cloudinaryErr);
           return res.status(500).json({
             success: false,
-            message: "Error uploading profile photo to Cloudinary.",
+            message: 'Error uploading profile photo to Cloudinary.',
             error: cloudinaryErr.message,
-          })
+          });
         }
       }
 
       // Update other client details
-      client.name = name || client.name
-      client.category = category || client.category
-      client.status = status || client.status
-      client.email = email || client.email
-      client.phone = phone || client.phone
-      client.nationality = nationality || client.nationality
-      client.postalCode = postalCode || client.postalCode
-      client.prefecture = prefecture || client.prefecture
-      client.city = city || client.city
-      client.street = street || client.street
-      client.building = building || client.building
-      client.modeOfContact = modeOfContact || client.modeOfContact
-      client.socialMedia = socialMedia || client.socialMedia
+      client.name = name || client.name;
+      client.category = category || client.category;
+      client.status = status || client.status;
+      client.email = email || client.email;
+      client.phone = phone || client.phone;
+      client.nationality = nationality || client.nationality;
+      client.postalCode = postalCode || client.postalCode;
+      client.prefecture = prefecture || client.prefecture;
+      client.city = city || client.city;
+      client.street = street || client.street;
+      client.building = building || client.building;
+      client.modeOfContact = modeOfContact || client.modeOfContact;
+      client.socialMedia = socialMedia || client.socialMedia;
 
       // Save the updated client
-      const updatedClient = await client.save()
+      const updatedClient = await client.save();
 
       // Exclude sensitive fields (like password) from the response
-      const responseClient = updatedClient.toObject()
-      delete responseClient.password
+      const responseClient = updatedClient.toObject();
+      delete responseClient.password;
 
       // Send the response with the updated client data
       res.status(200).json({
         success: true,
-        message: "Client updated successfully.",
+        message: 'Client updated successfully.',
         updatedClient: responseClient,
-      })
-    } catch (err) {
-      console.error("Error updating client:", err)
-      res.status(400).json({
-        success: false,
-        message: "Error updating client. Please try again later.",
-        error: err.message,
-      })
-    }
-  },
-]
-
-
-
-exports.updateClient = [
-  upload.single('profilePhoto'), // Handle single file upload
-  async (req, res) => {
-    const { _id: superAdminId, role } = req.user;
-    if (!superAdminId) {
-      return res.status(403).json({ success: false, message: "Unauthorized: SuperAdmin access required." });
-    }
-
-    try {
-      const client = await ClientModel.findById(req.params.id);
-      if (!client) {
-        return res.status(404).json({ success: false, message: "Client not found." });
-      }
-
-      if (req.file) {
-        // Handle file upload to Cloudinary
-        try {
-          const result = await cloudinary.uploader.upload(req.file.path, {
-            folder: "client_profiles",
-            public_id: `profile_${client._id}`,
-            width: 500,
-            height: 500,
-            crop: "fill",
-          });
-          client.profilePhoto = result.secure_url;
-        } catch (cloudinaryErr) {
-          return res.status(500).json({
-            success: false,
-            message: "Error uploading profile photo to Cloudinary.",
-            error: cloudinaryErr.message,
-          });
-        }
-      }
-
-      // Update other client details
-      client.name = req.body.name || client.name;
-      client.email = req.body.email || client.email;
-      // Add more fields as necessary
-
-      const updatedClient = await client.save();
-
-      // Return updated client data
-      res.status(200).json({
-        success: true,
-        message: "Client updated successfully.",
-        updatedClient: updatedClient,
       });
     } catch (err) {
+      console.error('Error updating client:', err);
       res.status(400).json({
         success: false,
-        message: "Error updating client.",
+        message: 'Error updating client. Please try again later.',
         error: err.message,
       });
     }
   },
 ];
+
+
+
 
 
 
