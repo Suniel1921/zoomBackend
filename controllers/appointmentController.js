@@ -530,7 +530,7 @@ const modelMapping = {
   application: applicationModel,
   appointment: AppointmentModel,
   documenttranslation: documentTranslationModel,
-  epassports: ePassportModel,
+  epassport: ePassportModel,
   // graphicDesign: GraphicDesignModel,
   graphicdesigns: GraphicDesignModel,
   japanvisit: japanVisitApplicationModel, 
