@@ -44,13 +44,13 @@ exports.addClient = [
         street,
         building,
         modeOfContact,
-        socialMedia,
+        facebookUrl,
         timeline,
         dateJoined,
       } = req.body;
 
       // Validate required fields
-      const requiredFields = ['name', 'email', 'password', 'phone'];
+      const requiredFields = ['name', 'email', 'password', 'phone',];
       for (let field of requiredFields) {
         if (!req.body[field]) {
           return res.status(400).json({ success: false, message: `${field.charAt(0).toUpperCase() + field.slice(1)} is required.` });
@@ -99,7 +99,7 @@ exports.addClient = [
         street,
         building,
         modeOfContact,
-        socialMedia,
+        facebookUrl,
         timeline,
         dateJoined,
         profilePhoto: profilePhotoUrl,
@@ -109,19 +109,23 @@ exports.addClient = [
       const mailOptions = {
         from: process.env.MYEMAIL, // Sender address
         to: email, // Recipient address
-        subject: 'Your Login Credentials - CRM', // Email subject
+        subject: 'Your Login Credentials - CRM', 
         html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #333;">Welcome to our CRM system!</h2>
           <p>Dear ${name},</p>
-          <p>Welcome to our CRM system!</p>
-          <p>Here are your login credentials:</p>
-          <p><strong>Email:</strong> ${email}</p>
-          <p><strong>Password:</strong> ${password}</p>
-          <p>Please log in to track your application.</p>
-          <p><a href="https://crm.yourcompany.com/client-login" target="_blank">Login Here</a></p>
-          <p>If you did not request this account, please contact support immediately.</p>
-          <br>
-          <p>Best Regards,<br> Zoom Creatives CRM Team</p>
-        `,
+          <p>Your account has been successfully created. Here are your login credentials:</p>
+          <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <p style="margin: 5px 0;"><strong>Email:</strong> ${email}</p>
+            <p style="margin: 5px 0;"><strong>Password:</strong> ${password}</p>
+          </div>
+          <p>For security reasons, we recommend changing your password after your first login.</p>
+          <p><a href="https://crm.zoomcreatives.jp/client-login" style="background-color: #fedc00; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 20px 0;">Login to Your Account</a></p>
+          <p>If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
+          <hr style="border: 1px solid #eee; margin: 20px 0;">
+          <p style="color: #666; font-size: 12px;">This is an automated message, please do not reply directly to this email.</p>
+        </div>
+      `,
       };
 
       transporter.sendMail(mailOptions, (error, info) => {
@@ -214,7 +218,6 @@ exports.getClientById = async (req, res) => {
 
 
 
-
 exports.updateClient = [
   upload.single('profilePhoto'), // Multer middleware for file upload
   async (req, res) => {
@@ -223,10 +226,10 @@ exports.updateClient = [
       return res.status(403).json({ success: false, message: 'Unauthorized: SuperAdmin access required.' });
     }
 
-      // Authorization check
-  if (!role || (role !== 'superadmin' && role !== 'admin')) {
-    return res.status(403).json({ success: false, message: 'Unauthorized: Access denied.' });
-  }
+    // Authorization check
+    if (!role || (role !== 'superadmin' && role !== 'admin')) {
+      return res.status(403).json({ success: false, message: 'Unauthorized: Access denied.' });
+    }
 
     try {
       // Find the client by ID
@@ -249,12 +252,11 @@ exports.updateClient = [
         street,
         building,
         modeOfContact,
-        socialMedia,
+        facebookUrl,
       } = req.body;
 
       // Check if a profile photo is being uploaded
       if (req.file) {
-        // Upload profile photo to Cloudinary
         try {
           const result = await cloudinary.uploader.upload(req.file.path, {
             folder: 'client_profiles',
@@ -276,25 +278,29 @@ exports.updateClient = [
         }
       }
 
+      // Parse modeOfContact 
+      const parsedModeOfContact = modeOfContact ? JSON.parse(modeOfContact) : client.modeOfContact;
+
       // Update other client details
       client.name = name || client.name;
       client.category = category || client.category;
       client.status = status || client.status;
       client.email = email || client.email;
       client.phone = phone || client.phone;
+      client.facebookUrl = facebookUrl || client.facebookUrl;
       client.nationality = nationality || client.nationality;
       client.postalCode = postalCode || client.postalCode;
       client.prefecture = prefecture || client.prefecture;
       client.city = city || client.city;
       client.street = street || client.street;
       client.building = building || client.building;
-      client.modeOfContact = modeOfContact || client.modeOfContact;
-      client.socialMedia = socialMedia || client.socialMedia;
+      client.modeOfContact = parsedModeOfContact;
+
 
       // Save the updated client
       const updatedClient = await client.save();
 
-      // Exclude sensitive fields (like password) from the response
+      // Exclude sensitive fields from the response
       const responseClient = updatedClient.toObject();
       delete responseClient.password;
 
@@ -314,6 +320,7 @@ exports.updateClient = [
     }
   },
 ];
+
 
 
 

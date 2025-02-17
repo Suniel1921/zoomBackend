@@ -61,10 +61,10 @@ const clientSchema = new mongoose.Schema({
     modeOfContact: {
       type: [String]
     },
-    socialMedia: {
-      type: []
-    },
 
+    facebookUrl : {
+      type: String,
+    },
 
     timeline: {
       type: Array
