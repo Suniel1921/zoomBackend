@@ -227,7 +227,7 @@ exports.updateClient = [
     }
 
     // Authorization check
-    if (!role || (role !== 'superadmin' && role !== 'admin')) {
+    if (!role || (role !== 'superadmin' && role !== 'admin' && role !== 'user')) {
       return res.status(403).json({ success: false, message: 'Unauthorized: Access denied.' });
     }
 
