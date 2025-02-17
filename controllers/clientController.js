@@ -326,9 +326,6 @@ exports.getClientById = async (req, res) => {
 
 
 
-const upload = require("../middlewares/multerConfig");
-const cloudinary = require("../utils/cloudinaryConfig");
-const ClientModel = require("../models/Client");
 
 exports.updateClient = [
   upload.single("profilePhoto"), // Multer middleware for file upload
