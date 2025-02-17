@@ -218,27 +218,139 @@ exports.getClientById = async (req, res) => {
 
 
 
+// exports.updateClient = [
+//   upload.single('profilePhoto'), // Multer middleware for file upload
+//   async (req, res) => {
+//     const { _id: superAdminId, role } = req.user;
+//     if (!superAdminId) {
+//       return res.status(403).json({ success: false, message: 'Unauthorized: SuperAdmin access required.' });
+//     }
+
+//     // Authorization check
+//     if (!role || (role !== 'superadmin' && role !== 'admin' && role !== 'user')) {
+//       return res.status(403).json({ success: false, message: 'Unauthorized: Access denied.' });
+//     }
+
+//     try {
+//       // Find the client by ID
+//       const client = await ClientModel.findById(req.params.id);
+//       if (!client) {
+//         return res.status(404).json({ success: false, message: 'Client not found.' });
+//       }
+
+//       // Destructure the fields from the request body
+//       const {
+//         name,
+//         category,
+//         status,
+//         email,
+//         phone,
+//         nationality,
+//         postalCode,
+//         prefecture,
+//         city,
+//         street,
+//         building,
+//         modeOfContact,
+//         facebookUrl,
+//       } = req.body;
+
+//       // Check if a profile photo is being uploaded
+//       if (req.file) {
+//         try {
+//           const result = await cloudinary.uploader.upload(req.file.path, {
+//             folder: 'client_profiles',
+//             public_id: `profile_${client._id}`,
+//             width: 500,
+//             height: 500,
+//             crop: 'fill',
+//           });
+
+//           // Update client profile photo URL
+//           client.profilePhoto = result.secure_url;
+//         } catch (cloudinaryErr) {
+//           console.error('Cloudinary upload error:', cloudinaryErr);
+//           return res.status(500).json({
+//             success: false,
+//             message: 'Error uploading profile photo to Cloudinary.',
+//             error: cloudinaryErr.message,
+//           });
+//         }
+//       }
+
+//       // Parse modeOfContact 
+//       const parsedModeOfContact = modeOfContact ? JSON.parse(modeOfContact) : client.modeOfContact;
+
+//       // Update other client details
+//       client.name = name || client.name;
+//       client.category = category || client.category;
+//       client.status = status || client.status;
+//       client.email = email || client.email;
+//       client.phone = phone || client.phone;
+//       client.facebookUrl = facebookUrl || client.facebookUrl;
+//       client.nationality = nationality || client.nationality;
+//       client.postalCode = postalCode || client.postalCode;
+//       client.prefecture = prefecture || client.prefecture;
+//       client.city = city || client.city;
+//       client.street = street || client.street;
+//       client.building = building || client.building;
+//       client.modeOfContact = parsedModeOfContact;
+
+
+//       // Save the updated client
+//       const updatedClient = await client.save();
+
+//       // Exclude sensitive fields from the response
+//       const responseClient = updatedClient.toObject();
+//       delete responseClient.password;
+
+//       // Send the response with the updated client data
+//       res.status(200).json({
+//         success: true,
+//         message: 'Client updated successfully.',
+//         updatedClient: responseClient,
+//       });
+//     } catch (err) {
+//       console.error('Error updating client:', err);
+//       res.status(400).json({
+//         success: false,
+//         message: 'Error updating client. Please try again later.',
+//         error: err.message,
+//       });
+//     }
+//   },
+// ];
+
+
+
+
+
+
+const upload = require("../middlewares/multerConfig");
+const cloudinary = require("../utils/cloudinaryConfig");
+const ClientModel = require("../models/Client");
+
 exports.updateClient = [
-  upload.single('profilePhoto'), // Multer middleware for file upload
+  upload.single("profilePhoto"), // Multer middleware for file upload
   async (req, res) => {
-    const { _id: superAdminId, role } = req.user;
-    if (!superAdminId) {
-      return res.status(403).json({ success: false, message: 'Unauthorized: SuperAdmin access required.' });
-    }
-
-    // Authorization check
-    if (!role || (role !== 'superadmin' && role !== 'admin' && role !== 'user')) {
-      return res.status(403).json({ success: false, message: 'Unauthorized: Access denied.' });
-    }
-
     try {
+      const { _id: userId, role } = req.user; // Extract user ID and role from token
+      const clientId = req.params.id;
+
       // Find the client by ID
-      const client = await ClientModel.findById(req.params.id);
+      const client = await ClientModel.findById(clientId);
       if (!client) {
-        return res.status(404).json({ success: false, message: 'Client not found.' });
+        return res.status(404).json({ success: false, message: "Client not found." });
       }
 
-      // Destructure the fields from the request body
+      // **✅ Authorization Check**
+      // - Admins/Superadmins can update any client.
+      // - Normal users can only update their own profile.
+      if (role !== "superadmin" && role !== "admin" && clientId !== userId) {
+        return res.status(403).json({ success: false, message: "Unauthorized: You can only update your own profile." });
+      }
+
+      // **✅ Destructure the request body**
       const {
         name,
         category,
@@ -255,33 +367,37 @@ exports.updateClient = [
         facebookUrl,
       } = req.body;
 
-      // Check if a profile photo is being uploaded
+      // **✅ Handle Profile Photo Upload (Cloudinary)**
       if (req.file) {
         try {
           const result = await cloudinary.uploader.upload(req.file.path, {
-            folder: 'client_profiles',
+            folder: "client_profiles",
             public_id: `profile_${client._id}`,
             width: 500,
             height: 500,
-            crop: 'fill',
+            crop: "fill",
           });
 
-          // Update client profile photo URL
-          client.profilePhoto = result.secure_url;
+          client.profilePhoto = result.secure_url; // Update profile photo URL
         } catch (cloudinaryErr) {
-          console.error('Cloudinary upload error:', cloudinaryErr);
+          console.error("Cloudinary upload error:", cloudinaryErr);
           return res.status(500).json({
             success: false,
-            message: 'Error uploading profile photo to Cloudinary.',
+            message: "Error uploading profile photo to Cloudinary.",
             error: cloudinaryErr.message,
           });
         }
       }
 
-      // Parse modeOfContact 
-      const parsedModeOfContact = modeOfContact ? JSON.parse(modeOfContact) : client.modeOfContact;
+      // **✅ Fix `modeOfContact` Parsing**
+      let parsedModeOfContact;
+      try {
+        parsedModeOfContact = modeOfContact ? JSON.parse(modeOfContact) : client.modeOfContact;
+      } catch (err) {
+        parsedModeOfContact = client.modeOfContact; // Fallback if JSON parsing fails
+      }
 
-      // Update other client details
+      // **✅ Update Other Client Details**
       client.name = name || client.name;
       client.category = category || client.category;
       client.status = status || client.status;
@@ -296,30 +412,30 @@ exports.updateClient = [
       client.building = building || client.building;
       client.modeOfContact = parsedModeOfContact;
 
-
-      // Save the updated client
+      // **✅ Save the Updated Client**
       const updatedClient = await client.save();
 
-      // Exclude sensitive fields from the response
+      // **✅ Remove Password from Response**
       const responseClient = updatedClient.toObject();
       delete responseClient.password;
 
-      // Send the response with the updated client data
+      // **✅ Send Success Response**
       res.status(200).json({
         success: true,
-        message: 'Client updated successfully.',
+        message: "Client updated successfully.",
         updatedClient: responseClient,
       });
     } catch (err) {
-      console.error('Error updating client:', err);
+      console.error("Error updating client:", err);
       res.status(400).json({
         success: false,
-        message: 'Error updating client. Please try again later.',
+        message: "Error updating client. Please try again later.",
         error: err.message,
       });
     }
   },
 ];
+
 
 
 
