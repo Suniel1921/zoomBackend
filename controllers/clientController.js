@@ -336,6 +336,7 @@ exports.updateClient = [
 
       // Find the client by ID
       const client = await ClientModel.findById(clientId);
+      console.log('client id is ', clientId)
       if (!client) {
         return res.status(404).json({ success: false, message: "Client not found." });
       }

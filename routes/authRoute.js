@@ -18,6 +18,7 @@ router.get('/admin', requireLogin, isAdmin, controller.admin);
 // *************************forgot password and reset link*************************
 router.post('/forgotPassword', controller.forgotPassword);
 router.post('/resetPassword', controller.resetPassword);
+router.post('/verifyOTP', controller.verifyOTP); // This route is for mobile app to verify OTP
 
 
 

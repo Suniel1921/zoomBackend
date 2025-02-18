@@ -324,6 +324,55 @@ exports.resetPassword = async (req, res) => {
 
 
 
+
+
+
+// Add this to your controller
+exports.verifyOTP = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Email and OTP are required' 
+      });
+    }
+
+    const storedData = tempUserStore.get(email);
+    
+    if (!storedData || 
+        storedData.otp !== otp || 
+        Date.now() - storedData.createdAt > 600000) { // 10 minutes
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid or expired OTP' 
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'OTP verified successfully'
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ 
+      success: false, 
+      message: 'Internal server error' 
+    });
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
 // Protected route controller
 exports.protectedRoute = async (req, res) => {
   res.status(200).json({ ok: true });
