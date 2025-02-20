@@ -81,7 +81,7 @@ const clientSchema = new mongoose.Schema({
       enum: ['user', 'admin'], 
       default: 'user' 
   }
-  }, { timestamps: false });
+  }, { timestamps: true });
   
 
 
