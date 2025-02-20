@@ -46,7 +46,7 @@ exports.createAppointment = async (req, res) => {
     const clientEmail = client.email;
 
     // Format the appointment date and time
-    const formattedDate = moment(appointmentData.date).format('MMMM Do YYYY, h:mm A');
+    const formattedDate = moment(appointmentData.date).format('MMMM Do YYYY');
     const formattedTime = appointmentData.time ? moment(appointmentData.time, 'HH:mm').format('h:mm A') : 'Not specified';
     const meetingType = appointmentData.meetingType.charAt(0).toUpperCase() + appointmentData.meetingType.slice(1); // Capitalize meeting type
 
@@ -182,7 +182,7 @@ exports.updateAppointment = async (req, res) => {
       const clientEmail = client.email;
 
       // Format the appointment date and time for email
-      const formattedDate = moment(updatedAppointment.date).format('MMMM Do YYYY, h:mm A');
+      const formattedDate = moment(updatedAppointment.date).format('MMMM Do YYYY');
       const formattedTime = updatedAppointment.time ? moment(updatedAppointment.time, 'HH:mm').format('h:mm A') : 'Not specified';
 
       // Prepare email content for rescheduling
@@ -274,7 +274,7 @@ exports.updateAppointmentStatus = async (req, res) => {
     const clientEmail = client.email;
 
     // Format the appointment date and time for email
-    const formattedDate = moment(appointment.date).format('MMMM Do YYYY, h:mm A');
+    const formattedDate = moment(appointment.date).format('MMMM Do YYYY');
     const formattedTime = appointment.time ? moment(appointment.time, 'HH:mm').format('h:mm A') : 'Not specified';
 
     // Prepare email content based on the appointment status
