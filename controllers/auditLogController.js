@@ -21,12 +21,12 @@ exports.addLog = async (action, userType, userId, userName, ipAddress, details =
     });
 
     await log.save();
-    console.log('Audit log created:', {
-      action,
-      userType,
-      userName,
-      ipAddress: cleanIpAddress
-    });
+    // console.log('Audit log created:', {
+    //   action,
+    //   userType,
+    //   userName,
+    //   ipAddress: cleanIpAddress
+    // });
   } catch (error) {
     console.error('Error adding audit log:', error);
   }
