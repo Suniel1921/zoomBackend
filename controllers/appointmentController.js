@@ -402,11 +402,11 @@ const generateEmailTemplate = ({ subject, greeting, message, details, statusColo
       <title>${subject}</title>
     </head>
     <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
-      <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #ffffff; margin: 20px auto; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+      <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #000; margin: 20px auto; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
         <!-- Header -->
         <tr>
           <td style="background-color: #fedc00; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
-            <h1 style="color: #ffffff; margin: 0; font-size: 24px;">Zoom Creatives</h1>
+            <h1 style="color: #000; margin: 0; font-size: 24px;">Zoom Creatives</h1>
           </td>
         </tr>
         <!-- Content -->

@@ -127,7 +127,7 @@ exports.getApplications = async (req, res) => {
       .find(query)
       .populate('createdBy', 'name email')
       .populate('clientId', 'name email phone')
-      .sort({ createdAt: -1 }) // Sorting by createdAt field in descending order
+      .sort({ createdAt: -1 })
       .exec();
 
     if (applications.length === 0) {

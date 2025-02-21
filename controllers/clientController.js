@@ -120,7 +120,7 @@ exports.addClient = [
             <p style="margin: 5px 0;"><strong>Password:</strong> ${password}</p>
           </div>
           <p>For security reasons, we recommend changing your password after your first login.</p>
-          <p><a href="https://crm.zoomcreatives.jp/client-login" style="background-color: #fedc00; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 20px 0;">Login to Your Account</a></p>
+          <p><a href="https://crm.zoomcreatives.jp" style="background-color: #FEDC00; color: black; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 20px 0;">Login to Your Account</a></p>
           <p>If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
           <hr style="border: 1px solid #eee; margin: 20px 0;">
           <p style="color: #666; font-size: 12px;">This is an automated message, please do not reply directly to this email.</p>
