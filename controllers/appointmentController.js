@@ -484,7 +484,7 @@ exports.createAppointment = async (req, res) => {
       ],
       statusColor: '#28a745', // Green for creation
       ctaText: 'View Appointment',
-      ctaLink: 'https://crm.zoomcreatives.jp/client-portal',
+      ctaLink: 'https://crm.zoomcreatives.jp/client-login',
     });
 
     const mailOptions = {
@@ -592,7 +592,7 @@ exports.updateAppointment = async (req, res) => {
         ],
         statusColor: '#fedc00', // Blue for reschedule
         ctaText: 'View Details',
-        ctaLink: 'https://crm.zoomcreatives.jp/client-portal',
+        ctaLink: 'https://crm.zoomcreatives.jp/client-login',
       });
 
       const mailOptions = {
