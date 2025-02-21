@@ -105,7 +105,7 @@ exports.getAllDocumentTranslation = async (req, res) => {
       .populate({
         path: "clientId", 
         select: "name email phone", 
-      })
+      }).sort({ createdAt: -1 }) 
       .exec();
 
     // If no applications are found, return a 404 error

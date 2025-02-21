@@ -39,8 +39,8 @@ exports.getAllEpassports = async (req, res) => {
     const epassports = await ePassportModel
       .find(query)
       .populate("createdBy", "name email")
-      .populate("clientId", "name email phone");
-
+      .populate("clientId", "name email phone")
+      .sort({createdAt: -1});
     // console.log("Returning ePassports:", epassports) // Debugging log
 
     res.status(200).json({ success: true, data: epassports });

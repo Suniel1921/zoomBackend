@@ -59,8 +59,54 @@ exports.createApplication = async (req, res) => {
 
 
 // Get all applications for the authenticated user (superadmin or admin)
+// exports.getApplications = async (req, res) => {
+//   const { _id, role, superAdminId } = req.user; 
+
+//   // Role-based check: Only 'superadmin' or 'admin' are allowed
+//   if (!role || (role !== 'superadmin' && role !== 'admin')) {
+//     return res.status(403).json({ success: false, message: 'Unauthorized: Access denied.' });
+//   }
+
+//   try {
+//     let query = {};
+
+  
+//     if (role === 'superadmin') {
+//       query = { superAdminId: _id };
+//     } else if (role === 'admin') {
+//       query = { $or: [{ createdBy: _id }, { superAdminId }] };
+//     }
+
+//     // Query to get applications based on role and superAdminId
+//     const applications = await applicationModel
+//       .find(query)
+//       .populate('createdBy', 'name email') 
+//       .populate("clientId", "name email phone")
+//       .exec();
+
+//     // If no applications are found, return a 404 error
+//     if (applications.length === 0) {
+//       return res.status(404).json({ success: false, message: 'No applications found' });
+//     }
+
+//     // Return the list of applications found
+//     return res.status(200).json({
+//       success: true,
+//       data: applications,
+//     });
+//   } catch (error) {
+//     console.error('Error fetching applications:', error.message);
+//     return res.status(500).json({ success: false, message: 'Internal Server Error', error });
+//   }
+// };
+
+
+
+
+
+// *************fetching latest created data first************
 exports.getApplications = async (req, res) => {
-  const { _id, role, superAdminId } = req.user; 
+  const { _id, role, superAdminId } = req.user;
 
   // Role-based check: Only 'superadmin' or 'admin' are allowed
   if (!role || (role !== 'superadmin' && role !== 'admin')) {
@@ -70,26 +116,24 @@ exports.getApplications = async (req, res) => {
   try {
     let query = {};
 
-  
     if (role === 'superadmin') {
       query = { superAdminId: _id };
     } else if (role === 'admin') {
       query = { $or: [{ createdBy: _id }, { superAdminId }] };
     }
 
-    // Query to get applications based on role and superAdminId
+    // Fetch applications sorted by createdAt in descending order (latest first)
     const applications = await applicationModel
       .find(query)
-      .populate('createdBy', 'name email') 
-      .populate("clientId", "name email phone")
+      .populate('createdBy', 'name email')
+      .populate('clientId', 'name email phone')
+      .sort({ createdAt: -1 }) // Sorting by createdAt field in descending order
       .exec();
 
-    // If no applications are found, return a 404 error
     if (applications.length === 0) {
       return res.status(404).json({ success: false, message: 'No applications found' });
     }
 
-    // Return the list of applications found
     return res.status(200).json({
       success: true,
       data: applications,
@@ -99,6 +143,7 @@ exports.getApplications = async (req, res) => {
     return res.status(500).json({ success: false, message: 'Internal Server Error', error });
   }
 };
+
 
 
 

@@ -54,6 +54,7 @@ exports.createJapanVisitApplication = async (req, res) => {
 
 
 // Get All Japan Visit Applications Controller
+// Get All Japan Visit Applications Controller
 exports.getAllJapanVisitApplications = async (req, res) => {
   const { _id, role, superAdminId } = req.user;
 
@@ -79,12 +80,13 @@ exports.getAllJapanVisitApplications = async (req, res) => {
       })
       .populate({
         path: 'clientId',
-        select: 'name email phone'
+        select: 'name email phone',
       })
+      .sort({ createdAt: -1 }) // Sorting by createdAt in descending order
       .exec();
 
     if (applications.length === 0) {
-      return res.status(404).json({ success: false, message: 'No japan visit application found' });
+      return res.status(404).json({ success: false, message: 'No Japan visit applications found' });
     }
 
     return res.status(200).json({
@@ -92,10 +94,11 @@ exports.getAllJapanVisitApplications = async (req, res) => {
       data: applications,
     });
   } catch (error) {
-    console.error('Error fetching japan visit applications:', error.message);
+    console.error('Error fetching Japan visit applications:', error.message);
     return res.status(500).json({ success: false, message: 'Internal Server Error', error });
   }
 };
+
 
 // Get Japan Visit Application By Id Controller
 exports.getJapanVisitApplicationById = async (req, res) => {
