@@ -367,12 +367,6 @@ exports.verifyOTP = async (req, res) => {
 
 
 
-
-
-
-
-
-
 // Protected route controller
 exports.protectedRoute = async (req, res) => {
   res.status(200).json({ ok: true });
@@ -382,6 +376,10 @@ exports.protectedRoute = async (req, res) => {
 exports.admin = (req, res) => {
   res.status(200).json({ ok: true });
 }
+
+
+
+
 
 
 
