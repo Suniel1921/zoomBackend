@@ -64,6 +64,7 @@ const clientSchema = new mongoose.Schema({
 
     facebookUrl : {
       type: String,
+      required: false,
     },
 
     timeline: {

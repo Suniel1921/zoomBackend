@@ -1,11 +1,10 @@
 const bcrypt = require('bcryptjs');
 const AdminModel = require('../models/newModel/adminModel');
 
-
-// Create new admin controller
+// Create new admin
 exports.createAdmin = async (req, res) => {
   try {
-    const { _id: superAdminId } = req.user; // Getting superAdminId from the authenticated user
+    const { _id: superAdminId } = req.user; 
     const { name, email, password, role, status } = req.body;
 
     const existingAdmin = await AdminModel.findOne({ email });
@@ -26,20 +25,18 @@ exports.createAdmin = async (req, res) => {
     });
 
     await admin.save();
-    res.status(201).json({ success: true, message: 'Admin created successfully', admin });
+
+    const { password: _, ...adminWithoutPassword } = admin.toObject(); // Remove password
+    res.status(201).json({ success: true, message: 'Admin created successfully', admin: adminWithoutPassword });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Error creating admin', error: error.message });
   }
 };
 
-
-
-
-// Get all admins for the authenticated superadmin or admin
+// Get all admins
 exports.getAdmins = async (req, res) => {
   const { _id, role, superAdminId } = req.user;
 
-  // Check for valid role (superadmin or admin)
   if (!role || (role !== 'superadmin' && role !== 'admin')) {
     return res.status(403).json({ success: false, message: 'Unauthorized: Access denied.' });
   }
@@ -48,39 +45,26 @@ exports.getAdmins = async (req, res) => {
     let query = {};
 
     if (role === 'superadmin') {
-      // SuperAdmin: Fetch all admins under their `superAdminId`
       query = { superAdminId: _id };
     } else if (role === 'admin') {
-      // Admin: Fetch admins created by the admin or under their `superAdminId`
       query = { $or: [{ createdBy: _id }, { superAdminId }] };
     }
 
-    const admins = await AdminModel.find(query)
-      .exec(); 
+    const admins = await AdminModel.find(query).select('-password');
 
-    // if (admins.length === 0) {
-    //   return res.status(404).json({ success: false, message: 'No admins found' });
-    // }
-
-    return res.status(200).json({
-      success: true,
-      admins,
-    });
+    return res.status(200).json({ success: true, admins });
   } catch (error) {
     console.error('Error fetching admins:', error.message);
     return res.status(500).json({ success: false, message: 'Internal Server Error', error });
   }
 };
 
-
-
-
-// Get admin by ID for the authenticated superAdmin
+// Get admin by ID
 exports.getAdminById = async (req, res) => {
   try {
     const { _id: superAdminId } = req.user; 
-    const admin = await AdminModel.findOne({ _id: req.params.id, superAdminId });
-    
+    const admin = await AdminModel.findOne({ _id: req.params.id, superAdminId }).select('-password');
+
     if (!admin) {
       return res.status(404).json({ success: false, message: 'Admin not found or you do not have access to it' });
     }
@@ -94,10 +78,10 @@ exports.getAdminById = async (req, res) => {
 // Update admin
 exports.updateAdmin = async (req, res) => {
   try {
-    const { _id: superAdminId } = req.user; 
+    const { _id: superAdminId } = req.user;
     const { name, email, role, status } = req.body;
 
-    const admin = await AdminModel.findOne({ _id: req.params.id, superAdminId });
+    const admin = await AdminModel.findOne({ _id: req.params.id, superAdminId }).select('-password');
     if (!admin) {
       return res.status(404).json({ success: false, message: 'Admin not found or you do not have access to it' });
     }
@@ -128,5 +112,3 @@ exports.deleteAdmin = async (req, res) => {
     res.status(500).json({ success: false, message: 'Error deleting admin', error: error.message });
   }
 };
-
-
