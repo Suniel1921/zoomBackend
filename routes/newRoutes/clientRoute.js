@@ -9,7 +9,8 @@ router.get('/getClient', requireLogin, controller.getClients);
 //get single client by id
 router.get('/getClient/:id', requireLogin, controller.getClientById);
 //create / add client
-router.post('/createClient', requireLogin, controller.addClient);
+// router.post('/createClient', requireLogin, controller.addClient); //note removed requirelogin becoz client register / singup its self
+router.post('/createClient',  controller.addClient); 
 //udpate client
 router.put('/updateClient/:id', requireLogin, controller.updateClient);
 //delete client
