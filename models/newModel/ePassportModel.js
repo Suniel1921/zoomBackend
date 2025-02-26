@@ -101,10 +101,14 @@ const epassportSchema = new mongoose.Schema(
         "Counter Cash",
         "Credit Card",
         "Paypay",
-        "Line Pay",
       ],
       required: false,
     },
+
+
+
+
+
 
     applicationStatus: {
       type: String,
