@@ -8,31 +8,27 @@ const documentTranslationSchema = new mongoose.Schema(
       required: true,
       ref: "SuperAdminModel",
     },
-
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "AdminModel", // Can be a super admin or admin
+      ref: "AdminModel",
       required: true,
     },
-
     clientId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "ClientModel",
       required: true,
     },
-
     clientFiles: {
-      type: [String], // Array of URLs
-      default: [], // Default to empty array
+      type: [String],
+      default: [],
     },
-
     steps: [
       {
         name: { type: String, required: true },
         status: {
           type: String,
           enum: ["pending", "completed", "in-progress", "processing"],
-          default: "complted",
+          default: "completed",
         },
         updatedAt: { type: Date, default: Date.now },
       },
@@ -50,6 +46,7 @@ const documentTranslationSchema = new mongoose.Schema(
     nameInTargetScript: {
       type: String,
       required: false,
+      default: "",
     },
     pages: {
       type: Number,
@@ -73,13 +70,7 @@ const documentTranslationSchema = new mongoose.Schema(
     },
     paymentMethod: {
       type: String,
-      enum: [
-        "Counter Cash",
-        "Bank Transfer",
-        "Credit Card",
-        "Paypay",
-        "Line Pay",
-      ],
+      enum: ["Counter Cash", "Bank Transfer", "Credit Card", "Paypay", "Line Pay"],
     },
     handledBy: {
       type: String,
@@ -96,27 +87,23 @@ const documentTranslationSchema = new mongoose.Schema(
     },
     deliveryType: {
       type: String,
-      enum: [
-        "Office Pickup",
-        "Sent on Email",
-        "Sent on Viber",
-        "Sent on Facebook",
-        "By Post",
-      ],
+      enum: ["Office Pickup", "Sent on Email", "Sent on Viber", "Sent on Facebook", "By Post"],
       required: true,
     },
-    // Additional Information
     notes: {
       type: String,
+      default: "",
     },
   },
   { timestamps: true }
 );
 
-// Middleware to auto-populate steps if not provided
 documentTranslationSchema.pre("save", function (next) {
   if (!this.steps || this.steps.length === 0) {
-    this.steps = defaultSteps.documentTranslationStep; // Populate default steps
+    this.steps = defaultSteps.documentTranslationStep;
+  }
+  if (this.nameInTargetScript === undefined) {
+    this.nameInTargetScript = "";
   }
   next();
 });

@@ -1,6 +1,5 @@
 const documentTranslationModel = require("../models/newModel/documentTranslationModel");
 
-// CREATE Document Translation controller
 exports.createDocumentTranslation = async (req, res) => {
   const { superAdminId, _id: createdBy, role } = req.user;
   const {
@@ -8,7 +7,7 @@ exports.createDocumentTranslation = async (req, res) => {
     steps,
     sourceLanguage,
     targetLanguage,
-    nameInTargetScript,
+    nameInTargetScript = "",
     pages,
     amount,
     paidAmount,
@@ -21,18 +20,14 @@ exports.createDocumentTranslation = async (req, res) => {
     notes,
   } = req.body;
 
-  // Role-based check: Only 'superadmin' or 'admin' are allowed
   if (role !== "superadmin" && (!superAdminId || role !== "admin")) {
-    console.log("Unauthorized access attempt:", req.user); // Log for debugging
+    console.log("Unauthorized access attempt:", req.user);
     return res
       .status(403)
       .json({ success: false, message: "Unauthorized: Access denied." });
   }
 
-  // If the user is a superadmin, use their userId as superAdminId
   const clientSuperAdminId = role === "superadmin" ? createdBy : superAdminId;
-
-  // Use custom steps if provided, otherwise leave it undefined
   const applicationSteps = steps && Array.isArray(steps) ? steps : [];
 
   try {
@@ -40,28 +35,28 @@ exports.createDocumentTranslation = async (req, res) => {
       superAdminId: clientSuperAdminId,
       createdBy,
       clientId,
-      steps: applicationSteps, 
+      steps: applicationSteps,
       sourceLanguage,
       targetLanguage,
-      nameInTargetScript,
+      nameInTargetScript: nameInTargetScript || "",
       pages,
       amount,
       paidAmount,
       paymentStatus,
-      paymentMethod,
+      paymentMethod: paymentStatus === "Paid" ? paymentMethod : undefined,
       handledBy,
       deadline,
       translationStatus,
       deliveryType,
-      notes,
+      notes: notes || "",
     });
 
     await newTranslation.save();
     res.status(201).json({
-        success: true,
-        message: "Document translation created successfully",
-        newTranslation,
-      });
+      success: true,
+      message: "Document translation created successfully",
+      newTranslation,
+    });
   } catch (error) {
     console.error("Error creating document translation:", error);
     res.status(500).json({
@@ -71,6 +66,7 @@ exports.createDocumentTranslation = async (req, res) => {
     });
   }
 };
+
 
 // GET All Document Translations for Authenticated Super Admin
 
