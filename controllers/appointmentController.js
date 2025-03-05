@@ -908,6 +908,7 @@ const modelMapping = {
 };
 
 // Route to update step status
+// Route to update step status
 exports.updateStepStatus = async (req, res) => {
   const { clientId, steps } = req.body;
 
@@ -916,36 +917,48 @@ exports.updateStepStatus = async (req, res) => {
     for (let step of steps) {
       const { stepId, status, modelName } = step;
 
-      // Log the incoming modelName to ensure correct casing
-      console.log('Incoming Model Name:', modelName); // Log incoming model name
+      // Log the incoming modelName for debugging
+      console.log("Incoming Model Name:", modelName);
 
-      // Map modelName to lowercase and check
+      // Map modelName to lowercase and validate
       const Model = modelMapping[modelName.toLowerCase()];
       if (!Model) {
-        return res.status(400).json({ success: false, message: `Invalid model names: ${modelName}` });
+        return res.status(400).json({
+          success: false,
+          message: `Invalid model name: ${modelName}`,
+        });
       }
 
-      // console.log('Model:', Model); // Log selected model from mapping
-      // console.log('Step ID:', stepId);
-      // console.log('Status:', status);
-
+      // Update both status and updatedAt for the specific step
       const result = await Model.updateOne(
         { "steps._id": stepId },
-        { $set: { "steps.$.status": status } }
+        {
+          $set: {
+            "steps.$.status": status,
+            "steps.$.updatedAt": new Date(), // ADDED: Set updatedAt to current date/time
+          },
+        }
       );
 
-      if (result.nModified === 0) {
+      // CHANGE: Updated from nModified to modifiedCount (modern MongoDB driver)
+      if (result.modifiedCount === 0) {
         console.log(`No document updated for stepId ${stepId}`);
       }
     }
 
-    return res.status(200).json({ success: true, message: "Statuses updated successfully!" });
+    return res.status(200).json({
+      success: true,
+      message: "Statuses updated successfully!",
+    });
   } catch (error) {
-    console.error('Error updating status:', error);
-    return res.status(500).json({ success: false, message: "Failed to update statuses", error: error.message });
+    console.error("Error updating status:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update statuses",
+      error: error.message,
+    });
   }
 };
-
 
 
 
