@@ -3,18 +3,18 @@ const ePassportModel = require("../models/newModel/ePassportModel");
 // Create ePassport
 exports.createEpassport = async (req, res) => {
   try {
-    const { _id: userId, role, superAdminId } = req.user;
-    const { steps, ...otherData } = req.body;
+    const { superAdminId, _id: createdBy, role } = req.user;
+    const { steps = [], ...otherData } = req.body;
 
-    if (role !== "superadmin" && role !== "admin") {
+    if (!["superadmin", "admin"].includes(role)) {
       return res.status(403).json({ success: false, message: "Unauthorized access." });
     }
 
     const epassport = new ePassportModel({
       ...otherData,
       steps: Array.isArray(steps) ? steps : [],
-      superAdminId: role === "superadmin" ? userId : superAdminId,
-      createdBy: userId,
+      superAdminId: role === "superadmin" ? createdBy : superAdminId,
+      createdBy,
     });
 
     await epassport.save();
@@ -23,6 +23,10 @@ exports.createEpassport = async (req, res) => {
     res.status(400).json({ success: false, message: "Failed to create ePassport", error: error.message });
   }
 };
+
+
+
+
 
 // Get all ePassports (SuperAdmin & Admin can access each other's data)
 exports.getAllEpassports = async (req, res) => {

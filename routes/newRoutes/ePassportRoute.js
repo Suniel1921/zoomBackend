@@ -20,15 +20,4 @@ router.delete('/deleteFile', controller.deleteFile);
 
 
 
-
-
-
- 
-
-
-
-
-
-
-
 module.exports = router;
