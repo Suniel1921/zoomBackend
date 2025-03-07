@@ -69,7 +69,10 @@ exports.getEpassportById = async (req, res) => {
   }
 };
 
-// Update ePassport
+
+
+
+
 exports.updateEpassport = async (req, res) => {
   try {
     const { _id: userId, role, superAdminId } = req.user;
