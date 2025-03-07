@@ -107,6 +107,8 @@ exports.deleteEpassport = async (req, res) => {
 
 
 
+
+
 const upload = require('../config/multerConfig');
 const cloudinary = require('cloudinary').v2;
 
@@ -137,6 +139,11 @@ exports.uploadFileForApplication = [
       // Set the createdBy field (if it's not already set)
       if (!application.createdBy) {
         application.createdBy = createdBy;
+      }
+
+      // Fix paymentMethod if it's an empty string
+      if (application.paymentMethod === '') {
+        application.paymentMethod = undefined;
       }
 
       // Process each file and upload to Cloudinary

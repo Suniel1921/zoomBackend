@@ -74,11 +74,14 @@ const epassportSchema = new mongoose.Schema(
       enum: ["Due", "Partial", "Paid"],
       required: true,
     },
+ 
     paymentMethod: {
       type: String,
       enum: ["Bank Furicomy", "Counter Cash", "Credit Card", "Paypay"],
       required: false,
     },
+
+    
     applicationStatus: {
       type: String,
       enum: ["Processing", "Waiting for Payment", "Completed", "Cancelled"],
