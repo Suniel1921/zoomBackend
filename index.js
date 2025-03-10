@@ -26,14 +26,23 @@ const auditLogRoute = require('./routes/newRoutes/auditLogRoute');
 const callLogsRoute = require('./routes/newRoutes/callLogsRoute');
 const campaignRoute = require('./routes/newRoutes/campaignRoute');
 const appBannerRoute = require ('./routes/newRoutes/appBannerRoute');
+const notificationRoute = require ('./routes/newRoutes/notificationRoute');
 const { initRedisClient } = require('./config/redisClient');
+const webSocketService = require('./config/webSocketService');
 
 // Load environment variables
 dotenv.config();
 
+
+
+
 // Initialize Express app
 const app = express();
+// const server = createServer(app);
+
+// Initialize WebSocket service
 const server = createServer(app);
+webSocketService.initialize(server);
 
 // Middleware for parsing JSON and URL-encoded data
 app.use(express.json());
@@ -79,6 +88,7 @@ app.use('/api/v1/logs', auditLogRoute);
 app.use('/api/v1/callLogs', callLogsRoute);
 app.use('/api/v1/campaign', campaignRoute);
 app.use('/api/v1/appBanner', appBannerRoute);
+app.use('/api/v1/notify', notificationRoute);
 
 // Default Route
 app.get('/', (req, res) => {

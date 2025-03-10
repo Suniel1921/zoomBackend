@@ -1,28 +1,127 @@
 const ePassportModel = require("../models/newModel/ePassportModel");
+const notificationController = require('../controllers/notificationController');
 
-// Create ePassport
+
+
+
 exports.createEpassport = async (req, res) => {
   try {
-    const { superAdminId, _id: createdBy, role } = req.user;
-    const { steps = [], ...otherData } = req.body;
+    const { superAdminId, _id: createdBy, name: creatorName, role } = req.user;
+    const { handlerId, handledBy, clientName, ...otherData } = req.body;
 
     if (!["superadmin", "admin"].includes(role)) {
       return res.status(403).json({ success: false, message: "Unauthorized access." });
     }
 
+    // Create ePassport
     const epassport = new ePassportModel({
       ...otherData,
-      steps: Array.isArray(steps) ? steps : [],
+      clientName,
+      steps: Array.isArray(otherData.steps) ? otherData.steps : [],
       superAdminId: role === "superadmin" ? createdBy : superAdminId,
       createdBy,
+      handledBy
     });
 
     await epassport.save();
+
+    // If handlerId is specified and it's different from the creator, create notification
+    if (handlerId && handlerId !== createdBy.toString()) {
+      await notificationController.createNotification({
+        recipientId: handlerId,
+        senderId: createdBy,
+        type: 'TASK_ASSIGNED',
+        taskId: epassport._id,
+        taskModel: 'ePassportModel',
+        message: `${creatorName} has assigned you an ePassport task for ${clientName}`
+      });
+    }
+
     res.status(201).json({ success: true, message: "ePassport created successfully", data: epassport });
   } catch (error) {
+    console.error('Error creating ePassport:', error);
     res.status(400).json({ success: false, message: "Failed to create ePassport", error: error.message });
   }
 };
+
+
+
+
+
+
+exports.updateEpassport = async (req, res) => {
+  try {
+    const { _id: userId, role, superAdminId, name: updaterName } = req.user;
+    const { handlerId, handledBy, clientName } = req.body;
+    
+    const query = role === "superadmin" ? 
+      { _id: req.params.id, superAdminId: userId } : 
+      { _id: req.params.id, superAdminId };
+
+    const oldEpassport = await ePassportModel.findOne(query);
+    if (!oldEpassport) {
+      return res.status(404).json({ success: false, message: "ePassport not found" });
+    }
+
+    // Update the ePassport
+    const epassport = await ePassportModel.findOneAndUpdate(
+      query,
+      { ...req.body },
+      { new: true }
+    );
+
+    // If handler is changed, send notification to new handler
+    if (handlerId && handlerId !== oldEpassport.handlerId?.toString()) {
+      await notificationController.createNotification({
+        recipientId: handlerId,
+        senderId: userId,
+        type: 'TASK_ASSIGNED',
+        taskId: epassport._id,
+        taskModel: 'ePassportModel',
+        message: `${updaterName} has assigned you an ePassport task for ${clientName}`
+      });
+    }
+
+    res.status(200).json({ 
+      success: true, 
+      message: "ePassport updated successfully", 
+      data: epassport 
+    });
+  } catch (error) {
+    console.error('Error updating ePassport:', error);
+    res.status(400).json({ 
+      success: false, 
+      message: "Failed to update ePassport", 
+      error: error.message 
+    });
+  }
+};
+
+
+
+// Create ePassport
+// exports.createEpassport = async (req, res) => {
+//   try {
+//     const { superAdminId, _id: createdBy, role } = req.user;
+//     const { steps = [], ...otherData } = req.body;
+
+//     if (!["superadmin", "admin"].includes(role)) {
+//       return res.status(403).json({ success: false, message: "Unauthorized access." });
+//     }
+
+//     const epassport = new ePassportModel({
+//       ...otherData,
+//       steps: Array.isArray(steps) ? steps : [],
+//       superAdminId: role === "superadmin" ? createdBy : superAdminId,
+//       createdBy,
+//     });
+
+//     await epassport.save();
+//     res.status(201).json({ success: true, message: "ePassport created successfully", data: epassport });
+//   } catch (error) {
+//     res.status(400).json({ success: false, message: "Failed to create ePassport", error: error.message });
+//   }
+// };
 
 
 
@@ -73,18 +172,18 @@ exports.getEpassportById = async (req, res) => {
 
 
 
-exports.updateEpassport = async (req, res) => {
-  try {
-    const { _id: userId, role, superAdminId } = req.user;
-    const query = role === "superadmin" ? { _id: req.params.id, superAdminId: userId } : { _id: req.params.id, superAdminId };
-    const epassport = await ePassportModel.findOneAndUpdate(query, req.body, { new: true });
+// exports.updateEpassport = async (req, res) => {
+//   try {
+//     const { _id: userId, role, superAdminId } = req.user;
+//     const query = role === "superadmin" ? { _id: req.params.id, superAdminId: userId } : { _id: req.params.id, superAdminId };
+//     const epassport = await ePassportModel.findOneAndUpdate(query, req.body, { new: true });
 
-    if (!epassport) return res.status(404).json({ success: false, message: "ePassport not found" });
-    res.status(200).json({ success: true, message: "ePassport updated successfully", data: epassport });
-  } catch (error) {
-    res.status(400).json({ success: false, message: error.message });
-  }
-};
+//     if (!epassport) return res.status(404).json({ success: false, message: "ePassport not found" });
+//     res.status(200).json({ success: true, message: "ePassport updated successfully", data: epassport });
+//   } catch (error) {
+//     res.status(400).json({ success: false, message: error.message });
+//   }
+// };
 
 // Delete ePassport
 exports.deleteEpassport = async (req, res) => {
@@ -180,6 +279,8 @@ const documentTranslationModel = require("../models/newModel/documentTranslation
 const GraphicDesignModel = require("../models/newModel/graphicDesingModel");
 const OtherServiceModel = require("../models/newModel/otherServicesModel");
 const japanVisitApplicationModel = require("../models/newModel/japanVisitModel");
+const AdminModel = require("../models/newModel/adminModel");
+const SuperAdminModel = require("../models/newModel/superAdminModel");
 
 
 const models = {
