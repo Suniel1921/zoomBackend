@@ -1,15 +1,72 @@
 const japanVisitApplicationModel = require("../models/newModel/japanVisitModel");
+const notificationController = require("../controllers/notificationController");
 
 // Create Japan Visit Application Controller
+// exports.createJapanVisitApplication = async (req, res) => {
+//   try {
+//     const { superAdminId, _id: createdBy, role } = req.user;
+
+//     const {
+//       clientId, steps, mobileNo, date, deadline, handledBy, status, package: packageType,
+//       noOfApplicants, reasonForVisit, otherReason, amount, paidAmount,
+//       discount, deliveryCharge, dueAmount, paymentStatus, paymentMethod,
+//       modeOfDelivery, notes
+//     } = req.body;
+
+//     // Role-based check: Only 'superadmin' or 'admin' are allowed
+//     if (role !== 'superadmin' && (!superAdminId || role !== 'admin')) {
+//       console.log('Unauthorized access attempt:', req.user);
+//       return res.status(403).json({ success: false, message: 'Unauthorized: Access denied.' });
+//     }
+
+//     // If the user is a superadmin, use their userId as superAdminId
+//     const clientSuperAdminId = role === 'superadmin' ? createdBy : superAdminId;
+
+//     // Validate required fields
+//     if (!clientId || !packageType || !reasonForVisit || !modeOfDelivery) {
+//       return res.status(400).json({ success: false, message: 'Missing required fields' });
+//     }
+
+//     // Use custom steps if provided, otherwise leave it undefined
+//     const applicationSteps = steps && Array.isArray(steps) ? steps : [];
+
+//     // Create application instance
+//     const application = new japanVisitApplicationModel({
+//       superAdminId: clientSuperAdminId,
+//       createdBy,
+//       clientId, mobileNo, date, deadline, handledBy, status, package: packageType,
+//       noOfApplicants, reasonForVisit, otherReason, amount, paidAmount,
+//       discount, deliveryCharge, dueAmount, paymentStatus, paymentMethod,
+//       modeOfDelivery, notes, steps: applicationSteps,
+//     });
+
+//     // Save to database
+//     const savedApplication = await application.save();
+
+//     // Return success response
+//     res.status(201).json({ success: true, message: 'Japan visit application created successfully', data: savedApplication });
+//   } catch (error) {
+//     console.error('Error creating application:', error);
+//     return res.status(500).json({ success: false, message: 'Internal Server Error', error: error.message });
+//   }
+// };
+
+
+
+
+
+
+// ************websoket (sending real time notification)*******
+// Create Japan Visit Application Controller
+
 exports.createJapanVisitApplication = async (req, res) => {
   try {
-    const { superAdminId, _id: createdBy, role } = req.user;
-
+    const { superAdminId, _id: createdBy, fullName: creatorName, role } = req.user;
     const {
       clientId, steps, mobileNo, date, deadline, handledBy, status, package: packageType,
       noOfApplicants, reasonForVisit, otherReason, amount, paidAmount,
       discount, deliveryCharge, dueAmount, paymentStatus, paymentMethod,
-      modeOfDelivery, notes
+      modeOfDelivery, notes, handlerId, clientName // Add clientName to destructure
     } = req.body;
 
     // Role-based check: Only 'superadmin' or 'admin' are allowed
@@ -37,10 +94,31 @@ exports.createJapanVisitApplication = async (req, res) => {
       noOfApplicants, reasonForVisit, otherReason, amount, paidAmount,
       discount, deliveryCharge, dueAmount, paymentStatus, paymentMethod,
       modeOfDelivery, notes, steps: applicationSteps,
+      handlerId // Store handlerId if needed in DB
     });
 
     // Save to database
     const savedApplication = await application.save();
+
+    // Notification logic
+    if (handlerId && handlerId !== createdBy.toString()) {
+      console.log('Attempting to send notification:', { handlerId, createdBy, clientName });
+      try {
+        await notificationController.createNotification({
+          recipientId: handlerId,
+          senderId: createdBy,
+          type: 'TASK_ASSIGNED',
+          taskId: savedApplication._id,
+          taskModel: 'japanVisitApplicationModel', // Updated taskModel
+          message: `${creatorName || 'Someone'} has assigned you a Japan Visit application for ${clientName || 'a client'}`
+        });
+        console.log('Notification created successfully for Japan Visit application');
+      } catch (notificationError) {
+        console.error('Failed to create notification for Japan Visit application:', notificationError);
+      }
+    } else {
+      console.log('No notification sent: handlerId missing or same as createdBy', { handlerId, createdBy });
+    }
 
     // Return success response
     res.status(201).json({ success: true, message: 'Japan visit application created successfully', data: savedApplication });
@@ -49,8 +127,6 @@ exports.createJapanVisitApplication = async (req, res) => {
     return res.status(500).json({ success: false, message: 'Internal Server Error', error: error.message });
   }
 };
-
-
 
 
 // Get All Japan Visit Applications Controller

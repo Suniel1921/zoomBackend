@@ -1,47 +1,63 @@
 const applicationModel = require('../models/newModel/applicationModel');
+const notificationController = require('../controllers/notificationController');
 
-// Create a new application
 exports.createApplication = async (req, res) => {
   try {
-    const { superAdminId, _id: createdBy, role } = req.user; // Extract user ID and role from authenticated user
-    const {clientId, clientName, familyMembers, payment, steps, ...rest } = req.body;
+    const { superAdminId, _id: createdBy, fullName: creatorName, role } = req.user;
+    const { clientId, clientName, familyMembers, payment, steps, handlerId, handledBy, ...rest } = req.body;
 
-    // Role-based check: Only 'superadmin' or 'admin' are allowed
+    console.log('User creating application:', { createdBy, role, fullName: creatorName });
+    console.log('Received handlerId:', handlerId);
+
     if (role !== 'superadmin' && (!superAdminId || role !== 'admin')) {
-      console.log('Unauthorized access attempt:', req.user);  // Log for debugging
+      console.log('Unauthorized access attempt:', req.user);
       return res.status(403).json({ success: false, message: 'Unauthorized: Access denied.' });
     }
 
-
-    // If the user is a superadmin, use their userId as superAdminId
     const clientSuperAdminId = role === 'superadmin' ? createdBy : superAdminId;
-
     if (!clientSuperAdminId) {
       return res.status(400).json({ success: false, message: 'SuperAdminId is required' });
     }
 
-    // Calculate total payment
     const total = (payment.visaApplicationFee + payment.translationFee) - (payment.paidAmount + payment.discount);
 
-    // Prepare application data
     const applicationData = {
-      superAdminId: clientSuperAdminId,  // Use the determined superAdminId
-      createdBy,  // The user creating the application
+      superAdminId: clientSuperAdminId,
+      createdBy,
       clientName,
       clientId,
       familyMembers,
-      payment: {
-        ...payment,
-        total,
-      },
+      payment: { ...payment, total },
       paymentStatus: total <= 0 ? 'Paid' : 'Due',
-      steps: Array.isArray(steps) ? steps : [],  // Ensure steps are provided if necessary
+      steps: Array.isArray(steps) ? steps : [],
+      handledBy,
+      handlerId,
       ...rest,
     };
 
-    // Save the new application to the database
     const newApplication = new applicationModel(applicationData);
     await newApplication.save();
+
+    console.log('Application created:', newApplication._id);
+
+    if (handlerId && handlerId !== createdBy.toString()) {
+      console.log('Notification condition met, attempting to send:', { handlerId, createdBy, clientName });
+      try {
+        await notificationController.createNotification({
+          recipientId: handlerId,
+          senderId: createdBy,
+          type: 'TASK_ASSIGNED',
+          taskId: newApplication._id,
+          taskModel: 'ApplicationModel',
+          message: `${creatorName || 'Someone'} has assigned you an Visa application task for ${clientName}`
+        });
+        console.log('Notification created successfully for application');
+      } catch (notificationError) {
+        console.error('Failed to create notification for application:', notificationError);
+      }
+    } else {
+      console.log('Notification not sent: handlerId missing or same as createdBy', { handlerId, createdBy });
+    }
 
     res.status(201).json({
       success: true,
@@ -53,8 +69,6 @@ exports.createApplication = async (req, res) => {
     res.status(500).json({ success: false, message: 'Something went wrong', error: error.message });
   }
 };
-
-
 
 
 

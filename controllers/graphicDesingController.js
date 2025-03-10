@@ -1,33 +1,107 @@
+// const GraphicDesignModel = require("../models/newModel/graphicDesingModel");
+
+
+// //create graphicDesing Controller
+// exports.createGraphicDesign = async (req, res) => {
+//   try {
+//     const { superAdminId, _id: createdBy, role } = req.user;
+//     const {
+//       clientId, handledBy, businessName, mobileNo, landlineNo, address, designType,
+//       amount, advancePaid, remarks, status, deadline
+//     } = req.body;
+
+//     // Role-based check: Only 'superadmin' or 'admin' are allowed
+//     if (role !== "superadmin" && (!superAdminId || role !== "admin")) {
+//       console.log("Unauthorized access attempt:", req.user); 
+//       return res
+//         .status(403)
+//         .json({ success: false, message: "Unauthorized: Access denied." });
+//     }
+  
+//     // If the user is a superadmin, use their userId as superAdminId
+//     const clientSuperAdminId = role === "superadmin" ? createdBy : superAdminId;
+
+//     const dueAmount = amount - advancePaid;
+//     const paymentStatus = dueAmount > 0 ? 'Due' : 'Paid';
+
+
+//     const designJob = new GraphicDesignModel({
+//       superAdminId: clientSuperAdminId,
+//       createdBy, 
+//       clientId,
+//       handledBy,
+//       businessName,
+//       mobileNo,
+//       landlineNo,
+//       address,
+//       designType,
+//       amount,
+//       advancePaid,
+//       remarks,
+//       status,
+//       deadline,
+//       dueAmount,
+//       paymentStatus,
+//     });
+
+//     await designJob.save();
+
+//     res.status(201).json({ success: true, message: 'Design job created successfully', designJob });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ success: false, message: 'Error creating design job', error });
+//   }
+// };
+
+
+
+
+
+// *************websocket for seding real time notfication while creating a data**************
+
+
+
 const GraphicDesignModel = require("../models/newModel/graphicDesingModel");
+const notificationController = require("../controllers/notificationController");
 
-
-//create graphicDesing Controller
+// Create Graphic Design Controller
 exports.createGraphicDesign = async (req, res) => {
   try {
-    const { superAdminId, _id: createdBy, role } = req.user;
+    const { superAdminId, _id: createdBy, fullName: creatorName, role } = req.user;
     const {
-      clientId, handledBy, businessName, mobileNo, landlineNo, address, designType,
-      amount, advancePaid, remarks, status, deadline
+      clientId,
+      handledBy,
+      businessName,
+      mobileNo,
+      landlineNo,
+      address,
+      designType,
+      amount,
+      advancePaid,
+      remarks,
+      status,
+      deadline,
+      clientName, // Add clientName for notification
+      handlerId   // Add handlerId for notification
     } = req.body;
 
     // Role-based check: Only 'superadmin' or 'admin' are allowed
     if (role !== "superadmin" && (!superAdminId || role !== "admin")) {
-      console.log("Unauthorized access attempt:", req.user); 
+      console.log("Unauthorized access attempt:", req.user);
       return res
         .status(403)
         .json({ success: false, message: "Unauthorized: Access denied." });
     }
-  
+
     // If the user is a superadmin, use their userId as superAdminId
     const clientSuperAdminId = role === "superadmin" ? createdBy : superAdminId;
 
     const dueAmount = amount - advancePaid;
     const paymentStatus = dueAmount > 0 ? 'Due' : 'Paid';
 
-
     const designJob = new GraphicDesignModel({
       superAdminId: clientSuperAdminId,
-      createdBy, 
+      createdBy,
       clientId,
       handledBy,
       businessName,
@@ -42,11 +116,32 @@ exports.createGraphicDesign = async (req, res) => {
       deadline,
       dueAmount,
       paymentStatus,
+      handlerId // Store handlerId if needed in DB
     });
 
-    await designJob.save();
+    const savedDesignJob = await designJob.save();
 
-    res.status(201).json({ success: true, message: 'Design job created successfully', designJob });
+    // Notification logic
+    if (handlerId && handlerId !== createdBy.toString()) {
+      console.log('Attempting to send notification:', { handlerId, createdBy, clientName });
+      try {
+        await notificationController.createNotification({
+          recipientId: handlerId,
+          senderId: createdBy,
+          type: 'TASK_ASSIGNED',
+          taskId: savedDesignJob._id,
+          taskModel: 'GraphicDesignModel',
+          message: `${creatorName || 'Someone'} has assigned you a graphic design task for ${clientName || 'a client'}`
+        });
+        console.log('Notification created successfully for graphic design job');
+      } catch (notificationError) {
+        console.error('Failed to create notification for graphic design job:', notificationError);
+      }
+    } else {
+      console.log('No notification sent: handlerId missing or same as createdBy', { handlerId, createdBy });
+    }
+
+    res.status(201).json({ success: true, message: 'Design job created successfully', designJob: savedDesignJob });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: 'Error creating design job', error });

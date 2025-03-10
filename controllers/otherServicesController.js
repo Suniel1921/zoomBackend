@@ -1,11 +1,97 @@
-const ClientModel = require("../models/newModel/clientModel");
-const OtherServiceModel = require("../models/newModel/otherServicesModel");
+// const ClientModel = require("../models/newModel/clientModel");
+// const OtherServiceModel = require("../models/newModel/otherServicesModel");
 
+
+// // Create a new Service Controller
+// exports.createOtherServices = async (req, res) => {
+//   try {
+//     const { superAdminId, _id: createdBy, role } = req.user;
+//     const {
+//       clientId,
+//       serviceTypes,
+//       otherServiceDetails,
+//       contactChannel,
+//       deadline,
+//       amount,
+//       paidAmount,
+//       discount,
+//       paymentMethod,
+//       handledBy,
+//       jobStatus,
+//       remarks,
+//       steps, 
+//     } = req.body;
+
+    
+//   // Role-based check: Only 'superadmin' or 'admin' are allowed
+//   if (role !== "superadmin" && (!superAdminId || role !== "admin")) {
+//     console.log("Unauthorized access attempt:", req.user); // Log for debugging
+//     return res.status(403).json({ success: false, message: "Unauthorized: Access denied." });
+//   }
+
+//   // If the user is a superadmin, use their userId as superAdminId
+//   const clientSuperAdminId = role === "superadmin" ? createdBy : superAdminId;
+
+
+//     // Validate and initialize steps if provided
+//     const applicationSteps = steps && Array.isArray(steps) ? steps : [];
+
+//     // Calculate the due amount
+//     const dueAmount = amount - (paidAmount + discount);
+
+//     // Create a new service record
+//     const newService = new OtherServiceModel({
+//       superAdminId: clientSuperAdminId,
+//       createdBy, 
+//       clientId,
+//       serviceTypes,
+//       otherServiceDetails,
+//       contactChannel,
+//       deadline,
+//       amount,
+//       paidAmount,
+//       discount,
+//       paymentMethod,
+//       handledBy,
+//       jobStatus,
+//       remarks,
+//       dueAmount,
+//       paymentStatus: dueAmount > 0 ? 'Due' : 'Paid',
+//       steps: applicationSteps, 
+//     });
+
+//     // Save the service to the database
+//     await newService.save();
+
+//     return res.status(201).json({
+//       success: true,
+//       message: 'Service created successfully',
+//       data: newService,
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({ success: false, message: 'Internal server error', error });
+//   }
+// };
+
+
+
+
+// Get all services for the authenticated superAdmin
+
+
+
+
+
+
+// ******************websocket sending real time notfication****************
+const OtherServiceModel = require("../models/newModel/otherServicesModel");
+const notificationController = require("../controllers/notificationController");
 
 // Create a new Service Controller
 exports.createOtherServices = async (req, res) => {
   try {
-    const { superAdminId, _id: createdBy, role } = req.user;
+    const { superAdminId, _id: createdBy, fullName: creatorName, role } = req.user;
     const {
       clientId,
       serviceTypes,
@@ -19,19 +105,19 @@ exports.createOtherServices = async (req, res) => {
       handledBy,
       jobStatus,
       remarks,
-      steps, 
+      steps,
+      clientName, // Add clientName for notification
+      handlerId   // Add handlerId for notification
     } = req.body;
 
-    
-  // Role-based check: Only 'superadmin' or 'admin' are allowed
-  if (role !== "superadmin" && (!superAdminId || role !== "admin")) {
-    console.log("Unauthorized access attempt:", req.user); // Log for debugging
-    return res.status(403).json({ success: false, message: "Unauthorized: Access denied." });
-  }
+    // Role-based check: Only 'superadmin' or 'admin' are allowed
+    if (role !== "superadmin" && (!superAdminId || role !== "admin")) {
+      console.log("Unauthorized access attempt:", req.user);
+      return res.status(403).json({ success: false, message: "Unauthorized: Access denied." });
+    }
 
-  // If the user is a superadmin, use their userId as superAdminId
-  const clientSuperAdminId = role === "superadmin" ? createdBy : superAdminId;
-
+    // If the user is a superadmin, use their userId as superAdminId
+    const clientSuperAdminId = role === "superadmin" ? createdBy : superAdminId;
 
     // Validate and initialize steps if provided
     const applicationSteps = steps && Array.isArray(steps) ? steps : [];
@@ -42,7 +128,7 @@ exports.createOtherServices = async (req, res) => {
     // Create a new service record
     const newService = new OtherServiceModel({
       superAdminId: clientSuperAdminId,
-      createdBy, 
+      createdBy,
       clientId,
       serviceTypes,
       otherServiceDetails,
@@ -57,16 +143,37 @@ exports.createOtherServices = async (req, res) => {
       remarks,
       dueAmount,
       paymentStatus: dueAmount > 0 ? 'Due' : 'Paid',
-      steps: applicationSteps, 
+      steps: applicationSteps,
+      handlerId // Store handlerId if needed in DB
     });
 
     // Save the service to the database
-    await newService.save();
+    const savedService = await newService.save();
+
+    // Notification logic
+    if (handlerId && handlerId !== createdBy.toString()) {
+      console.log('Attempting to send notification:', { handlerId, createdBy, clientName });
+      try {
+        await notificationController.createNotification({
+          recipientId: handlerId,
+          senderId: createdBy,
+          type: 'TASK_ASSIGNED',
+          taskId: savedService._id,
+          taskModel: 'OtherServiceModel',
+          message: `${creatorName || 'Someone'} has assigned you an other service task for ${clientName || 'a client'}`
+        });
+        console.log('Notification created successfully for other service');
+      } catch (notificationError) {
+        console.error('Failed to create notification for other service:', notificationError);
+      }
+    } else {
+      console.log('No notification sent: handlerId missing or same as createdBy', { handlerId, createdBy });
+    }
 
     return res.status(201).json({
       success: true,
       message: 'Service created successfully',
-      data: newService,
+      data: savedService,
     });
   } catch (error) {
     console.error(error);
@@ -76,8 +183,6 @@ exports.createOtherServices = async (req, res) => {
 
 
 
-
-// Get all services for the authenticated superAdmin
 
 exports.getAllOtherServices = async (req, res) => {
   const { _id, role, superAdminId } = req.user; 

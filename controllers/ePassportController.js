@@ -6,8 +6,9 @@ const notificationController = require('../controllers/notificationController');
 
 exports.createEpassport = async (req, res) => {
   try {
-    const { superAdminId, _id: createdBy, name: creatorName, role } = req.user;
+    const { superAdminId, _id: createdBy, fullName: creatorName, role } = req.user;
     const { handlerId, handledBy, clientName, ...otherData } = req.body;
+    console.log('req body is ', req.user)
 
     if (!["superadmin", "admin"].includes(role)) {
       return res.status(403).json({ success: false, message: "Unauthorized access." });
@@ -51,7 +52,7 @@ exports.createEpassport = async (req, res) => {
 
 exports.updateEpassport = async (req, res) => {
   try {
-    const { _id: userId, role, superAdminId, name: updaterName } = req.user;
+    const { _id: userId, role, superAdminId, fullName: updaterName } = req.user;
     const { handlerId, handledBy, clientName } = req.body;
     
     const query = role === "superadmin" ? 

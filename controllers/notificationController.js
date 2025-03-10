@@ -3,6 +3,7 @@ const NotificationModel = require('../models/newModel/notificationModel');
 
 exports.createNotification = async ({ recipientId, senderId, type, taskId, taskModel, message }) => {
   try {
+    console.log('Creating notification:', { recipientId, senderId, type, taskId, taskModel, message });
     const notification = new NotificationModel({
       recipient: recipientId,
       sender: senderId,
@@ -13,13 +14,12 @@ exports.createNotification = async ({ recipientId, senderId, type, taskId, taskM
     });
 
     await notification.save();
+    console.log('Notification saved:', notification._id);
 
-    // Populate sender information before sending the notification
     const populatedNotification = await NotificationModel.findById(notification._id)
-      .populate('sender', 'name')
+      .populate('sender', 'fullName')
       .lean();
 
-    // Send real-time notification with populated data
     webSocketService.sendNotification(recipientId, {
       type: 'NEW_NOTIFICATION',
       data: populatedNotification
@@ -32,14 +32,14 @@ exports.createNotification = async ({ recipientId, senderId, type, taskId, taskM
   }
 };
 
+// Other methods (getNotifications, markAsRead, deleteNotification) remain unchanged
 exports.getNotifications = async (req, res) => {
   try {
     const notifications = await NotificationModel.find({ recipient: req.user._id })
-      .populate('sender', 'name')
+      .populate('sender', 'fullName')
       .sort({ createdAt: -1 })
-      .limit(50)
+      .limit(20)
       .lean();
-
     res.status(200).json({ success: true, notifications });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -52,7 +52,6 @@ exports.markAsRead = async (req, res) => {
       { recipient: req.user._id, read: false },
       { read: true }
     );
-
     res.status(200).json({ success: true, message: 'Notifications marked as read' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

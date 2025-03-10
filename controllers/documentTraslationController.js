@@ -1,7 +1,89 @@
+// const documentTranslationModel = require("../models/newModel/documentTranslationModel");
+
+// exports.createDocumentTranslation = async (req, res) => {
+//   const { superAdminId, _id: createdBy, role } = req.user;
+//   const {
+//     clientId,
+//     steps,
+//     sourceLanguage,
+//     targetLanguage,
+//     nameInTargetScript = "",
+//     pages,
+//     amount,
+//     paidAmount,
+//     paymentStatus,
+//     paymentMethod,
+//     handledBy,
+//     deadline,
+//     translationStatus,
+//     deliveryType,
+//     notes,
+//   } = req.body;
+
+//   if (role !== "superadmin" && (!superAdminId || role !== "admin")) {
+//     console.log("Unauthorized access attempt:", req.user);
+//     return res
+//       .status(403)
+//       .json({ success: false, message: "Unauthorized: Access denied." });
+//   }
+
+//   const clientSuperAdminId = role === "superadmin" ? createdBy : superAdminId;
+//   const applicationSteps = steps && Array.isArray(steps) ? steps : [];
+
+//   try {
+//     const newTranslation = new documentTranslationModel({
+//       superAdminId: clientSuperAdminId,
+//       createdBy,
+//       clientId,
+//       steps: applicationSteps,
+//       sourceLanguage,
+//       targetLanguage,
+//       nameInTargetScript: nameInTargetScript || "",
+//       pages,
+//       amount,
+//       paidAmount,
+//       paymentStatus,
+//       paymentMethod: paymentStatus === "Paid" ? paymentMethod : undefined,
+//       handledBy,
+//       deadline,
+//       translationStatus,
+//       deliveryType,
+//       notes: notes || "",
+//     });
+
+//     await newTranslation.save();
+//     res.status(201).json({
+//       success: true,
+//       message: "Document translation created successfully",
+//       newTranslation,
+//     });
+//   } catch (error) {
+//     console.error("Error creating document translation:", error);
+//     res.status(500).json({
+//       success: false,
+//       message: "Error creating document translation",
+//       error: error.message,
+//     });
+//   }
+// };
+
+
+// GET All Document Translations for Authenticated Super Admin
+
+
+
+
+
+
+
+
+
+
 const documentTranslationModel = require("../models/newModel/documentTranslationModel");
+const notificationController = require("../controllers/notificationController");
 
 exports.createDocumentTranslation = async (req, res) => {
-  const { superAdminId, _id: createdBy, role } = req.user;
+  const { superAdminId, _id: createdBy, fullName: creatorName, role } = req.user;
   const {
     clientId,
     steps,
@@ -18,6 +100,8 @@ exports.createDocumentTranslation = async (req, res) => {
     translationStatus,
     deliveryType,
     notes,
+    handlerId, // Add handlerId
+    clientName // Add clientName for notification
   } = req.body;
 
   if (role !== "superadmin" && (!superAdminId || role !== "admin")) {
@@ -49,13 +133,35 @@ exports.createDocumentTranslation = async (req, res) => {
       translationStatus,
       deliveryType,
       notes: notes || "",
+      handlerId // Store handlerId if needed in DB
     });
 
-    await newTranslation.save();
+    const savedTranslation = await newTranslation.save();
+
+    // Notification logic
+    if (handlerId && handlerId !== createdBy.toString()) {
+      console.log('Attempting to send notification:', { handlerId, createdBy, clientName });
+      try {
+        await notificationController.createNotification({
+          recipientId: handlerId,
+          senderId: createdBy,
+          type: 'TASK_ASSIGNED',
+          taskId: savedTranslation._id,
+          taskModel: 'documentTranslationModel',
+          message: `${creatorName || 'Someone'} has assigned you a document translation task for ${clientName || 'a client'}`
+        });
+        console.log('Notification created successfully for document translation');
+      } catch (notificationError) {
+        console.error('Failed to create notification for document translation:', notificationError);
+      }
+    } else {
+      console.log('No notification sent: handlerId missing or same as createdBy', { handlerId, createdBy });
+    }
+
     res.status(201).json({
       success: true,
       message: "Document translation created successfully",
-      newTranslation,
+      newTranslation: savedTranslation,
     });
   } catch (error) {
     console.error("Error creating document translation:", error);
@@ -68,7 +174,7 @@ exports.createDocumentTranslation = async (req, res) => {
 };
 
 
-// GET All Document Translations for Authenticated Super Admin
+
 
 exports.getAllDocumentTranslation = async (req, res) => {
   const { _id, role, superAdminId } = req.user; // Extract user ID and role from authenticated user

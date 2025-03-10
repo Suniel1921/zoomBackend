@@ -24,7 +24,7 @@ const notificationSchema = new mongoose.Schema({
   taskModel: {
     type: String,
     required: true,
-    enum: ['ePassportModel'] // Add other models as needed
+    enum: ['ePassportModel', 'ApplicationModel', 'japanVisitApplicationModel', 'documentTranslationModel', 'OtherServiceModel', 'GraphicDesignModel'] // Add other models as needed
   },
   message: {
     type: String,
