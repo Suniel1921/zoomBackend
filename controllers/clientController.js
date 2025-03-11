@@ -167,6 +167,7 @@ exports.addClient = [
         timeline,
         dateJoined: dateJoined || new Date(),
         profilePhoto: profilePhotoUrl,
+        uniqueClientId: nanoid(), // Ensure unique ID is generated
       });
 
       try {
@@ -222,6 +223,8 @@ exports.getClients = async (req, res) => {
     });
   }
 };
+
+
 
 /**
  * Retrieves a client by ID
