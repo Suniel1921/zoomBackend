@@ -26,10 +26,16 @@ const clientSchema = new mongoose.Schema({
       enum: ['active', 'inactive'],
       default: 'active'
     },
+    // email: {
+    //   type: String,
+    //   required: false,
+    //   // unique: true,
+    // },
     email: {
       type: String,
-      required: false,
-      // unique: true,
+      required: true,
+      unique: true,
+      index: true //for better performance
     },
 
     password: {
