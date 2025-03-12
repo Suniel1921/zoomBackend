@@ -233,11 +233,10 @@ exports.getGraphicDesignById = async (req, res) => {
   }
 };
 
-
 exports.updateGraphicDesign = async (req, res) => {
   try {
-    const { amount, advancePaid } = req.body;
-    const { _id: adminId, role, superAdminId } = req.user; 
+    const { amount, advancePaid, paymentStatus } = req.body;
+    const { _id: adminId, role, superAdminId } = req.user;
     const { id } = req.params;
 
     // Validate request body
@@ -266,7 +265,6 @@ exports.updateGraphicDesign = async (req, res) => {
 
     // Role-based ownership checks
     if (role === "superadmin") {
-      // Superadmin can access jobs linked to their ID
       if (
         !graphicDesign.superAdminId ||
         graphicDesign.superAdminId.toString() !== adminId.toString()
@@ -277,7 +275,6 @@ exports.updateGraphicDesign = async (req, res) => {
         });
       }
     } else if (role === "admin") {
-      // Admin can only access jobs linked to their superAdminId
       if (
         !graphicDesign.superAdminId ||
         graphicDesign.superAdminId.toString() !== superAdminId?.toString()
@@ -292,10 +289,13 @@ exports.updateGraphicDesign = async (req, res) => {
     // Calculate the dueAmount
     const dueAmount = amount - advancePaid;
 
+    // Ensure paymentStatus is consistent with dueAmount (just in case frontend sends inconsistent data)
+    const updatedPaymentStatus = dueAmount === 0 ? "Paid" : "Due";
+
     // Update the graphic design job
     const updatedGraphicDesign = await GraphicDesignModel.findByIdAndUpdate(
       id,
-      { ...req.body, dueAmount },
+      { ...req.body, dueAmount, paymentStatus: updatedPaymentStatus },
       { new: true }
     );
 
