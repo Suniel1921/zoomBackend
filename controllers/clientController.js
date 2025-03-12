@@ -167,7 +167,6 @@ exports.addClient = [
         timeline,
         dateJoined: dateJoined || new Date(),
         profilePhoto: profilePhotoUrl,
-        uniqueClientId: nanoid(), // Ensure unique ID is generated
       });
 
       try {
@@ -196,6 +195,9 @@ exports.addClient = [
     }
   },
 ];
+
+
+
 
 /**
  * Retrieves all clients based on user role
