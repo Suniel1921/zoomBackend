@@ -34,7 +34,7 @@ exports.createEpassport = async (req, res) => {
         type: 'TASK_ASSIGNED',
         taskId: epassport._id,
         taskModel: 'ePassportModel',
-        message: `${creatorName} has assigned you an ePassport task for ${clientName}`
+        message: `${creatorName || 'SomeOne'}  has assigned you an ePassport task for ${clientName}`
       });
     }
 
