@@ -233,8 +233,6 @@ exports.getClients = async (req, res) => {
  */
 exports.getClientById = async (req, res) => {
   try {
-    const { _id: superAdminId, role } = req.user;
-    // checkAuthorization(role, superAdminId, superAdminId);
 
     const client = await ClientModel.findById(req.params.id).lean();
     if (!client) {
