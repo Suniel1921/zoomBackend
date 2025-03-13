@@ -144,7 +144,7 @@ exports.addClient = [
       }
 
       const profilePhotoUrl = await uploadProfilePhoto(req.files?.[0]);
-      const hashedPassword = await bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
+      const hashedPassword = await bcrypt.hash(password, BCRYPT_SALT_ROUNDS);cli
       const clientSuperAdminId = role === 'superadmin' ? createdBy : superAdminId;
 
       const newClient = await ClientModel.create({
@@ -234,7 +234,7 @@ exports.getClients = async (req, res) => {
 exports.getClientById = async (req, res) => {
   try {
     const { _id: superAdminId, role } = req.user;
-    checkAuthorization(role, superAdminId, superAdminId);
+    // checkAuthorization(role, superAdminId, superAdminId);
 
     const client = await ClientModel.findById(req.params.id).lean();
     if (!client) {
