@@ -144,7 +144,7 @@ exports.addClient = [
       }
 
       const profilePhotoUrl = await uploadProfilePhoto(req.files?.[0]);
-      const hashedPassword = await bcrypt.hash(password, BCRYPT_SALT_ROUNDS);cli
+      const hashedPassword = await bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
       const clientSuperAdminId = role === 'superadmin' ? createdBy : superAdminId;
 
       const newClient = await ClientModel.create({
@@ -252,7 +252,7 @@ exports.getClientById = async (req, res) => {
 };
 
 /**
- * Updates an existing client
+ * Updates an existing client (this is controller is also used in our zoom app)
  */
 exports.updateClient = [
   upload.single('profilePhoto'),

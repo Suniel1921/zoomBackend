@@ -11,8 +11,7 @@ router.use(requireLogin);
 
 
 // Audit log routes
-router.get('/get-audit-log', controller.getLogs);
-router.get('/exports-logs', controller.exportLogs);
+router.get('/get-audit-log', controller.getLogs); 
 router.delete('/clear-all-logs', controller.clearAllLogs);
 // router.delete('/clear-old-logs', controller.clearOldLogs);
 
