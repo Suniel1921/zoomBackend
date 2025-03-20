@@ -65,6 +65,7 @@ app.use(logMiddleware);
 dbConnection();
 
 
+
 // Routes
 app.use('/api/v1/auth', authRoute);
 app.use('/api/v1/client', clientRoute);

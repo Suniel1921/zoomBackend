@@ -1,5 +1,5 @@
-const AdminModel = require("../models/newModel/adminModel");
-const SuperAdminModel = require("../models/newModel/superAdminModel");
+const AdminModel = require('../models/newModel/adminModel');
+const SuperAdminModel = require('../models/newModel/superAdminModel');
 const { ConversationModel, GroupModel } = require('../models/newModel/chatModel');
 const webSocketService = require('../config/webSocketService');
 
@@ -54,21 +54,31 @@ const getGroupChatHistory = async (req, res) => {
 };
 
 const markMessagesAsRead = async (req, res) => {
-  const { chatId, isGroup, otherUserId } = req.body;
+  const { chatId, isGroup } = req.body;
   const userId = req.user._id;
 
   try {
     if (isGroup) {
-      await GroupModel.updateMany(
-        { _id: chatId, 'messages.from': { $ne: userId } },
-        { $set: { 'messages.$[].read': true } }
-      );
+      const group = await GroupModel.findById(chatId);
+      if (!group || !group.members.includes(userId)) {
+        return res.status(403).json({ success: false, error: 'Not authorized' });
+      }
+      group.messages = group.messages.map(msg => ({
+        ...msg,
+        read: msg.from.toString() !== userId ? true : msg.read,
+      }));
+      await group.save();
     } else {
-      const participants = [userId, otherUserId].sort();
-      await ConversationModel.updateMany(
-        { participants, 'messages.from': { $ne: userId } },
-        { $set: { 'messages.$[].read': true } }
-      );
+      const participants = [userId, chatId].sort();
+      const conversation = await ConversationModel.findOne({ participants });
+      if (!conversation) {
+        return res.status(404).json({ success: false, error: 'Conversation not found' });
+      }
+      conversation.messages = conversation.messages.map(msg => ({
+        ...msg,
+        read: msg.from.toString() !== userId ? true : msg.read,
+      }));
+      await conversation.save();
     }
 
     res.json({ success: true });
@@ -103,7 +113,7 @@ const createGroup = async (req, res) => {
           type: 'GROUP_CREATED',
           group: { _id: group._id, name: group.name },
           createdBy: createdBy,
-          createdByName: creator.name
+          createdByName: creator.name,
         }));
       }
     });
@@ -134,5 +144,9 @@ module.exports = {
   getGroupChatHistory,
   createGroup,
   getGroupList,
-  markMessagesAsRead
+  markMessagesAsRead,
 };
+
+
+
+
