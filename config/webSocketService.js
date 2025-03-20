@@ -6,7 +6,7 @@ const SuperAdminModel = require('../models/newModel/superAdminModel');
 
 class WebSocketService {
   constructor() {
-    this.clients = new Map(); // Map<userId: string, WebSocket>
+    this.clients = new Map(); // userId: WebSocket
   }
 
   initialize(server) {
@@ -16,23 +16,26 @@ class WebSocketService {
       try {
         const url = new URL(req.url, 'ws://localhost');
         const token = url.searchParams.get('token');
+
         if (!token) throw new Error('No token provided');
 
         const decoded = jwt.verify(token, process.env.SECRET_KEY || 'your-secret-key');
         const userId = decoded._id.toString();
+        const userRole = decoded.role;
+
         this.clients.set(userId, ws);
 
-        // Send online users to the new client
+        // Send existing online users to the new client
         const onlineUsers = Array.from(this.clients.keys());
         this.sendToClient(ws, { type: 'ONLINE_USERS', users: onlineUsers });
 
-        // Notify others of new connection
+        // Notify other clients of the new connection
         this.broadcast({ type: 'USER_ONLINE', userId }, userId);
 
         ws.on('message', async (message) => {
           try {
             const data = JSON.parse(message.toString());
-            await this.handleMessage(data, userId, decoded.role);
+            await this.handleMessage(data, userId, userRole); // Pass userRole
           } catch (error) {
             console.error(`Error processing message from ${userId}:`, error);
             this.sendToClient(ws, { type: 'ERROR', message: 'Invalid message format' });
@@ -75,6 +78,7 @@ class WebSocketService {
 
   async handleMessage(data, senderId, senderRole) {
     const Model = senderRole === 'superadmin' ? SuperAdminModel : AdminModel;
+
     if (!Model) {
       console.error('Invalid sender role:', senderRole);
       return;
@@ -104,14 +108,17 @@ class WebSocketService {
 
     try {
       const participants = [fromId, toId].sort();
-      let conversation = await ConversationModel.findOne({ participants }) ||
-        new ConversationModel({ participants });
+      let conversation = await ConversationModel.findOne({ participants });
+
+      if (!conversation) {
+        conversation = new ConversationModel({ participants });
+      }
 
       const message = {
         from: fromId,
         content,
         timestamp: new Date(),
-        read: this.clients.has(toId), // Mark as read if recipient is online
+        read: this.clients.has(toId), //Mark as read if recipient is online
       };
 
       conversation.messages.push(message);
@@ -120,6 +127,7 @@ class WebSocketService {
 
       const newMessage = savedConversation.messages[savedConversation.messages.length - 1];
       const sender = await FromModel.findById(fromId).select('name superAdminPhoto').lean();
+
       const populatedMessage = {
         _id: newMessage._id.toString(),
         from: { _id: fromId, name: sender.name, superAdminPhoto: sender.superAdminPhoto || null },
@@ -128,17 +136,18 @@ class WebSocketService {
         read: newMessage.read,
       };
 
-      [fromId, toId].forEach(id => {
-        const ws = this.clients.get(id);
-        if (ws) this.sendToClient(ws, {
-          type: 'PRIVATE_MESSAGE',
-          conversationId: savedConversation._id.toString(),
-          message: populatedMessage,
-        });
+      [fromId, toId].forEach(userId => {
+        const ws = this.clients.get(userId);
+        if (ws) {
+          this.sendToClient(ws, {
+            type: 'PRIVATE_MESSAGE',
+            conversationId: savedConversation._id.toString(),
+            message: populatedMessage,
+          });
+        }
       });
     } catch (error) {
       console.error('Error handling private message:', error);
-      throw error;
     }
   }
 
@@ -156,7 +165,7 @@ class WebSocketService {
         from: fromId,
         content,
         timestamp: new Date(),
-        read: false, // Initially unread for all except sender
+        read: false, //Initially unread for all except sender
       };
 
       group.messages.push(message);
@@ -165,6 +174,7 @@ class WebSocketService {
 
       const newMessage = savedGroup.messages[savedGroup.messages.length - 1];
       const sender = await FromModel.findById(fromId).select('name superAdminPhoto').lean();
+
       const populatedMessage = {
         _id: newMessage._id.toString(),
         from: { _id: fromId, name: sender.name, superAdminPhoto: sender.superAdminPhoto || null },
@@ -175,15 +185,16 @@ class WebSocketService {
 
       group.members.forEach(userId => {
         const ws = this.clients.get(userId.toString());
-        if (ws) this.sendToClient(ws, {
-          type: 'GROUP_MESSAGE',
-          groupId,
-          message: populatedMessage,
-        });
+        if (ws) {
+          this.sendToClient(ws, {
+            type: 'GROUP_MESSAGE',
+            groupId,
+            message: populatedMessage,
+          });
+        }
       });
     } catch (error) {
       console.error('Error handling group message:', error);
-      throw error;
     }
   }
 }

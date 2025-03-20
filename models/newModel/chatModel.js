@@ -28,5 +28,3 @@ const GroupModel = mongoose.model('GroupModel', groupSchema);
 module.exports = { ConversationModel, GroupModel };
 
 
-
-

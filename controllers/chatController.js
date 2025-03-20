@@ -42,6 +42,7 @@ const getGroupChatHistory = async (req, res) => {
     if (!group) {
       return res.status(404).json({ success: false, error: 'Group not found' });
     }
+
     if (!group.members.includes(userId)) {
       return res.status(403).json({ success: false, error: 'Not authorized to view this group' });
     }
@@ -63,6 +64,7 @@ const markMessagesAsRead = async (req, res) => {
       if (!group || !group.members.includes(userId)) {
         return res.status(403).json({ success: false, error: 'Not authorized' });
       }
+
       group.messages = group.messages.map(msg => ({
         ...msg,
         read: msg.from.toString() !== userId ? true : msg.read,
@@ -71,9 +73,11 @@ const markMessagesAsRead = async (req, res) => {
     } else {
       const participants = [userId, chatId].sort();
       const conversation = await ConversationModel.findOne({ participants });
+
       if (!conversation) {
         return res.status(404).json({ success: false, error: 'Conversation not found' });
       }
+
       conversation.messages = conversation.messages.map(msg => ({
         ...msg,
         read: msg.from.toString() !== userId ? true : msg.read,
@@ -91,6 +95,7 @@ const markMessagesAsRead = async (req, res) => {
 const createGroup = async (req, res) => {
   const { name, members } = req.body;
   const createdBy = req.user._id;
+  const userRole = req.user.role;  // Add this line
 
   if (!name || !members || !Array.isArray(members)) {
     return res.status(400).json({ success: false, error: 'Name and members are required' });
@@ -102,10 +107,12 @@ const createGroup = async (req, res) => {
       members: [...new Set([...members, createdBy])],
       createdBy,
     });
+
     await group.save();
 
-    const FromModel = req.user.role === 'superadmin' ? SuperAdminModel : AdminModel;
+    const FromModel = userRole === 'superadmin' ? SuperAdminModel : AdminModel;  // Use userRole
     const creator = await FromModel.findById(createdBy).select('name').lean();
+
     group.members.forEach(userId => {
       const ws = webSocketService.clients.get(userId.toString());
       if (ws && ws.readyState === WebSocket.OPEN) {
@@ -146,7 +153,3 @@ module.exports = {
   getGroupList,
   markMessagesAsRead,
 };
-
-
-
-

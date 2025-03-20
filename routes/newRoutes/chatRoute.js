@@ -12,3 +12,4 @@ router.post('/markAsRead', requireLogin, chatController.markMessagesAsRead);
 module.exports = router;
 
 
+
