@@ -7,7 +7,7 @@ const {requireLogin} = require ('../../middleware/newMiddleware/authMiddleware')
 const router = express.Router();
 
 // Protect all audit log routes with authentication and admin access
-// router.use(requireLogin);
+router.use(requireLogin);
 
 
 // Audit log routes
