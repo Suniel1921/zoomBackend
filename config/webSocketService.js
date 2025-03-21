@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const { ConversationModel, GroupModel } = require('../models/newModel/chatModel');
 const AdminModel = require('../models/newModel/adminModel');
 const SuperAdminModel = require('../models/newModel/superAdminModel');
+require('dotenv').config();
 
 class WebSocketService {
     constructor() {
@@ -14,12 +15,13 @@ class WebSocketService {
 
         this.wss.on('connection', async (ws, req) => {
             try {
-                const url = new URL(req.url, 'ws://localhost');
+                const url = new URL(req.url, process.env.WS_URL || 'ws://localhost');
+                console.log(url)
                 const token = url.searchParams.get('token');
 
                 if (!token) throw new Error('No token provided');
 
-                const decoded = jwt.verify(token, process.env.SECRET_KEY || 'your-secret-key');
+                const decoded = jwt.verify(token, process.env.SECRET_KEY);
                 const userId = decoded._id.toString();
                 const userRole = decoded.role;
 
