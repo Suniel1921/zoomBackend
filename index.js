@@ -59,7 +59,7 @@ app.use(
 );
 
 // Custom middleware for logging
-app.use(logMiddleware);
+// app.use(logMiddleware);
 
 // Database Connection
 dbConnection();

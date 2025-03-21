@@ -3,7 +3,8 @@ const AuditLog = require('../models/newModel/auditLogModel');
 // Add a new log
 exports.addLog = async (action, userType, userId, userName, ipAddress, details = {}) => {
   try {
-    if (!action || !userName || !ipAddress) {
+    if (!action || !userName) {
+    // if (!action || !userName || !ipAddress) {
       console.error('Missing required audit log fields:', { action, userName, ipAddress });
       return;
     }
