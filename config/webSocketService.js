@@ -16,7 +16,7 @@ class WebSocketService {
         this.wss.on('connection', async (ws, req) => {
             try {
                 const url = new URL(req.url, process.env.WS_URL || 'ws://localhost');
-                console.log(url)
+                // console.log(url)
                 const token = url.searchParams.get('token');
 
                 if (!token) throw new Error('No token provided');
@@ -203,38 +203,43 @@ class WebSocketService {
 
     async handleTyping(senderId, chatId, chatType) {
         try {
+            if (!chatId || !chatType) {
+                console.warn(`Invalid TYPING event: senderId=${senderId}, chatId=${chatId}, chatType=${chatType}`);
+                return;
+            }
+            console.log(`Processing TYPING: senderId=${senderId}, chatId=${chatId}, chatType=${chatType}`);
             if (chatType === 'private') {
                 const participants = chatId.split('-');
                 const recipientId = participants.find(id => id !== senderId);
+                if (!recipientId) {
+                    console.warn(`Invalid private chatId format: ${chatId}`);
+                    return;
+                }
                 const ws = this.clients.get(recipientId);
                 if (ws) {
-                    this.sendToClient(ws, {
-                        type: 'TYPING',
-                        chatId,
-                        chatType,
-                        userId: senderId,
-                    });
+                    this.sendToClient(ws, { type: 'TYPING', chatId, chatType, userId: senderId });
+                } else {
+                    console.log(`Recipient ${recipientId} not connected`);
                 }
             } else if (chatType === 'group') {
                 const group = await GroupModel.findById(chatId);
-                if (!group) return;
-
+                if (!group) {
+                    console.warn(`Group not found: ${chatId}`);
+                    return;
+                }
                 group.members.forEach(userId => {
                     if (userId.toString() !== senderId) {
                         const ws = this.clients.get(userId.toString());
                         if (ws) {
-                            this.sendToClient(ws, {
-                                type: 'TYPING',
-                                chatId,
-                                chatType,
-                                userId: senderId,
-                            });
+                            this.sendToClient(ws, { type: 'TYPING', chatId, chatType, userId: senderId });
                         }
                     }
                 });
+            } else {
+                console.warn(`Unsupported chatType: ${chatType}`);
             }
         } catch (error) {
-            console.error('Error handling typing event:', error);
+            console.error(`Error in handleTyping for senderId=${senderId}:`, error.message);
         }
     }
 }

@@ -56,6 +56,143 @@ exports.register = async (req, res) => {
 
 
 
+// exports.login = async (req, res) => {
+//   try {
+//     const { email, password } = req.body;
+
+//     if (!email || !password) {
+//       return res.status(400).json({ success: false, message: "Email and password are required" });
+//     }
+
+//     // List of models to check, in order of precedence
+//     const models = [
+//       { model: SuperAdminModel, role: "superadmin", include: {} },
+//       { model: AdminModel, role: "admin", include: { superAdminId: 1 } },
+//       { model: ClientModel, role: "client", include: { superAdminId: 1 } },
+//       { model: authModel, role: "user", include: {} }, 
+//     ];
+
+//     let user = null;
+//     let role = null;
+//     let additionalData = {};
+
+//     // Check each model for the user
+//     for (const { model, role: modelRole, include } of models) {
+//       user = await model.findOne({ email }).select({ ...include, password: 1, name: 1, email: 1, phone: 1, profilePhoto: 1 });
+//       if (user) {
+//         role = modelRole;
+//         additionalData = include;
+//         break;
+//       }
+//     }
+
+//     if (!user) {
+//       // Log failed login attempt (user not found)
+//       await AuditLogController.addLog(
+//         "failed_login", // Action
+//         "unknown",      // User type (unknown since user doesn't exist)
+//         null,           // User ID
+//         email,          // Use email as the identifier
+//         req.ip,         // IP address
+//         { message: "User not found" } // Additional details
+//       );
+
+//       return res.status(401).json({ success: false, message: "Invalid email or password" });
+//     }
+
+//     // Verify password
+//     const isPasswordValid = await bcrypt.compare(password, user.password);
+//     if (!isPasswordValid) {
+//       // Log failed login attempt (invalid password)
+//       await AuditLogController.addLog(
+//         "failed_login", // Action
+//         role,           // User type (e.g., admin, superadmin, etc.)
+//         user._id,       // User ID
+//         user.name || user.email, // User name or email
+//         req.ip,         // IP address
+//         { message: "Invalid password" } // Additional details
+//       );
+
+//       return res.status(401).json({ success: false, message: "Invalid email or password" });
+//     }
+
+//     // Update last login time for admin
+//     if (role === 'admin') {
+//       console.log(`Updating last login for admin: ${user._id}`);
+//       await AdminModel.findByIdAndUpdate(user._id, { lastLogin: new Date() });
+//       console.log(`Last login updated for admin: ${user._id}`);
+//     }
+
+//     // Log successful login
+//     await AuditLogController.addLog(
+//       "login",          // Action
+//       role,             // User type (e.g., admin, superadmin, etc.)
+//       user._id,         // User ID
+//       user.name || user.email, // User name or email
+//       req.ip,           // IP address
+//       { message: "Login successful" } // Additional details
+//     );
+
+//     // Prepare JWT payload
+//     const payload = {
+//       _id: user._id,
+//       email: user.email,
+//       role,
+//       ...(user.superAdminId && { superAdminId: user.superAdminId }), 
+//     };
+
+//     // Log the payload for debugging
+//     console.log('JWT Payload:', payload);
+
+//     // Generate JWT token
+//     const token = JWT.sign(payload, process.env.SECRET_KEY, { expiresIn: "7d" });
+
+//     // Return user data with the token
+//     return res.status(200).json({
+//       success: true,
+//       message: "Login successful",
+//       user: {
+//         id: user._id,
+//         fullName: user.name || user.email, 
+//         email: user.email,
+//         role,
+//         phone: user.phone || null,
+//         profilePhoto: user.profilePhoto || null,
+//         ...additionalData, // Include additional fields like `superAdminId`
+//       },
+//       token,
+//     });
+//   } catch (error) {
+//     console.error("Login Error:", error);
+
+//     // Log the error
+//     await AuditLogController.addLog(
+//       "error",          // Action
+//       "system",         // User type (system error)
+//       null,             // User ID
+//       "Login Controller", // Identifier
+//       req.ip,           // IP address
+//       { error: error.message } // Additional details
+//     );
+
+//     return res.status(500).json({
+//       success: false,
+//       message: "An error occurred during login. Please try again later.",
+//     });
+//   }
+// };
+
+
+
+
+
+
+
+
+
+// from this controller removed ip address for app (apple reject due to tracking ip aderss )
+
+
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -93,7 +230,7 @@ exports.login = async (req, res) => {
         "unknown",      // User type (unknown since user doesn't exist)
         null,           // User ID
         email,          // Use email as the identifier
-        req.ip,         // IP address
+        null,           // IP address removed
         { message: "User not found" } // Additional details
       );
 
@@ -109,7 +246,7 @@ exports.login = async (req, res) => {
         role,           // User type (e.g., admin, superadmin, etc.)
         user._id,       // User ID
         user.name || user.email, // User name or email
-        req.ip,         // IP address
+        null,           // IP address removed
         { message: "Invalid password" } // Additional details
       );
 
@@ -129,7 +266,7 @@ exports.login = async (req, res) => {
       role,             // User type (e.g., admin, superadmin, etc.)
       user._id,         // User ID
       user.name || user.email, // User name or email
-      req.ip,           // IP address
+      null,             // IP address removed
       { message: "Login successful" } // Additional details
     );
 
@@ -171,7 +308,7 @@ exports.login = async (req, res) => {
       "system",         // User type (system error)
       null,             // User ID
       "Login Controller", // Identifier
-      req.ip,           // IP address
+      null,             // IP address removed
       { error: error.message } // Additional details
     );
 
@@ -181,6 +318,19 @@ exports.login = async (req, res) => {
     });
   }
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
