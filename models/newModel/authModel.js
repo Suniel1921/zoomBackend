@@ -16,6 +16,7 @@ const authSchema = new mongoose.Schema({
     nationality: {
       type: String,
       // required: [true, 'Nationality is required'],
+      required: false,
     },
     email: {
       type: String,

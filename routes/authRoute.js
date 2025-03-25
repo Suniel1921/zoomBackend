@@ -27,3 +27,6 @@ router.post('/verifyOTP', controller.verifyOTP); // This route is for mobile app
 
 
 module.exports = router;
+
+
+
