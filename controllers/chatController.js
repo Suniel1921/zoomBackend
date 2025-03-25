@@ -9,21 +9,25 @@ const getPrivateChatHistory = async (req, res) => {
   const userRole = req.user.role;
 
   try {
-    const participants = [userId, otherUserId].sort();
-    const conversation = await ConversationModel.findOne({ participants })
-      .populate({
-        path: 'messages.from',
-        select: 'name superAdminPhoto',
-        model: userRole === 'superadmin' ? SuperAdminModel : AdminModel,
+      const participants = [userId, otherUserId].sort();
+      const conversation = await ConversationModel.findOne({
+          participants,
+          type: 'admin_to_admin'  //Ensure we only fetch admin-to-admin chats
       })
-      .lean();
+          .populate({
+              path: 'messages.from',
+              select: 'name superAdminPhoto',
+              model: userRole === 'superadmin' ? SuperAdminModel : AdminModel,
+          })
+          .lean();
 
-    res.json({ success: true, messages: conversation?.messages || [] });
+      res.json({ success: true, messages: conversation?.messages || [] });
   } catch (error) {
-    console.error('Error fetching private chat history:', error);
-    res.status(500).json({ success: false, error: 'Failed to fetch chat history' });
+      console.error('Error fetching private chat history:', error);
+      res.status(500).json({ success: false, error: 'Failed to fetch chat history' });
   }
 };
+
 
 const getGroupChatHistory = async (req, res) => {
   const { groupId } = req.body;
@@ -146,10 +150,41 @@ const getGroupList = async (req, res) => {
   }
 };
 
+
+//new api for fetching clients msg
+const getClientChatHistory = async (req, res) => {
+  const { clientId } = req.body;
+  const userId = req.user._id;
+  const userRole = req.user.role;
+
+  try {
+      const conversation = await ConversationModel.findOne({
+          type: 'client_to_admin',
+          clientId: clientId
+      })
+          .populate({
+              path: 'messages.from',
+              select: 'name superAdminPhoto fullName profilePhoto',
+              model: userRole === 'superadmin' ? SuperAdminModel : ClientModel  // Use appropriate model here
+          })
+          .lean();
+      // console.log(conversation)
+      res.json({ success: true, messages: conversation?.messages || [] });
+  } catch (error) {
+      console.error('Error fetching client chat history:', error);
+      res.status(500).json({ success: false, error: 'Failed to fetch chat history' });
+  }
+};
+
 module.exports = {
   getPrivateChatHistory,
   getGroupChatHistory,
   createGroup,
   getGroupList,
   markMessagesAsRead,
+  getClientChatHistory,   //new
 };
+
+
+
+

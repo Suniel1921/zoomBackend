@@ -22,9 +22,14 @@ const groupSchema = new mongoose.Schema({
   lastUpdated: { type: Date, default: Date.now },
 });
 
+const clientConversationSchema = new mongoose.Schema({
+  clientId: { type: mongoose.Schema.Types.ObjectId, required: true },
+  messages: [messageSchema],
+  lastUpdated: { type: Date, default: Date.now },
+});
+
 const ConversationModel = mongoose.model('ConversationModel', conversationSchema);
 const GroupModel = mongoose.model('GroupModel', groupSchema);
+const ClientConversationModel = mongoose.model('ClientConversationModel', clientConversationSchema);
 
-module.exports = { ConversationModel, GroupModel };
-
-
+module.exports = { ConversationModel, GroupModel, ClientConversationModel };

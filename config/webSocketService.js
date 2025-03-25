@@ -14,50 +14,50 @@ class WebSocketService {
         this.wss = new WebSocket.Server({ server });
 
         this.wss.on('connection', async (ws, req) => {
-            try {
-                const url = new URL(req.url, process.env.WS_URL || 'ws://localhost');
-                // console.log(url)
-                const token = url.searchParams.get('token');
+           try{
+            const url = new URL(req.url, process.env.WS_URL || 'ws://localhost');
+            // console.log(url)
+            const token = url.searchParams.get('token');
 
-                if (!token) throw new Error('No token provided');
+            if (!token) throw new Error('No token provided');
 
-                const decoded = jwt.verify(token, process.env.SECRET_KEY);
-                const userId = decoded._id.toString();
-                const userRole = decoded.role;
+            const decoded = jwt.verify(token, process.env.SECRET_KEY);
+            const userId = decoded._id.toString();
+            const userRole = decoded.role;
 
-                this.clients.set(userId, ws);
+            this.clients.set(userId, ws);
 
-                const onlineUsers = Array.from(this.clients.keys());
-                this.sendToClient(ws, { type: 'ONLINE_USERS', users: onlineUsers });
+            const onlineUsers = Array.from(this.clients.keys());
+            this.sendToClient(ws, { type: 'ONLINE_USERS', users: onlineUsers });
 
-                this.broadcast({ type: 'USER_ONLINE', userId }, userId);
+            this.broadcast({ type: 'USER_ONLINE', userId }, userId);
 
-                ws.on('message', async (message) => {
-                    try {
-                        const data = JSON.parse(message.toString());
-                        await this.handleMessage(data, userId, userRole);
-                    } catch (error) {
-                        console.error(`Error processing message from ${userId}:`, error);
-                        this.sendToClient(ws, { type: 'ERROR', message: 'Invalid message format' });
-                    }
-                });
+            ws.on('message', async (message) => {
+                try {
+                    const data = JSON.parse(message.toString());
+                    await this.handleMessage(data, userId, userRole);
+                } catch (error) {
+                    console.error(`Error processing message from ${userId}:`, error);
+                    this.sendToClient(ws, { type: 'ERROR', message: 'Invalid message format' });
+                }
+            });
 
-                ws.on('close', () => {
-                    this.clients.delete(userId);
-                    this.broadcast({ type: 'USER_OFFLINE', userId }, userId);
-                    console.log(`WebSocket disconnected: ${userId}`);
-                });
+            ws.on('close', () => {
+                this.clients.delete(userId);
+                this.broadcast({ type: 'USER_OFFLINE', userId }, userId);
+                console.log(`WebSocket disconnected: ${userId}`);
+            });
 
-                ws.on('error', (error) => {
-                    console.error(`WebSocket error for ${userId}:`, error);
-                });
+            ws.on('error', (error) => {
+                console.error(`WebSocket error for ${userId}:`, error);
+            });
 
-                this.sendToClient(ws, { type: 'CONNECTED', userId });
-                console.log(`WebSocket connected: ${userId}`);
-            } catch (error) {
-                console.error('WebSocket connection error:', error.message);
-                ws.close(1008, 'Authentication failed');
-            }
+            this.sendToClient(ws, { type: 'CONNECTED', userId });
+            console.log(`WebSocket connected: ${userId}`);
+           } catch (error) {
+            console.error('WebSocket connection error:', error.message);
+            ws.close(1008, 'Authentication failed');
+        }
         });
     }
 

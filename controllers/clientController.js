@@ -204,27 +204,24 @@ exports.addClient = [
  */
 exports.getClients = async (req, res) => {
   try {
-    const { _id, role, superAdminId } = req.user;
-    checkAuthorization(role, superAdminId, _id);
+      // Check user role
+      const userRole = req.user.role;
+      if (!['admin', 'superadmin'].includes(userRole)) {
+          return res.status(403).json({ success: false, error: 'Forbidden: Insufficient permissions' });
+      }
 
-    const query = role === 'superadmin'
-      ? { superAdminId: _id }
-      : { $or: [{ createdBy: _id }, { superAdminId }] };
-
-    const clients = await ClientModel.find(query)
-      .populate('createdBy', 'name email')
-      .lean();
-
-    return res.status(200).json({ success: true, clients });
+      const clients = await ClientModel.find().lean();
+      const normalizedClients = clients.map(client => ({
+          ...client,
+          fullName: client.fullName || client.name || 'Unknown Client',
+      }));
+      res.json({ success: true, clients: normalizedClients });
   } catch (error) {
-    console.error('Error fetching clients:', error.message);
-    return res.status(500).json({
-      success: false,
-      message: 'Internal Server Error',
-      error: error.message,
-    });
+      console.error('Error fetching clients:', error.message);
+      res.status(500).json({ success: false, error: 'Failed to fetch clients' });
   }
 };
+
 
 
 

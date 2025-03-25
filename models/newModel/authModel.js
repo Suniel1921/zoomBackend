@@ -9,7 +9,7 @@ const authSchema = new mongoose.Schema({
     },
     phone: {
         type: Number,
-        required: true,
+        required: false,
         trim: true,
         match: [/^\+?[0-9]{7,15}$/, "Invalid phone number format"],
       },
