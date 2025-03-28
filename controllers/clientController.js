@@ -46,7 +46,7 @@ const sendCredentialsEmail = async (email, name, password) => {
       <!-- Buttons Section -->
       <div style="text-align: center; margin: 20px 0;">
         <a href="https://apps.apple.com/jp/app/zoom-creatives/id6742648724?l=en-US" 
-          style="background-color: #fcda00; color: #fff; padding: 12px 20px; text-decoration: none; border-radius: 5px; display: inline-block; font-size: 16px; margin-bottom: 10px;">
+          style="background-color: #fcda00; color: #232323; padding: 12px 20px; text-decoration: none; border-radius: 5px; display: inline-block; font-size: 16px; margin-bottom: 10px;">
           📲 Download Our App (Recommended)
         </a>
         <br>
