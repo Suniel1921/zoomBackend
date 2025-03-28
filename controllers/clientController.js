@@ -33,21 +33,35 @@ const sendCredentialsEmail = async (email, name, password) => {
     to: email,
     subject: 'Your Login Credentials - CRM',
     html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #333;">Welcome to our CRM system!</h2>
-        <p>Dear ${name},</p>
-        <p>Your account has been successfully created. Here are your login credentials:</p>
-        <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
-          <p style="margin: 5px 0;"><strong>Email:</strong> ${email}</p>
-          <p style="margin: 5px 0;"><strong>Password:</strong> ${password}</p>
-        </div>
-        <p>For security reasons, we recommend changing your password after your first login.</p>
-        <p><a href="https://crm.zoomcreatives.jp/client-login" style="background-color: #FEDC00; color: #000; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 20px 0;">Login to Your Account</a></p>
-        <p>If you have any questions, contact our support team.</p>
-        <hr style="border: 1px solid #eee; margin: 20px 0;">
-        <p style="color: #666; font-size: 12px;">This is an automated message, please do not reply.</p>
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #333;">Welcome to our CRM system!</h2>
+      <p>Dear ${name},</p>
+      <p>Your account has been successfully created. Here are your login credentials:</p>
+      <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
+        <p style="margin: 5px 0;"><strong>Email:</strong> ${email}</p>
+        <p style="margin: 5px 0;"><strong>Password:</strong> ${password}</p>
       </div>
-    `,
+      <p>For security reasons, we recommend changing your password after your first login.</p>
+
+      <!-- Buttons Section -->
+      <div style="text-align: center; margin: 20px 0;">
+        <a href="https://apps.apple.com/jp/app/zoom-creatives/id6742648724?l=en-US" 
+          style="background-color: #fcda00; color: #fff; padding: 12px 20px; text-decoration: none; border-radius: 5px; display: inline-block; font-size: 16px; margin-bottom: 10px;">
+          📲 Download Our App (Recommended)
+        </a>
+        <br>
+        <a href="https://crm.zoomcreatives.jp/client-login" 
+          style="background-color: #6c757d; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; font-size: 14px;">
+          🔗 Login Without App
+        </a>
+      </div>
+
+      <p>If you have any questions, contact our support team.</p>
+      <hr style="border: 1px solid #eee; margin: 20px 0;">
+      <p style="color: #666; font-size: 12px;">This is an automated message, please do not reply.</p>
+    </div>
+  `,
+
   };
 
   try {

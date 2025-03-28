@@ -1,23 +1,39 @@
-const AuditLog = require('../models/newModel/auditLogModel');
+const AuditLog = require("../models/newModel/auditLogModel");
 
 // Add a new log
-exports.addLog = async (action, userType, userId, userName, ipAddress, details = {}) => {
+exports.addLog = async (
+  action,
+  userType,
+  userId,
+  userName,
+  ipAddress,
+  details = {}
+) => {
   try {
-    if (!action || !userName || !ipAddress) {
-      console.error('Missing required audit log fields:', { action, userName, ipAddress });
+    if (!action || !userName) {
+      // if (!action || !userName || !ipAddress) {
+      console.error("Missing required audit log fields:", {
+        action,
+        userName,
+        ipAddress,
+      });
       return;
     }
 
     // Clean the IP address
-    const cleanIpAddress = ipAddress.replace(/^::ffff:/, '');
+    // const cleanIpAddress = ipAddress.replace(/^::ffff:/, '');
+    // Clean the IP address safely
+    const cleanIpAddress = ipAddress
+      ? ipAddress.replace(/^::ffff:/, "")
+      : "Unknown";
 
     const log = new AuditLog({
       action,
-      userType: userType || 'unknown',
+      userType: userType || "unknown",
       userId,
       userName,
       ipAddress: cleanIpAddress,
-      details: typeof details === 'object' ? details : { message: details }
+      details: typeof details === "object" ? details : { message: details },
     });
 
     await log.save();
@@ -28,21 +44,21 @@ exports.addLog = async (action, userType, userId, userName, ipAddress, details =
     //   ipAddress: cleanIpAddress
     // });
   } catch (error) {
-    console.error('Error adding audit log:', error);
+    console.error("Error adding audit log:", error);
   }
 };
 
 // Fetch all audit logs with pagination and filtering
 exports.getLogs = async (req, res) => {
   try {
-    const { 
-      page = 1, 
+    const {
+      page = 1,
       limit = 10,
       userType,
       action,
       startDate,
       endDate,
-      searchQuery 
+      searchQuery,
     } = req.query;
 
     const query = {};
@@ -60,8 +76,8 @@ exports.getLogs = async (req, res) => {
     }
     if (searchQuery) {
       query.$or = [
-        { userName: { $regex: searchQuery, $options: 'i' } },
-        { 'details.message': { $regex: searchQuery, $options: 'i' } }
+        { userName: { $regex: searchQuery, $options: "i" } },
+        { "details.message": { $regex: searchQuery, $options: "i" } },
       ];
     }
 
@@ -70,22 +86,28 @@ exports.getLogs = async (req, res) => {
         .sort({ timestamp: -1 })
         .skip((page - 1) * limit)
         .limit(parseInt(limit)),
-      AuditLog.countDocuments(query)
+      AuditLog.countDocuments(query),
     ]);
 
     res.status(200).json({
       success: true,
-      message: 'Logs fetched successfully',
+      message: "Logs fetched successfully",
       logs,
       pagination: {
         total,
         page: parseInt(page),
-        pages: Math.ceil(total / limit)
-      }
+        pages: Math.ceil(total / limit),
+      },
     });
   } catch (error) {
-    console.error('Error fetching logs:', error);
-    res.status(500).json({ success: false, message: 'Failed to fetch logs', error: error.message });
+    console.error("Error fetching logs:", error);
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: "Failed to fetch logs",
+        error: error.message,
+      });
   }
 };
 
@@ -95,23 +117,45 @@ exports.exportLogs = async (req, res) => {
     const logs = await AuditLog.find().sort({ timestamp: -1 });
 
     const csvContent = [
-      ['Timestamp', 'User Name', 'User Type', 'Action', 'IP Address', 'Details'].join(','),
-      ...logs.map(log => [
-        new Date(log.timestamp).toISOString(),
-        log.userName,
-        log.userType,
-        log.action,
-        log.ipAddress,
-        JSON.stringify(log.details || {}).replace(/"/g, '""')
-      ].map(field => `"${field}"`).join(','))
-    ].join('\n');
+      [
+        "Timestamp",
+        "User Name",
+        "User Type",
+        "Action",
+        "IP Address",
+        "Details",
+      ].join(","),
+      ...logs.map((log) =>
+        [
+          new Date(log.timestamp).toISOString(),
+          log.userName,
+          log.userType,
+          log.action,
+          log.ipAddress,
+          JSON.stringify(log.details || {}).replace(/"/g, '""'),
+        ]
+          .map((field) => `"${field}"`)
+          .join(",")
+      ),
+    ].join("\n");
 
-    res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', `attachment; filename=audit-logs-${new Date().toISOString().split('T')[0]}.csv`);
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=audit-logs-${
+        new Date().toISOString().split("T")[0]
+      }.csv`
+    );
     res.send(csvContent);
   } catch (error) {
-    console.error('Error exporting logs:', error);
-    res.status(500).json({ success: false, message: 'Error exporting logs', error: error.message });
+    console.error("Error exporting logs:", error);
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: "Error exporting logs",
+        error: error.message,
+      });
   }
 };
 
@@ -119,9 +163,17 @@ exports.exportLogs = async (req, res) => {
 exports.clearAllLogs = async (req, res) => {
   try {
     await AuditLog.deleteMany({});
-    res.status(200).json({ success: true, message: 'All logs cleared successfully' });
+    res
+      .status(200)
+      .json({ success: true, message: "All logs cleared successfully" });
   } catch (error) {
-    console.error('Error clearing logs:', error);
-    res.status(500).json({ success: false, message: 'Failed to clear logs', error: error.message });
+    console.error("Error clearing logs:", error);
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: "Failed to clear logs",
+        error: error.message,
+      });
   }
 };
