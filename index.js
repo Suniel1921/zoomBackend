@@ -46,7 +46,8 @@ const server = createServer(app);
 webSocketService.initialize(server);
 
 // Middleware for parsing JSON and URL-encoded data
-app.use(express.json());
+// app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // CORS Middleware
