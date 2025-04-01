@@ -1,7 +1,7 @@
 // src/config/webSocketService.js
 const WebSocket = require('ws');
 const jwt = require('jsonwebtoken');
-const { ConversationModel, GroupModel, ClientConversationModel } = require('../models/newModel/chatModel');
+const { ConversationModel, ClientConversationModel } = require('../models/newModel/chatModel');
 const AdminModel = require('../models/newModel/adminModel');
 const SuperAdminModel = require('../models/newModel/superAdminModel');
 const ClientModel = require('../models/newModel/clientModel');
@@ -64,24 +64,20 @@ class WebSocketService {
   }
 
   broadcast(message, excludeUserId = null) {
-    const messageString = JSON.stringify(message);
     this.clients.forEach((client, userId) => {
       if (userId !== excludeUserId && client.readyState === WebSocket.OPEN) {
-        client.send(messageString);
+        client.send(JSON.stringify(message));
       }
     });
   }
 
   async handleMessage(data, senderId, senderRole) {
     const FromModel = senderRole === 'superadmin' ? SuperAdminModel : 
-                    senderRole === 'client' ? ClientModel : AdminModel;
+                     senderRole === 'client' ? ClientModel : AdminModel;
 
     switch (data.type) {
       case 'PRIVATE_MESSAGE':
         await this.handlePrivateMessage(senderId, data.toUserId, data.content, FromModel);
-        break;
-      case 'GROUP_MESSAGE':
-        await this.handleGroupMessage(senderId, data.groupId, data.content, FromModel);
         break;
       case 'CLIENT_MESSAGE':
         await this.handleClientMessage(senderId, data.clientId || senderId, data.content, 
@@ -98,14 +94,14 @@ class WebSocketService {
 
     const participants = [fromId, toId].sort();
     let conversation = await ConversationModel.findOne({ participants }) || 
-                     new ConversationModel({ participants });
+                      new ConversationModel({ participants });
     const message = { from: fromId, content, timestamp: new Date(), read: this.clients.has(toId) };
     conversation.messages.push(message);
     conversation.lastUpdated = new Date();
     const savedConversation = await conversation.save();
 
     const newMessage = savedConversation.messages[savedConversation.messages.length - 1];
-    const sender = await FromModel.findById(fromId).select('name superAdminPhoto').lean();
+    const sender = await FromModel.findById(fromId).select('name superAdminPhoto profilePhoto fullName').lean();
     const populatedMessage = this.populateMessage(newMessage, sender);
 
     [fromId, toId].forEach(userId => {
@@ -118,36 +114,11 @@ class WebSocketService {
     });
   }
 
-  async handleGroupMessage(fromId, groupId, content, FromModel) {
-    if (!groupId || !content) return;
-
-    const group = await GroupModel.findById(groupId);
-    if (!group || !group.members.map(m => m.toString()).includes(fromId)) return;
-
-    const message = { from: fromId, content, timestamp: new Date(), read: false };
-    group.messages.push(message);
-    group.lastUpdated = new Date();
-    const savedGroup = await group.save();
-
-    const newMessage = savedGroup.messages[savedGroup.messages.length - 1];
-    const sender = await FromModel.findById(fromId).select('name superAdminPhoto').lean();
-    const populatedMessage = this.populateMessage(newMessage, sender);
-
-    group.members.forEach(userId => {
-      const ws = this.clients.get(userId.toString());
-      if (ws) this.sendToClient(ws, { 
-        type: 'GROUP_MESSAGE', 
-        groupId, 
-        message: populatedMessage 
-      });
-    });
-  }
-
   async handleClientMessage(senderId, clientId, content, adminThatReplied, FromModel) {
     if (!content) return;
 
     let conversation = await ClientConversationModel.findOne({ clientId }) || 
-                     new ClientConversationModel({ clientId });
+                      new ClientConversationModel({ clientId });
     const message = { 
       from: senderId, 
       content, 
@@ -192,20 +163,18 @@ class WebSocketService {
       const recipientId = participants.find(id => id !== senderId);
       const ws = this.clients.get(recipientId);
       if (ws) this.sendToClient(ws, message);
-    } else if (chatType === 'group') {
-      const group = await GroupModel.findById(chatId);
-      if (group) group.members.forEach(userId => {
-        if (userId.toString() !== senderId) {
-          const ws = this.clients.get(userId.toString());
-          if (ws) this.sendToClient(ws, message);
-        }
-      });
     } else if (chatType === 'client') {
-      const admins = await Promise.all([
+      const allUsers = await Promise.all([
         AdminModel.find().select('_id').lean(),
-        SuperAdminModel.find().select('_id').lean()
-      ]).then(([admins, superAdmins]) => [...admins, ...superAdmins].map(a => a._id.toString()));
-      admins.forEach(userId => {
+        SuperAdminModel.find().select('_id').lean(),
+        ClientModel.findById(chatId).select('_id').lean()
+      ]).then(([admins, superAdmins, client]) => [
+        ...admins.map(a => a._id.toString()),
+        ...superAdmins.map(s => s._id.toString()),
+        client?._id.toString()
+      ].filter(Boolean));
+
+      allUsers.forEach(userId => {
         if (userId !== senderId) {
           const ws = this.clients.get(userId);
           if (ws) this.sendToClient(ws, message);
@@ -219,8 +188,8 @@ class WebSocketService {
       _id: message._id.toString(),
       from: {
         _id: sender._id,
-        name: sender.name || sender.fullName,
-        superAdminPhoto: sender.superAdminPhoto || sender.profilePhoto || null
+        name: sender.name || sender.fullName || 'Unknown',
+        profilePhoto: sender.profilePhoto || sender.superAdminPhoto || null
       },
       content: message.content,
       timestamp: message.timestamp.toISOString(),

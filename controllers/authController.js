@@ -291,7 +291,7 @@ exports.login = async (req, res) => {
 
     // Update last login time only for active admin and client logins
     // (Superadmin lastLogin seems to be handled differently or not tracked here)
-    if (role === 'admin') {
+    if (role === 'admin' && role === 'superadmin') {
         console.log(`Updating last login for admin: ${user._id}`);
         // Use await here to ensure it completes before proceeding
         await AdminModel.findByIdAndUpdate(user._id, { lastLogin: new Date() });
