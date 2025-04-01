@@ -192,7 +192,6 @@ exports.register = async (req, res) => {
 
 // from this controller removed ip address for app (apple reject due to tracking ip aderss )
 
-
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -203,22 +202,38 @@ exports.login = async (req, res) => {
 
     // List of models to check, in order of precedence
     const models = [
-      { model: SuperAdminModel, role: "superadmin", include: {} },
-      { model: AdminModel, role: "admin", include: { superAdminId: 1 } },
-      { model: ClientModel, role: "client", include: { superAdminId: 1 } },
-      { model: authModel, role: "user", include: {} }, 
+      { model: SuperAdminModel, role: "superadmin", include: {}, checkStatus: false }, // Superadmin doesn't need status check here
+      { model: AdminModel, role: "admin", include: { superAdminId: 1, status: 1 }, checkStatus: true }, // Include status and enable check
+      { model: ClientModel, role: "client", include: { superAdminId: 1, status: 1 }, checkStatus: true }, // Include status and enable check
+      { model: authModel, role: "user", include: {}, checkStatus: false }, // Basic user doesn't need status check here
     ];
 
     let user = null;
     let role = null;
+    let checkStatusFlag = false;
     let additionalData = {};
 
     // Check each model for the user
-    for (const { model, role: modelRole, include } of models) {
-      user = await model.findOne({ email }).select({ ...include, password: 1, name: 1, email: 1, phone: 1, profilePhoto: 1 });
+    for (const { model, role: modelRole, include, checkStatus } of models) {
+      // Include password, name, email, phone, profilePhoto, and status if needed
+      const selectFields = {
+          ...include,
+          password: 1,
+          name: 1,
+          email: 1,
+          phone: 1,
+          profilePhoto: 1,
+          ...(checkStatus && { status: 1 }) // Conditionally include status field
+      };
+      user = await model.findOne({ email }).select(selectFields);
+
       if (user) {
         role = modelRole;
-        additionalData = include;
+        checkStatusFlag = checkStatus; // Store if this role needs status check
+        // Remove status from additionalData if it was included only for the check
+        const dataToKeep = { ...include };
+        delete dataToKeep.status;
+        additionalData = dataToKeep;
         break;
       }
     }
@@ -233,9 +248,30 @@ exports.login = async (req, res) => {
         null,           // IP address removed
         { message: "User not found" } // Additional details
       );
-
+      console.log(`Login attempt failed: User not found for email ${email}`);
       return res.status(401).json({ success: false, message: "Invalid email or password" });
     }
+
+    // --- STATUS CHECK ---
+    // Check status only for roles where checkStatusFlag is true (admin, client)
+    if (checkStatusFlag && user.status !== 'active') {
+       // Log failed login attempt (inactive account)
+       await AuditLogController.addLog(
+          "failed_login", // Action
+          role,           // User type (e.g., admin, client)
+          user._id,       // User ID
+          user.name || user.email, // User name or email
+          null,           // IP address removed
+          { message: "Account inactive" } // Additional details
+        );
+       console.log(`Login attempt failed: Account inactive for ${role} ${user.email}`);
+       return res.status(403).json({ // Use 403 Forbidden for inactive accounts
+         success: false,
+         message: "Your account is currently inactive. Please contact the administrator for assistance."
+       });
+    }
+    // --- END STATUS CHECK ---
+
 
     // Verify password
     const isPasswordValid = await bcrypt.compare(password, user.password);
@@ -249,16 +285,23 @@ exports.login = async (req, res) => {
         null,           // IP address removed
         { message: "Invalid password" } // Additional details
       );
-
+      console.log(`Login attempt failed: Invalid password for ${role} ${user.email}`);
       return res.status(401).json({ success: false, message: "Invalid email or password" });
     }
 
-    // Update last login time for admin
+    // Update last login time only for active admin and client logins
+    // (Superadmin lastLogin seems to be handled differently or not tracked here)
     if (role === 'admin') {
-      console.log(`Updating last login for admin: ${user._id}`);
-      await AdminModel.findByIdAndUpdate(user._id, { lastLogin: new Date() });
-      console.log(`Last login updated for admin: ${user._id}`);
+        console.log(`Updating last login for admin: ${user._id}`);
+        // Use await here to ensure it completes before proceeding
+        await AdminModel.findByIdAndUpdate(user._id, { lastLogin: new Date() });
+        console.log(`Last login updated for admin: ${user._id}`);
     }
+    // Add similar logic for ClientModel if you track their last login
+    // if (role === 'client') {
+    //     await ClientModel.findByIdAndUpdate(user._id, { lastLogin: new Date() });
+    // }
+
 
     // Log successful login
     await AuditLogController.addLog(
@@ -275,7 +318,7 @@ exports.login = async (req, res) => {
       _id: user._id,
       email: user.email,
       role,
-      ...(user.superAdminId && { superAdminId: user.superAdminId }), 
+      ...(user.superAdminId && { superAdminId: user.superAdminId.toString() }), // Ensure superAdminId is string if needed
     };
 
     // Log the payload for debugging
@@ -290,12 +333,16 @@ exports.login = async (req, res) => {
       message: "Login successful",
       user: {
         id: user._id,
-        fullName: user.name || user.email, 
+        // Use 'name' field if available, fallback to email
+        fullName: user.name || user.email,
         email: user.email,
         role,
-        phone: user.phone || null,
-        profilePhoto: user.profilePhoto || null,
-        ...additionalData, // Include additional fields like `superAdminId`
+        phone: user.phone || null, // Include phone if available
+        profilePhoto: user.profilePhoto || user.superAdminPhoto || null, // Include profile photo or superAdminPhoto
+        // Include superAdminId only if it exists in the payload (for admin/client)
+        ...(payload.superAdminId && { superAdminId: payload.superAdminId }),
+        // You might not want to send back the status explicitly unless needed by the frontend
+        // status: user.status // Only include if necessary
       },
       token,
     });
@@ -309,18 +356,16 @@ exports.login = async (req, res) => {
       null,             // User ID
       "Login Controller", // Identifier
       null,             // IP address removed
-      { error: error.message } // Additional details
+      { error: error.message, stack: error.stack } // Include stack trace for debugging
     );
 
     return res.status(500).json({
       success: false,
       message: "An error occurred during login. Please try again later.",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined // Show error details only in development
     });
   }
 };
-
-
-
 
 
 
