@@ -1,371 +1,3 @@
-// const { default: mongoose } = require("mongoose");
-// const applicationModel = require("../models/newModel/applicationModel");
-// const AppointmentModel = require("../models/newModel/appointmentModel");
-// const ClientModel = require("../models/newModel/clientModel");
-// const documentTranslationModel = require("../models/newModel/documentTranslationModel");
-// const ePassportModel = require("../models/newModel/ePassportModel");
-// const GraphicDesignModel = require("../models/newModel/graphicDesingModel");
-// const OtherServiceModel = require("../models/newModel/otherServicesModel");
-// const applicationStepModel = require("../models/newModel/steps/applicationStepModel");
-// const japanVisitApplicationModel = require("../models/newModel/japanVisitModel");
-
-
-
-// //****************sending email while appointment create ****************
-
-// const nodemailer = require('nodemailer');
-// const moment = require('moment');  
-// // Nodemailer configuration
-// const transporter = nodemailer.createTransport({
-//   service: 'gmail',
-//   auth: {
-//     user: process.env.MYEMAIL, 
-//     pass: process.env.PASSWORD 
-//   }
-// });
-
-// exports.createAppointment = async (req, res) => {
-//   try {
-//     const { _id: superAdminId } = req.user;  
-//     const { clientId, ...appointmentData } = req.body;
-
-//     // Validate if the client exists and belongs to the superAdmin
-//     const client = await ClientModel.findOne({ _id: clientId, superAdminId });
-//     if (!client) {
-//       return res.status(400).json({ success: false, message: 'Client not found or unauthorized' });
-//     }
-
-//     const appointment = new AppointmentModel({
-//       clientId,
-//       ...appointmentData,
-//       superAdminId, 
-//     });
-//     await appointment.save();
-
-//     // Get the client's email address
-//     const clientEmail = client.email;
-
-//     // Format the appointment date and time
-//     const formattedDate = moment(appointmentData.date).format('MMMM Do YYYY');
-//     const formattedTime = appointmentData.time ? moment(appointmentData.time, 'HH:mm').format('h:mm A') : 'Not specified';
-//     const meetingType = appointmentData.meetingType.charAt(0).toUpperCase() + appointmentData.meetingType.slice(1); // Capitalize meeting type
-
-//     // Prepare email content
-//     const emailContent = `
-//       Hello ${client.name},
-
-//       Your appointment has been Schedule with the following details:
-
-//       - Date & Time: ${formattedDate} at ${formattedTime}
-//       - Meeting Type: ${meetingType}
-//       - Duration: ${appointmentData.duration} minutes
-//       - Location: ${appointmentData.location || 'Not provided'}
-      
-//       Thank you for using our service!
-
-//       Best regards,
-//       Zoom Cretives Team
-//     `;
-
-//     // Send an email notification to the client
-//     const mailOptions = {
-//       from: process.env.MYEMAIL,
-//       to: clientEmail,  // Use the client's email
-//       subject: 'Appointment Created Successfully',
-//       text: emailContent
-//     };
-
-//     // Send email
-//     transporter.sendMail(mailOptions, (error, info) => {
-//       if (error) {
-//         console.error('Error sending email:', error);
-//       } else {
-//         console.log('Email sent:', info.response);
-//       }
-//     });
-
-//     res.status(201).json({ success: true, message: 'Appointment created successfully', appointment });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ success: false, message: 'Failed to create appointment', error });
-//   }
-// };
-
-
-
-
-
-
-
-
-// // Get all appointments for the authenticated superAdmin
-// exports.getAllAppointments = async (req, res) => {
-//   try {
-//     // const { _id: superAdminId } = req.user;  
-//     // const appointments = await AppointmentModel.find({ superAdminId })
-//     const appointments = await AppointmentModel.find()
-//       .populate('clientId', 'name phone')  
-//       .sort({ createdAt: -1 });
-
-//     res.status(200).json({ success: true, message: 'appointment fetched sucessfully', appointments });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ success: false, message: 'Failed to retrieve appointments', error });
-//   }
-// };
-
-// // Get an appointment by ID for the authenticated superAdmin
-// exports.getAppointmentsByClientId = async (req, res) => {
-//   try {
-//     const { clientId } = req.params; // Extract clientId from request parameters
-
-//     // Find all appointments with the given clientId
-//     const appointments = await AppointmentModel.find({ clientId });
-
-//     if (appointments.length === 0) {
-//       return res.status(404).json({ success: false, message: 'No appointments found for the given clientId' });
-//     }
-
-//     res.status(200).json({ success: true, message: 'Appointments fetched successfully', appointments });
-//   } catch (error) {
-//     console.error('Error fetching appointments:', error);
-//     res.status(500).json({ success: false, message: 'Failed to retrieve appointments', error: error.message });
-//   }
-// };
-
-
-// exports.updateAppointment = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const { mode, ...updateData } = req.body;
-
-//     // Ensure the mode is valid (edit or reschedule)
-//     if (!['edit', 'reschedule'].includes(mode)) {
-//       return res.status(400).json({
-//         success: false,
-//         message: 'Invalid mode. Mode must be either "edit" or "reschedule".',
-//       });
-//     }
-
-//     // Restrict fields for "reschedule" mode
-//     let isRescheduled = false;
-//     if (mode === 'reschedule') {
-//       const { date, time, notes } = updateData;
-//       if (!date || !time) {
-//         return res.status(400).json({
-//           success: false,
-//           message: 'Date and Time are required for rescheduling.',
-//         });
-//       }
-//       updateData.date = new Date(date); 
-//       updateData.time = time;
-//       if (notes) updateData.notes = notes; 
-//       isRescheduled = true; 
-//     }
-
-//     const updatedAppointment = await AppointmentModel.findByIdAndUpdate(
-//       id,
-//       updateData,
-//       { new: true } 
-//     );
-
-//     if (!updatedAppointment) {
-//       return res.status(404).json({
-//         success: false,
-//         message: 'Appointment not found',
-//       });
-//     }
-
-//     // If the appointment was rescheduled, send an email
-//     if (isRescheduled) {
-//       const client = await ClientModel.findById(updatedAppointment.clientId);
-//       const clientEmail = client.email;
-
-//       // Format the appointment date and time for email
-//       const formattedDate = moment(updatedAppointment.date).format('MMMM Do YYYY');
-//       const formattedTime = updatedAppointment.time ? moment(updatedAppointment.time, 'HH:mm').format('h:mm A') : 'Not specified';
-
-//       // Prepare email content for rescheduling
-//       const emailContent = `
-//         Hello ${client.name},
-
-//         Your appointment has been rescheduled with the following new details:
-
-//         - New Date & Time: ${formattedDate} at ${formattedTime}
-//         - Status: Rescheduled
-//         - Duration: ${updatedAppointment.duration} minutes
-//         - Location: ${updatedAppointment.location || 'Not provided'}
-//         - Notes: ${updatedAppointment.notes || 'No additional notes'}
-        
-//         We apologize for any inconvenience this may have caused, and we appreciate your understanding.
-
-//         Thank you for using our service!
-
-//         Best regards,
-//         Zoom Creatives Team
-//       `;
-
-//       // Send an email notification to the client
-//       const mailOptions = {
-//         from: process.env.MYEMAIL,
-//         to: clientEmail,  // Use the client's email
-//         subject: 'Appointment Rescheduled',
-//         text: emailContent
-//       };
-
-//       // Send email
-//       transporter.sendMail(mailOptions, (error, info) => {
-//         if (error) {
-//           console.error('Error sending email:', error);
-//         } else {
-//           // console.log('Email sent:', info.response);
-//         }
-//       });
-//     }
-
-//     res.status(200).json({
-//       success: true,
-//       message: `Appointment ${mode}d successfully`,
-//       updatedAppointment,
-//     });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({
-//       success: false,
-//       message: 'Failed to update appointment',
-//       error,
-//     });
-//   }
-// };
-
-// exports.updateAppointmentStatus = async (req, res) => {
-//   const { status } = req.body;  // Status can be "Completed", "Cancelled", or "Rescheduled"
-//   const { id } = req.params;
-
-//   try {
-//     const { _id: superAdminId } = req.user;  // Extract superAdminId from the authenticated user
-//     const appointment = await AppointmentModel.findOne({ _id: id, superAdminId });
-
-//     if (!appointment) {
-//       return res.status(404).json({ success: false, message: 'Appointment not found or unauthorized' });
-//     }
-
-//     if (status !== 'Completed' && status !== 'Cancelled' && status !== 'Rescheduled') {
-//       return res.status(400).json({ success: false, message: 'Invalid status' });
-//     }
-
-//     // Set status and timestamps
-//     appointment.status = status;
-//     if (status === 'Completed') {
-//       appointment.completedAt = new Date();
-//     } else if (status === 'Cancelled') {
-//       appointment.cancelledAt = new Date();
-//     } else if (status === 'Rescheduled') {
-//       const { date, time } = req.body;
-//       appointment.date = new Date(date);
-//       appointment.time = time;
-//       appointment.rescheduledAt = new Date();
-//     }
-
-//     await appointment.save();
-
-//     // Get the client's email address
-//     const client = await ClientModel.findById(appointment.clientId);
-//     const clientEmail = client.email;
-
-//     // Format the appointment date and time for email
-//     const formattedDate = moment(appointment.date).format('MMMM Do YYYY');
-//     const formattedTime = appointment.time ? moment(appointment.time, 'HH:mm').format('h:mm A') : 'Not specified';
-
-//     // Prepare email content based on the appointment status
-//     let emailContent = '';
-//     if (status === 'Completed') {
-//       emailContent = `
-//         Hello ${client.name},
-
-//         Your appointment has been completed successfully with the following details:
-
-//         - Date & Time: ${formattedDate} at ${formattedTime}
-//         - Status: Completed
-//         - Duration: ${appointment.duration} minutes
-//         - Location: ${appointment.location || 'Not provided'}
-        
-//         Thank you for using our service!
-
-//         Best regards,
-//         Zoom Creatives Team
-//       `;
-//     } else if (status === 'Cancelled') {
-//       emailContent = `
-//         Hello ${client.name},
-
-//         We regret to inform you that your appointment has been cancelled. The details are as follows:
-
-//         - Date & Time: ${formattedDate} at ${formattedTime}
-//         - Status: Cancelled
-//         - Duration: ${appointment.duration} minutes
-//         - Location: ${appointment.location || 'Not provided'}
-        
-//         If you wish to reschedule, please contact us.
-
-//         Best regards,
-//         Zoom Creatives Team
-//       `;
-//     } else if (status === 'Rescheduled') {
-//       emailContent = `
-//         Hello ${client.name},
-
-//         Your appointment has been rescheduled with the following new details:
-
-//         - New Date & Time: ${formattedDate} at ${formattedTime}
-//         - Status: Rescheduled
-//         - Duration: ${appointment.duration} minutes
-//         - Location: ${appointment.location || 'Not provided'}
-        
-//         Thank you for your understanding.
-
-//         Best regards,
-//         Zoom Creatives Team
-//       `;
-//     }
-
-//     // Send an email notification to the client
-//     const mailOptions = {
-//       from: process.env.MYEMAIL,
-//       to: clientEmail,  // Use the client's email
-//       subject: `Appointment ${status} Notification`,
-//       text: emailContent
-//     };
-
-//     // Send email
-//     transporter.sendMail(mailOptions, (error, info) => {
-//       if (error) {
-//         console.error('Error sending email:', error);
-//       } else {
-//         console.log('Email sent:', info.response);
-//       }
-//     });
-
-//     res.status(200).json({
-//       success: true,
-//       message: `Appointment ${status}d successfully`,
-//       appointment,
-//     });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({
-//       success: false,
-//       message: 'Failed to update appointment status',
-//       error,
-//     });
-//   }
-// };
-
-
-
-
-// *********************************rector and optimized code (above code is working fine )******************************************
-
 
 const { default: mongoose } = require("mongoose");
 const applicationModel = require("../models/newModel/applicationModel");
@@ -382,16 +14,17 @@ const japanVisitApplicationModel = require("../models/newModel/japanVisitModel")
 const nodemailer = require('nodemailer');
 const moment = require('moment');
 
-// Nodemailer configuration
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
     user: process.env.MYEMAIL,
     pass: process.env.PASSWORD,
   },
+  pool: true,
+  maxConnections: 5,
+  maxMessages: 100,
 });
 
-// Helper function to generate HTML email template
 const generateEmailTemplate = ({ subject, greeting, message, details, statusColor, ctaText, ctaLink }) => {
   return `
     <!DOCTYPE html>
@@ -399,216 +32,398 @@ const generateEmailTemplate = ({ subject, greeting, message, details, statusColo
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta http-equiv="X-UA-Compatible" content="ie=edge">
       <title>${subject}</title>
+      <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+          font-family: 'Orbitron', sans-serif; 
+          background-color: #0a0a0a; 
+          color: #ffffff; 
+          line-height: 1.6; 
+        }
+        .container { 
+          max-width: 600px; 
+          margin: 40px auto; 
+          background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); 
+          border-radius: 12px; 
+          overflow: hidden; 
+          box-shadow: 0 0 20px rgba(255, 255, 255, 0.1); 
+        }
+        .header { 
+          background: #fedc00; 
+          padding: 20px; 
+          text-align: center; 
+          border-bottom: 2px solid rgba(255, 255, 255, 0.1); 
+        }
+        .header h1 { 
+          color: #000000; 
+          font-size: 24px; 
+          font-weight: 700; 
+          text-transform: uppercase; 
+          letter-spacing: 2px; 
+        }
+        .content { 
+          padding: 30px; 
+        }
+        .greeting { 
+          font-size: 18px; 
+          margin-bottom: 15px; 
+          color: #fedc00; 
+        }
+        .message { 
+          font-size: 14px; 
+          margin-bottom: 25px; 
+          color: #cccccc; 
+        }
+        .details { 
+          background: rgba(255, 255, 255, 0.05); 
+          padding: 20px; 
+          border-radius: 8px; 
+          font-size: 13px; 
+        }
+        .details div { 
+          margin-bottom: 10px; 
+          display: flex; 
+          justify-content: space-between; 
+        }
+        .details .label { 
+          color: #fedc00; 
+          font-weight: 700; 
+        }
+        .details .value { 
+          color: #ffffff; 
+        }
+        .status { 
+          color: ${statusColor} !important; 
+        }
+        .cta { 
+          text-align: center; 
+          margin: 25px 0; 
+        }
+        .cta a { 
+          display: inline-block; 
+          padding: 12px 30px; 
+          background: ${statusColor}; 
+          color: #ffffff; 
+          text-decoration: none; 
+          border-radius: 25px; 
+          font-size: 14px; 
+          font-weight: 700; 
+          text-transform: uppercase; 
+          letter-spacing: 1px; 
+          transition: all 0.3s ease; 
+        }
+        .cta a:hover { 
+          transform: translateY(-2px); 
+          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); 
+        }
+        .footer { 
+          background: rgba(255, 255, 255, 0.03); 
+          padding: 20px; 
+          text-align: center; 
+          font-size: 12px; 
+          color: #666666; 
+          border-top: 1px solid rgba(255, 255, 255, 0.05); 
+        }
+        .footer a { 
+          color: #fedc00; 
+          text-decoration: none; 
+          margin: 0 10px; 
+        }
+        @media (max-width: 600px) {
+          .container { margin: 20px; }
+          .content { padding: 20px; }
+          .cta a { padding: 10px 20px; }
+        }
+      </style>
     </head>
-    <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
-      <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #000; margin: 20px auto; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-        <!-- Header -->
-        <tr>
-          <td style="background-color: #fedc00; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
-            <h1 style="color: #000; margin: 0; font-size: 24px;">Zoom Creatives</h1>
-          </td>
-        </tr>
-        <!-- Content -->
-        <tr>
-          <td style="padding: 30px; color: #333333;">
-            <h2 style="font-size: 20px; margin: 0 0 10px;">${greeting}</h2>
-            <p style="font-size: 16px; line-height: 1.5; margin: 0 0 20px;">${message}</p>
-            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f8f9fa; padding: 20px; border-radius: 6px;">
-              ${details.map(({ label, value }) => `
-                <tr>
-                  <td><strong>${label}:</strong></td>
-                  <td style="${label === 'Status' ? `color: ${statusColor}` : ''}">${value}</td>
-                </tr>
-              `).join('')}
-            </table>
-            <!-- Call to Action -->
-            ${ctaText && ctaLink ? `
-              <p style="text-align: center; margin: 20px 0;">
-                <a href="${ctaLink}" style="display: inline-block; padding: 12px 24px; background-color: ${statusColor}; color: #ffffff; text-decoration: none; border-radius: 5px; font-size: 16px;">${ctaText}</a>
-              </p>
-            ` : ''}
-          </td>
-        </tr>
-        <!-- Footer -->
-        <tr>
-          <td style="background-color: #f8f9fa; padding: 20px; text-align: center; border-radius: 0 0 8px 8px; font-size: 14px; color: #666666;">
-            <p style="margin: 0;">Best regards,<br>The Zoom Creatives Team</p>
-            <p style="margin: 10px 0 0;">
-              <a href="https://zoomcreatives.jp" style="color: #fedc00; text-decoration: none;">Contact Us</a> | 
-              <a href="https://zoomcreatives.jp" style="color: #fedc00; text-decoration: none;">Visit Our Website</a>
-            </p>
-          </td>
-        </tr>
-      </table>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>Zoom Creatives</h1>
+        </div>
+        <div class="content">
+          <h2 class="greeting">${greeting}</h2>
+          <p class="message">${message}</p>
+          <div class="details">
+            ${details.map(({ label, value }) => `
+              <div>
+                <span class="label">${label}</span>
+                <span class="value ${label === 'Status' ? 'status' : ''}">${value}</span>
+              </div>
+            `).join('')}
+          </div>
+          ${ctaText && ctaLink ? `
+            <div class="cta">
+              <a href="${ctaLink}">${ctaText}</a>
+            </div>
+          ` : ''}
+        </div>
+        <div class="footer">
+          <p>Best regards, The Zoom Creatives Team</p>
+          <p>
+            <a href="https://zoomcreatives.jp">Contact Us</a> | 
+            <a href="https://zoomcreatives.jp">Visit Website</a>
+          </p>
+        </div>
+      </div>
     </body>
     </html>
   `;
 };
 
-// Create Appointment
 exports.createAppointment = async (req, res) => {
   try {
-    const { _id: superAdminId } = req.user;
-    const { clientId, ...appointmentData } = req.body;
+    const { clientId, handledBy, ...appointmentData } = req.body;
+    const { superAdminId, _id: createdBy, role } = req.user;
 
-    // Validate client
-    const client = await ClientModel.findOne({ _id: clientId, superAdminId });
+    if (role !== 'superadmin' && role !== 'admin') {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Unauthorized: Only superadmin or admin can create appointments' 
+      });
+    }
+
+    const clientSuperAdminId = role === 'superadmin' ? createdBy : superAdminId;
+
+    const client = await ClientModel.findOne({ 
+      _id: clientId, 
+      superAdminId: clientSuperAdminId 
+    });
     if (!client) {
-      return res.status(400).json({ success: false, message: 'Client not found or unauthorized' });
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Client not found or unauthorized' 
+      });
     }
 
     const appointment = new AppointmentModel({
       clientId,
+      handledBy,
       ...appointmentData,
-      superAdminId,
+      superAdminId: clientSuperAdminId,
+      createdBy,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     });
     await appointment.save();
 
-    // Format date and time
     const formattedDate = moment(appointmentData.date).format('MMMM Do YYYY');
-    const formattedTime = appointmentData.time ? moment(appointmentData.time, 'HH:mm').format('h:mm A') : 'Not specified';
-    const meetingType = appointmentData.meetingType.charAt(0).toUpperCase() + appointmentData.meetingType.slice(1);
+    const formattedTime = appointmentData.time 
+      ? moment(appointmentData.time, 'HH:mm').format('h:mm A') 
+      : 'Not specified';
+    const meetingType = appointmentData.meetingType
+      ? appointmentData.meetingType.charAt(0).toUpperCase() + appointmentData.meetingType.slice(1)
+      : 'Not specified';
 
-    // Email content
-    const emailSubject = 'Appointment Created Successfully';
+    const emailSubject = 'New Appointment Scheduled';
     const emailTemplate = generateEmailTemplate({
       subject: emailSubject,
       greeting: `Hello ${client.name},`,
-      message: 'Your appointment has been scheduled successfully with the following details:',
+      message: 'Your appointment has been successfully scheduled:',
       details: [
         { label: 'Date & Time', value: `${formattedDate} at ${formattedTime}` },
         { label: 'Meeting Type', value: meetingType },
-        { label: 'Duration', value: `${appointmentData.duration} minutes` },
+        { label: 'Duration', value: `${appointmentData.duration || 'Not specified'} minutes` },
         { label: 'Location', value: appointmentData.location || 'Not provided' },
+        { label: 'Handled By', value: handledBy || 'Not assigned' },
       ],
-      statusColor: '#28a745', // Green for creation
+      statusColor: '#00ff9d',
       ctaText: 'View Appointment',
       ctaLink: 'https://crm.zoomcreatives.jp/client-login',
     });
 
     const mailOptions = {
-      from: process.env.MYEMAIL,
+      from: `"Zoom Creatives" <${process.env.MYEMAIL}>`,
       to: client.email,
       subject: emailSubject,
       html: emailTemplate,
     };
 
     transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        console.error('Error sending email:', error);
-      } else {
-        console.log('Email sent:', info.response);
-      }
+      if (error) console.error('Email sending failed:', error);
+      else console.log('Email sent successfully:', info.response);
     });
 
-    res.status(201).json({ success: true, message: 'Appointment created successfully', appointment });
+    res.status(201).json({ 
+      success: true, 
+      message: 'Appointment created successfully', 
+      appointment 
+    });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: 'Failed to create appointment', error });
+    console.error('Create appointment error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to create appointment', 
+      error: error.message 
+    });
   }
 };
 
-// Get All Appointments
 exports.getAllAppointments = async (req, res) => {
   try {
-    const appointments = await AppointmentModel.find()
-      .populate('clientId', 'name phone')
-      .sort({ createdAt: -1 });
+    const { role, superAdminId, _id: userId } = req.user;
+    
+    let query = {};
+    if (role === 'admin') {
+      query = { superAdminId };
+    } else if (role !== 'superadmin') {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Unauthorized access' 
+      });
+    }
 
-    res.status(200).json({ success: true, message: 'Appointments fetched successfully', appointments });
+    const appointments = await AppointmentModel.find(query)
+      .populate('clientId', 'name phone email')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    res.status(200).json({ 
+      success: true, 
+      message: 'Appointments fetched successfully', 
+      appointments 
+    });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: 'Failed to retrieve appointments', error });
+    console.error('Get appointments error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to retrieve appointments', 
+      error: error.message 
+    });
   }
 };
 
-// Get Appointments by Client ID
 exports.getAppointmentsByClientId = async (req, res) => {
   try {
     const { clientId } = req.params;
+    const { superAdminId, role } = req.user;
 
-    const appointments = await AppointmentModel.find({ clientId });
-    if (appointments.length === 0) {
-      return res.status(404).json({ success: false, message: 'No appointments found for the given clientId' });
+    const query = { clientId };
+    if (role === 'admin') {
+      query.superAdminId = superAdminId;
     }
 
-    res.status(200).json({ success: true, message: 'Appointments fetched successfully', appointments });
+    const appointments = await AppointmentModel.find(query)
+      .populate('clientId', 'name phone email')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    if (appointments.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'No appointments found for this client' 
+      });
+    }
+
+    res.status(200).json({ 
+      success: true, 
+      message: 'Appointments fetched successfully', 
+      appointments 
+    });
   } catch (error) {
-    console.error('Error fetching appointments:', error);
-    res.status(500).json({ success: false, message: 'Failed to retrieve appointments', error: error.message });
+    console.error('Get appointments by client error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to retrieve appointments', 
+      error: error.message 
+    });
   }
 };
 
-// Update Appointment
 exports.updateAppointment = async (req, res) => {
   try {
     const { id } = req.params;
-    const { mode, ...updateData } = req.body;
+    const { mode, handledBy, ...updateData } = req.body;
+
+    // Check if req.user is defined
+    if (!req.user) {
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Unauthorized: User not authenticated' 
+      });
+    }
+
+    const { role, superAdminId } = req.user;
+
+    if (role !== 'superadmin' && role !== 'admin') {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Unauthorized: Only superadmin or admin can update appointments' 
+      });
+    }
 
     if (!['edit', 'reschedule'].includes(mode)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid mode. Mode must be either "edit" or "reschedule".',
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid mode. Must be "edit" or "reschedule"' 
       });
     }
 
     let isRescheduled = false;
     if (mode === 'reschedule') {
-      const { date, time, notes } = updateData;
+      const { date, time } = updateData;
       if (!date || !time) {
-        return res.status(400).json({
-          success: false,
-          message: 'Date and Time are required for rescheduling.',
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Date and time are required for rescheduling' 
         });
       }
       updateData.date = new Date(date);
       updateData.time = time;
-      if (notes) updateData.notes = notes;
       isRescheduled = true;
     }
 
-    const updatedAppointment = await AppointmentModel.findByIdAndUpdate(id, updateData, { new: true });
+    if (handledBy) updateData.handledBy = handledBy;
+    updateData.updatedAt = new Date();
+
+    const updatedAppointment = await AppointmentModel.findOneAndUpdate(
+      { _id: id, superAdminId },
+      updateData,
+      { new: true, runValidators: true }
+    );
+
     if (!updatedAppointment) {
-      return res.status(404).json({ success: false, message: 'Appointment not found' });
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Appointment not found or unauthorized' 
+      });
     }
 
     if (isRescheduled) {
       const client = await ClientModel.findById(updatedAppointment.clientId);
       const formattedDate = moment(updatedAppointment.date).format('MMMM Do YYYY');
-      const formattedTime = updatedAppointment.time ? moment(updatedAppointment.time, 'HH:mm').format('h:mm A') : 'Not specified';
+      const formattedTime = updatedAppointment.time 
+        ? moment(updatedAppointment.time, 'HH:mm').format('h:mm A') 
+        : 'Not specified';
 
       const emailSubject = 'Appointment Rescheduled';
       const emailTemplate = generateEmailTemplate({
         subject: emailSubject,
         greeting: `Hello ${client.name},`,
-        message: 'Your appointment has been rescheduled with the following new details. We appreciate your understanding!',
+        message: 'Your appointment has been rescheduled:',
         details: [
           { label: 'New Date & Time', value: `${formattedDate} at ${formattedTime}` },
           { label: 'Status', value: 'Rescheduled' },
           { label: 'Duration', value: `${updatedAppointment.duration} minutes` },
           { label: 'Location', value: updatedAppointment.location || 'Not provided' },
-          { label: 'Notes', value: updatedAppointment.notes || 'No additional notes' },
+          { label: 'Handled By', value: updatedAppointment.handledBy || 'Not assigned' },
         ],
-        statusColor: '#fedc00', // Blue for reschedule
+        statusColor: '#fedc00',
         ctaText: 'View Details',
         ctaLink: 'https://crm.zoomcreatives.jp/client-login',
       });
 
       const mailOptions = {
-        from: process.env.MYEMAIL,
+        from: `"Zoom Creatives" <${process.env.MYEMAIL}>`,
         to: client.email,
         subject: emailSubject,
         html: emailTemplate,
       };
 
-      transporter.sendMail(mailOptions, (error, info) => {
-        if (error) {
-          console.error('Error sending email:', error);
-        } else {
-          console.log('Email sent:', info.response);
-        }
-      });
+      transporter.sendMail(mailOptions);
     }
 
     res.status(200).json({
@@ -617,49 +432,71 @@ exports.updateAppointment = async (req, res) => {
       updatedAppointment,
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to update appointment',
-      error,
+    console.error('Update appointment error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to update appointment', 
+      error: error.message 
     });
   }
 };
 
-// Update Appointment Status
 exports.updateAppointmentStatus = async (req, res) => {
-  const { status } = req.body;
-  const { id } = req.params;
-
   try {
-    const { _id: superAdminId } = req.user;
-    const appointment = await AppointmentModel.findOne({ _id: id, superAdminId });
+    const { status } = req.body;
+    const { id } = req.params;
+    const { superAdminId, role } = req.user;
 
-    if (!appointment) {
-      return res.status(404).json({ success: false, message: 'Appointment not found or unauthorized' });
+    if (role !== 'superadmin' && role !== 'admin') {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Unauthorized: Only superadmin or admin can update status' 
+      });
     }
 
     if (!['Completed', 'Cancelled', 'Rescheduled'].includes(status)) {
-      return res.status(400).json({ success: false, message: 'Invalid status' });
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid status. Must be Completed, Cancelled, or Rescheduled' 
+      });
+    }
+
+    const appointment = await AppointmentModel.findOne({ _id: id, superAdminId });
+    if (!appointment) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Appointment not found or unauthorized' 
+      });
     }
 
     appointment.status = status;
+    const now = new Date();
+    
     if (status === 'Completed') {
-      appointment.completedAt = new Date();
+      appointment.completedAt = now;
     } else if (status === 'Cancelled') {
-      appointment.cancelledAt = new Date();
+      appointment.cancelledAt = now;
     } else if (status === 'Rescheduled') {
       const { date, time } = req.body;
+      if (!date || !time) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Date and time required for rescheduling' 
+        });
+      }
       appointment.date = new Date(date);
       appointment.time = time;
-      appointment.rescheduledAt = new Date();
+      appointment.rescheduledAt = now;
     }
+    appointment.updatedAt = now;
 
     await appointment.save();
 
     const client = await ClientModel.findById(appointment.clientId);
     const formattedDate = moment(appointment.date).format('MMMM Do YYYY');
-    const formattedTime = appointment.time ? moment(appointment.time, 'HH:mm').format('h:mm A') : 'Not specified';
+    const formattedTime = appointment.time 
+      ? moment(appointment.time, 'HH:mm').format('h:mm A') 
+      : 'Not specified';
 
     let emailSubject = '';
     let message = '';
@@ -667,24 +504,28 @@ exports.updateAppointmentStatus = async (req, res) => {
     let ctaText = '';
     let ctaLink = '';
 
-    if (status === 'Completed') {
-      emailSubject = 'Your Appointment Has Been Completed';
-      message = 'Your appointment has been successfully completed. Thank you for choosing Zoom Creatives!';
-      statusColor = '#28a745'; // Green
-      ctaText = 'Give Feedback';
-      ctaLink = 'https://zoomcreatives.jp/'; 
-    } else if (status === 'Cancelled') {
-      emailSubject = 'Your Appointment Has Been Cancelled';
-      message = 'We regret to inform you that your appointment has been cancelled. Let us know if you’d like to reschedule.';
-      statusColor = '#dc3545'; // Red
-      ctaText = 'Reschedule Now';
-      ctaLink = 'https://crm.zoomcreatives.jp/client-portal';
-    } else if (status === 'Rescheduled') {
-      emailSubject = 'Your Appointment Has Been Rescheduled';
-      message = 'Your appointment has been rescheduled to a new date and time. We appreciate your flexibility!';
-      statusColor = '#fedc00'; // Blue
-      ctaText = 'View Details';
-      ctaLink = 'https://crm.zoomcreatives.jp/client-portal';
+    switch (status) {
+      case 'Completed':
+        emailSubject = 'Appointment Completed';
+        message = 'Your appointment has been successfully completed.';
+        statusColor = '#00ff9d';
+        ctaText = 'Give Feedback';
+        ctaLink = 'https://zoomcreatives.jp/';
+        break;
+      case 'Cancelled':
+        emailSubject = 'Appointment Cancelled';
+        message = 'Your appointment has been cancelled.';
+        statusColor = '#ff3366';
+        ctaText = 'Reschedule Now';
+        ctaLink = 'https://crm.zoomcreatives.jp/client-portal';
+        break;
+      case 'Rescheduled':
+        emailSubject = 'Appointment Rescheduled';
+        message = 'Your appointment has been rescheduled:';
+        statusColor = '#fedc00';
+        ctaText = 'View Details';
+        ctaLink = 'https://crm.zoomcreatives.jp/client-portal';
+        break;
     }
 
     const emailTemplate = generateEmailTemplate({
@@ -696,6 +537,7 @@ exports.updateAppointmentStatus = async (req, res) => {
         { label: 'Status', value: status },
         { label: 'Duration', value: `${appointment.duration} minutes` },
         { label: 'Location', value: appointment.location || 'Not provided' },
+        { label: 'Handled By', value: appointment.handledBy || 'Not assigned' },
       ],
       statusColor,
       ctaText,
@@ -703,56 +545,94 @@ exports.updateAppointmentStatus = async (req, res) => {
     });
 
     const mailOptions = {
-      from: process.env.MYEMAIL,
+      from: `"Zoom Creatives" <${process.env.MYEMAIL}>`,
       to: client.email,
       subject: emailSubject,
       html: emailTemplate,
     };
 
-    transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        console.error('Error sending email:', error);
-      } else {
-        console.log('Email sent:', info.response);
-      }
-    });
+    transporter.sendMail(mailOptions);
 
     res.status(200).json({
       success: true,
-      message: `Appointment ${status}d successfully`,
+      message: `Appointment ${status.toLowerCase()} successfully`,
       appointment,
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to update appointment status',
-      error,
+    console.error('Update status error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to update appointment status', 
+      error: error.message 
     });
   }
 };
 
-
-
-// Delete an appointment by ID for the authenticated superAdmin
 exports.deleteAppointment = async (req, res) => {
   try {
-    const { _id: superAdminId } = req.user;  // Extract superAdminId from the authenticated user
+    const { superAdminId, role } = req.user;
     const { id } = req.params;
 
-    const deletedAppointment = await AppointmentModel.findOneAndDelete({ _id: id, superAdminId });
-
-    if (!deletedAppointment) {
-      return res.status(404).json({ success: false, message: 'Appointment not found or unauthorized' });
+    if (role !== 'superadmin' && role !== 'admin') {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Unauthorized: Only superadmin or admin can delete appointments' 
+      });
     }
 
-    res.status(200).json({ success: true, message: 'Appointment deleted successfully' });
+    const deletedAppointment = await AppointmentModel.findOneAndDelete({ 
+      _id: id, 
+      superAdminId 
+    });
+
+    if (!deletedAppointment) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Appointment not found or unauthorized' 
+      });
+    }
+
+    const client = await ClientModel.findById(deletedAppointment.clientId);
+    const emailSubject = 'Appointment Cancelled';
+    const emailTemplate = generateEmailTemplate({
+      subject: emailSubject,
+      greeting: `Hello ${client.name},`,
+      message: 'Your scheduled appointment has been cancelled:',
+      details: [
+        { label: 'Original Date', value: moment(deletedAppointment.date).format('MMMM Do YYYY') },
+        { label: 'Original Time', value: deletedAppointment.time 
+          ? moment(deletedAppointment.time, 'HH:mm').format('h:mm A') 
+          : 'Not specified' },
+        { label: 'Status', value: 'Cancelled' },
+        { label: 'Handled By', value: deletedAppointment.handledBy || 'Not assigned' },
+      ],
+      statusColor: '#ff3366',
+      ctaText: 'Schedule New Appointment',
+      ctaLink: 'https://crm.zoomcreatives.jp/client-portal',
+    });
+
+    const mailOptions = {
+      from: `"Zoom Creatives" <${process.env.MYEMAIL}>`,
+      to: client.email,
+      subject: emailSubject,
+      html: emailTemplate,
+    };
+
+    transporter.sendMail(mailOptions);
+
+    res.status(200).json({ 
+      success: true, 
+      message: 'Appointment deleted successfully' 
+    });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: 'Failed to delete appointment', error });
+    console.error('Delete appointment error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to delete appointment', 
+      error: error.message 
+    });
   }
 };
-
 
 
 
@@ -907,7 +787,6 @@ const modelMapping = {
   otherservice: OtherServiceModel,
 };
 
-// Route to update step status
 // Route to update step status
 exports.updateStepStatus = async (req, res) => {
   const { clientId, steps } = req.body;
