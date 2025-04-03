@@ -30,6 +30,7 @@ const notificationRoute = require ('./routes/newRoutes/notificationRoute');
 const { initRedisClient } = require('./config/redisClient');
 const webSocketService = require('./config/webSocketService');
 const chatRoute = require ('./routes/newRoutes/chatRoute');
+const socketService = require('./config/socketService');
 
 // Load environment variables
 dotenv.config();
@@ -42,8 +43,16 @@ const app = express();
 // const server = createServer(app);
 
 // Initialize WebSocket service
+// const server = createServer(app);
+// webSocketService.initialize(server);
+
+//Initialize socket io
 const server = createServer(app);
-webSocketService.initialize(server);
+socketService.initialize(server);
+
+
+
+
 
 // Middleware for parsing JSON and URL-encoded data
 // app.use(express.json());
